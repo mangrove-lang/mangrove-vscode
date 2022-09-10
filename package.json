@@ -32,12 +32,11 @@
 	],
 	"main": "./build/src/extension.js",
 	"scripts": {
-		"vscode:prepublish": "npm run check:version && npm run lint && npm run compile",
+		"vscode:prepublish": "npm run lint && npm run compile",
 		"compile": "tsc -p ./",
 		"watch": "tsc -watch -p ./",
 		"lint": "eslint --ext ts src",
 		"prettier": "prettier \"**/*.ts\"",
-		"check:version": "node cmd/check-version.js",
 		"installDevExtension": "npm install && ./node_modules/.bin/vsce package -o ./build/mangrove-vscode-dev.vsix && code --install-extension ./build/mangrove-vscode-dev.vsix"
 	},
 	"dependencies": {
