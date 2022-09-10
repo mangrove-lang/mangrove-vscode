@@ -10,9 +10,9 @@ import
 	workspace,
 	WorkspaceFolder,
 	WorkspaceFoldersChangeEvent
-} from "vscode";
-import * as langClient from "vscode-languageclient";
-import {Observable} from "./utils/observable";
+} from "vscode"
+import * as langClient from "vscode-languageclient"
+import {Observable} from "./utils/observable"
 
 export interface Api
 {
@@ -36,7 +36,7 @@ export async function activate(context: ExtensionContext) : Promise<Api>
 
 export async function deactivate()
 {
-	return Promise.all([...workspaces.values()].map(workspace => workspace.stop()));
+	return Promise.all([...workspaces.values()].map(workspace => workspace.stop()))
 }
 
 const workspaces: Map<string, ClientWorkspace> = new Map()
@@ -121,10 +121,10 @@ function clientWorkspaceForURI(uri: Uri, options?: {initialiseIfMissing: boolean
 function registerCommands(): Disposable[]
 {
 	return [
-		commands.registerCommand('mangrove.restart',
+		commands.registerCommand("mangrove.restart",
 			async () => activeWorkspace.value?.restart()
 		),
-	];
+	]
 }
 
 function configureLanguage(): Disposable
