@@ -1,0 +1,9 @@
+.github/
+.vscode/**
+src/**
+.gitignore
+prettier.config.js
+.eslintrc.json
+tsconfig.json
+**/*.map
+**/*.ts
