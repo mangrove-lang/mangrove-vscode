@@ -1,12 +1,13 @@
 import {Disposable, workspace, WorkspaceFolder} from 'vscode'
+import * as path from 'path'
 import * as langClient from 'vscode-languageclient'
 import {LanguageClient, ServerOptions, TransportKind} from 'vscode-languageclient/node'
-import {WorkspaceProgress} from './extension'
+import {extensionContext, WorkspaceProgress} from './extension'
 import {Observable} from './utils/observable'
 
 const progress: Observable<WorkspaceProgress> = new Observable<WorkspaceProgress>({state: 'standby'})
 
-export async function createLanguageClient(languageServer: string, folder: WorkspaceFolder): Promise<langClient.CommonLanguageClient>
+export async function createLanguageClient(folder: WorkspaceFolder): Promise<langClient.CommonLanguageClient>
 {
 	const clientOptions: langClient.LanguageClientOptions =
 	{
@@ -19,6 +20,7 @@ export async function createLanguageClient(languageServer: string, folder: Works
 		workspaceFolder: folder
 	}
 
+	const languageServer = extensionContext.asAbsolutePath(path.join('build', 'server', 'server.js'))
 	const serverOptions: ServerOptions =
 	{
 		run:

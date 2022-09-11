@@ -12,7 +12,6 @@ import
 	WorkspaceFoldersChangeEvent
 } from 'vscode'
 import * as langClient from 'vscode-languageclient'
-import * as path from 'path'
 import {createLanguageClient, setupClient, setupProgress} from './mangrove'
 import {Observable} from './utils/observable'
 import {startSpinner, stopSpinner} from './utils/spinner'
@@ -24,7 +23,7 @@ export interface Api
 
 export async function activate(context: ExtensionContext) : Promise<Api>
 {
-	languageServer = context.asAbsolutePath(path.join('build', 'server', 'server.js'))
+	extensionContext = context
 	context.subscriptions.push(
 		...[
 			configureLanguage(),
@@ -45,7 +44,7 @@ export async function deactivate()
 
 const workspaces: Map<string, ClientWorkspace> = new Map()
 const activeWorkspace = new Observable<ClientWorkspace | null>(null)
-let languageServer: string
+export let extensionContext: ExtensionContext
 let progress: Disposable | undefined
 
 export type WorkspaceProgress = {state: 'progress'; message: string} | {state: 'ready' | 'standby'}
@@ -76,7 +75,7 @@ export class ClientWorkspace
 
 	public async start()
 	{
-		const client = await createLanguageClient(languageServer, this.folder)
+		const client = await createLanguageClient(this.folder)
 		client.onDidChangeState(({newState}) => {
 			if (newState === langClient.State.Starting)
 				this._progress.value = {state: 'progress', message: 'Starting'}
