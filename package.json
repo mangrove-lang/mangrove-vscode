@@ -33,9 +33,9 @@
 	"main": "./build/src/extension.js",
 	"scripts": {
 		"vscode:prepublish": "npm run lint && npm run compile",
-		"compile": "tsc -p ./",
-		"watch": "tsc -watch -p ./",
-		"lint": "eslint --ext ts src",
+		"compile": "tsc -b",
+		"watch": "tsc -b -w",
+		"lint": "eslint --ext ts client/src && eslint --ext ts server/src",
 		"prettier": "prettier \"**/*.ts\"",
 		"installDevExtension": "npm install && ./node_modules/.bin/vsce package -o ./build/mangrove-vscode-dev.vsix && code --install-extension ./build/mangrove-vscode-dev.vsix"
 	},
