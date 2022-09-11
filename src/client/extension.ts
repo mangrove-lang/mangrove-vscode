@@ -15,6 +15,7 @@ import * as langClient from 'vscode-languageclient'
 import * as path from 'path'
 import {createLanguageClient, setupClient, setupProgress} from './mangrove'
 import {Observable} from './utils/observable'
+import {startSpinner, stopSpinner} from './utils/spinner'
 
 export interface Api
 {
@@ -45,6 +46,7 @@ export async function deactivate()
 const workspaces: Map<string, ClientWorkspace> = new Map()
 const activeWorkspace = new Observable<ClientWorkspace | null>(null)
 let languageServer: string
+let progress: Disposable | undefined
 
 export type WorkspaceProgress = {state: 'progress'; message: string} | {state: 'ready' | 'standby'}
 
@@ -113,6 +115,22 @@ function activeTextEditorChanged(editor: TextEditor | undefined)
 	if (!workspace)
 		return
 	activeWorkspace.value = workspace
+
+	const updateProgress = (progress: WorkspaceProgress) =>
+	{
+		if (progress.state === 'progress')
+			startSpinner(`[${workspace.folder.name}] ${progress.message}`)
+		else
+		{
+			const symbol = progress.state === 'standby' ? '$(debug-stop)': '$(debug-start)'
+			stopSpinner(`[${workspace.folder.name}] ${symbol}`)
+		}
+	}
+
+	if (progress)
+		progress.dispose()
+	progress = workspace.progress.observe(updateProgress)
+	updateProgress(workspace.progress.value)
 }
 
 function workspaceFoldersChanged(event: WorkspaceFoldersChangeEvent)
