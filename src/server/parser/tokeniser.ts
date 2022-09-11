@@ -41,6 +41,7 @@ export class Tokeniser
 
 	nextChar()
 	{
+		const value = this.currentChar
 		if (this.position.line + 1 == this.file.lineCount)
 		{
 			const offset = this.file.offsetAt({line: this.position.line, character: this.position.character + 1})
@@ -49,7 +50,7 @@ export class Tokeniser
 			{
 				this.eof = true
 				this.currentChar = ''
-				return
+				return value
 			}
 		}
 
@@ -57,6 +58,7 @@ export class Tokeniser
 		const position = this.file.positionAt(offset)
 		this.currentChar = this.file.getText({start: this.position, end: position})
 		this.position = position
+		return value
 	}
 
 	readToken()
