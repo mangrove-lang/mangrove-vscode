@@ -70,6 +70,40 @@ export class Tokeniser
 		case '#':
 			this.readLineComment()
 			break
+		case '\r':
+		case '\n':
+			this._token.set(TokenType.whitespace)
+			break
+		case '.':
+			this._token.set(TokenType.dot)
+			break
+		case ';':
+			this._token.set(TokenType.semi)
+			break
+		case '{':
+			this._token.set(TokenType.leftBrace)
+			break
+		case '}':
+			this._token.set(TokenType.rightBrace)
+			break
+		case '(':
+			this._token.set(TokenType.leftParen)
+			break
+		case ')':
+			this._token.set(TokenType.rightParen)
+			break
+		case '[':
+			this._token.set(TokenType.leftSquare)
+			break
+		case ']':
+			this._token.set(TokenType.rightSquare)
+			break
+		case ',':
+			this._token.set(TokenType.comma)
+			break
+		case ':':
+			this._token.set(TokenType.colon)
+			break
 		}
 		this._token.endsAt(this.position)
 		this._token.calcLength(this.file)
