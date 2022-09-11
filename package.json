@@ -40,7 +40,8 @@
 		"installDevExtension": "npm install && ./node_modules/.bin/vsce package -o ./build/mangrove-vscode-dev.vsix && code --install-extension ./build/mangrove-vscode-dev.vsix"
 	},
 	"dependencies": {
-		"vscode-languageclient": "^7.0.0"
+		"vscode-languageclient": "^7.0.0",
+		"vscode-languageserver": "^7.0.0"
 	},
 	"devDependencies": {
 		"@types/node": "^18.7.16",
@@ -50,8 +51,7 @@
 		"eslint": "^8.23.0",
 		"prettier": "^2.7.1",
 		"typescript": "^4.8.3",
-		"vsce": "^1.103.0",
-		"vscode-languageserver": "^7.0.0"
+		"vsce": "^1.103.0"
 	},
 	"contributes": {
 		"languages": [
