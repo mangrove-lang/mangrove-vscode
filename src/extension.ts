@@ -10,9 +10,11 @@ import
 	workspace,
 	WorkspaceFolder,
 	WorkspaceFoldersChangeEvent
-} from "vscode"
-import * as langClient from "vscode-languageclient"
-import {Observable} from "./utils/observable"
+} from 'vscode'
+import * as langClient from 'vscode-languageclient'
+import * as path from 'path'
+import {createLanguageClient, setupClient, setupProgress} from './mangrove'
+import {Observable} from './utils/observable'
 
 export interface Api
 {
@@ -21,6 +23,7 @@ export interface Api
 
 export async function activate(context: ExtensionContext) : Promise<Api>
 {
+	languageServer = context.asAbsolutePath(path.join('server', 'build', 'server.js'))
 	context.subscriptions.push(
 		...[
 			configureLanguage(),
@@ -41,17 +44,27 @@ export async function deactivate()
 
 const workspaces: Map<string, ClientWorkspace> = new Map()
 const activeWorkspace = new Observable<ClientWorkspace | null>(null)
+let languageServer: string
+
+export type WorkspaceProgress = {state: 'progress'; message: string} | {state: 'ready' | 'standby'}
 
 export class ClientWorkspace
 {
 	public readonly folder: WorkspaceFolder
 	private languageClient: langClient.CommonLanguageClient | null = null
 	private disposables: Disposable[]
+	private _progress: Observable<WorkspaceProgress>
+
+	get progress()
+	{
+		return this._progress
+	}
 
 	constructor(folder: WorkspaceFolder)
 	{
 		this.folder = folder
 		this.disposables = []
+		this._progress = new Observable<WorkspaceProgress>({state: 'standby'})
 	}
 
 	public async autoStart()
@@ -61,7 +74,20 @@ export class ClientWorkspace
 
 	public async start()
 	{
-		//const client = await createLanguageClient
+		const client = await createLanguageClient(languageServer, this.folder)
+		client.onDidChangeState(({newState}) => {
+			if (newState === langClient.State.Starting)
+				this._progress.value = {state: 'progress', message: 'Starting'}
+			else if (newState === langClient.State.Stopped)
+				this._progress.value = {state: 'standby'}
+		})
+
+		this.languageClient = client
+		setupProgress(client, this._progress)
+		//this.disposables.push(activateTaskProvder(this.folder))
+		this.disposables.push(...setupClient(client, this.folder))
+		if (client.needsStart())
+			this.disposables.push(client.start())
 	}
 
 	public async stop()
@@ -83,7 +109,7 @@ function activeTextEditorChanged(editor: TextEditor | undefined)
 	if (!editor || !editor.document)
 		return
 	const {languageId, uri} = editor.document
-	const workspace = clientWorkspaceForURI(uri, {initialiseIfMissing: languageId === "mangrove"})
+	const workspace = clientWorkspaceForURI(uri, {initialiseIfMissing: languageId === 'mangrove'})
 	if (!workspace)
 		return
 	activeWorkspace.value = workspace
@@ -121,7 +147,7 @@ function clientWorkspaceForURI(uri: Uri, options?: {initialiseIfMissing: boolean
 function registerCommands(): Disposable[]
 {
 	return [
-		commands.registerCommand("mangrove.restart",
+		commands.registerCommand('mangrove.restart',
 			async () => activeWorkspace.value?.restart()
 		),
 	]
@@ -129,5 +155,5 @@ function registerCommands(): Disposable[]
 
 function configureLanguage(): Disposable
 {
-	return languages.setLanguageConfiguration("mangrove", {})
+	return languages.setLanguageConfiguration('mangrove', {})
 }
