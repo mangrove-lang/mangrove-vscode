@@ -7,7 +7,7 @@ import {Observable} from './utils/observable'
 
 const progress: Observable<WorkspaceProgress> = new Observable<WorkspaceProgress>({state: 'standby'})
 
-export async function createLanguageClient(folder: WorkspaceFolder): Promise<langClient.CommonLanguageClient>
+export async function createLanguageClient(folder: WorkspaceFolder): Promise<LanguageClient>
 {
 	const clientOptions: langClient.LanguageClientOptions =
 	{
@@ -43,7 +43,6 @@ export async function createLanguageClient(folder: WorkspaceFolder): Promise<lan
 		clientOptions
 	)
 	instance.registerProposedFeatures()
-
 	return instance
 }
 

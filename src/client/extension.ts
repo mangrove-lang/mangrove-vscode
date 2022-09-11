@@ -12,6 +12,7 @@ import
 	WorkspaceFoldersChangeEvent
 } from 'vscode'
 import * as langClient from 'vscode-languageclient'
+import {LanguageClient} from 'vscode-languageclient/node'
 import {createLanguageClient, setupClient, setupProgress} from './mangrove'
 import {Observable} from './utils/observable'
 import {startSpinner, stopSpinner} from './utils/spinner'
@@ -52,7 +53,8 @@ export type WorkspaceProgress = {state: 'progress'; message: string} | {state: '
 export class ClientWorkspace
 {
 	public readonly folder: WorkspaceFolder
-	private languageClient: langClient.CommonLanguageClient | null = null
+	private client: LanguageClient | null = null
+	private clientStarted: Thenable<void>
 	private disposables: Disposable[]
 	private _progress: Observable<WorkspaceProgress>
 
@@ -61,16 +63,19 @@ export class ClientWorkspace
 		return this._progress
 	}
 
+	get languageClient()
+	{
+		if (!this.client)
+			throw new Error('Attempting to use languageClient before it is initialised')
+		return this.client
+	}
+
 	constructor(folder: WorkspaceFolder)
 	{
 		this.folder = folder
 		this.disposables = []
 		this._progress = new Observable<WorkspaceProgress>({state: 'standby'})
-	}
-
-	public async autoStart()
-	{
-		return this.start().then(() => true)
+		this.clientStarted = this.start()
 	}
 
 	public async start()
@@ -83,7 +88,7 @@ export class ClientWorkspace
 				this._progress.value = {state: 'standby'}
 		})
 
-		this.languageClient = client
+		this.client = client
 		setupProgress(client, this._progress)
 		//this.disposables.push(activateTaskProvder(this.folder))
 		this.disposables.push(...setupClient(client, this.folder))
@@ -93,8 +98,8 @@ export class ClientWorkspace
 
 	public async stop()
 	{
-		if (this.languageClient)
-			await this.languageClient.stop()
+		if (this.client)
+			await this.client.stop()
 		this.disposables.forEach(item => void item.dispose())
 	}
 
@@ -102,6 +107,11 @@ export class ClientWorkspace
 	{
 		await this.stop()
 		return this.start()
+	}
+
+	public awaitReady()
+	{
+		return this.clientStarted
 	}
 }
 
@@ -156,7 +166,6 @@ function clientWorkspaceForURI(uri: Uri, options?: {initialiseIfMissing: boolean
 	{
 		const workspace = new ClientWorkspace(folder)
 		workspaces.set(folder.uri.toString(), workspace)
-		workspace.autoStart()
 	}
 	return workspaces.get(folder.uri.toString())
 }
