@@ -13,9 +13,10 @@ import
 } from 'vscode'
 import * as langClient from 'vscode-languageclient'
 import {LanguageClient} from 'vscode-languageclient/node'
-import {createLanguageClient, setupClient, setupProgress} from './mangrove'
+import {createLanguageClient, documentSelector, setupProgress} from './mangrove'
 import {Observable} from './utils/observable'
 import {startSpinner, stopSpinner} from './utils/spinner'
+import {SemanticTokensProvider} from '../providers/semanticTokens'
 
 export interface Api
 {
@@ -91,7 +92,7 @@ export class ClientWorkspace
 		this.client = client
 		setupProgress(client, this._progress)
 		//this.disposables.push(activateTaskProvder(this.folder))
-		this.disposables.push(...setupClient(client, this.folder))
+		this.disposables.push(...this.setupClient())
 		if (client.needsStart())
 			this.disposables.push(client.start())
 	}
@@ -112,6 +113,20 @@ export class ClientWorkspace
 	public awaitReady()
 	{
 		return this.clientStarted
+	}
+
+	setupClient(): Disposable[]
+	{
+		const result: Disposable[] = []
+		const semanticTokensProvider = new SemanticTokensProvider(this)
+		result.push(
+			languages.registerDocumentSemanticTokensProvider(
+				documentSelector,
+				semanticTokensProvider,
+				semanticTokensProvider.legend
+			)
+		)
+		return result
 	}
 }
 

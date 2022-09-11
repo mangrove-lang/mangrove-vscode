@@ -1,20 +1,21 @@
-import {Disposable, workspace, WorkspaceFolder} from 'vscode'
+import {workspace, WorkspaceFolder} from 'vscode'
 import * as path from 'path'
 import * as langClient from 'vscode-languageclient'
-import {LanguageClient, ServerOptions, TransportKind} from 'vscode-languageclient/node'
+import {DocumentSelector, LanguageClient, ServerOptions, TransportKind} from 'vscode-languageclient/node'
 import {extensionContext, WorkspaceProgress} from './extension'
 import {Observable} from './utils/observable'
 
 const progress: Observable<WorkspaceProgress> = new Observable<WorkspaceProgress>({state: 'standby'})
+export const documentSelector: DocumentSelector = [
+	{language: 'mangrove', scheme: 'file'},
+	{language: 'mangrove', scheme: 'untitled'},
+]
 
 export async function createLanguageClient(folder: WorkspaceFolder): Promise<LanguageClient>
 {
 	const clientOptions: langClient.LanguageClientOptions =
 	{
-		documentSelector: [
-			{language: 'mangrove', scheme: 'file'},
-			{language: 'mangrove', scheme: 'untitled'},
-		],
+		documentSelector: documentSelector,
 		diagnosticCollectionName: 'mangrove',
 		initializationOptions: workspace.getConfiguration('mangrove'),
 		workspaceFolder: folder
@@ -44,11 +45,6 @@ export async function createLanguageClient(folder: WorkspaceFolder): Promise<Lan
 	)
 	instance.registerProposedFeatures()
 	return instance
-}
-
-export function setupClient(_client: langClient.CommonLanguageClient, _folder: WorkspaceFolder): Disposable[]
-{
-	return []
 }
 
 export function setupProgress(_client: langClient.CommonLanguageClient, workspaceProgress: Observable<WorkspaceProgress>)
