@@ -2,6 +2,7 @@ import
 {
 	createConnection,
 	DidChangeConfigurationNotification,
+	DocumentUri,
 	InitializeParams,
 	InitializeResult,
 	ProposedFeatures,
@@ -38,6 +39,11 @@ connection.onInitialized(() =>
 	if (hasConfigurationCapability)
 		connection.client.register(DidChangeConfigurationNotification.type, undefined)
 })
+
+export function getDocumentFor(uri: DocumentUri)
+{
+	return documents.get(uri)
+}
 
 documents.listen(connection)
 connection.listen()
