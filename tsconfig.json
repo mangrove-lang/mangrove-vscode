@@ -11,7 +11,7 @@
 		"noImplicitReturns": true,
 		"noFallthroughCasesInSwitch": true
 	},
-	"include": ["client", "server"],
+	"include": ["src"],
 	"exclude": [
 		"node_modules"
 	]
