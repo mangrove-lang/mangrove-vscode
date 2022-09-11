@@ -1,6 +1,6 @@
 import {Position, TextDocument} from 'vscode-languageserver-textdocument'
 import {Token, TokenType} from './types'
-import {isNewLine} from './recogniser'
+import {isNewLine, isHex, isNormalAlpha, isDoubleQuote} from './recogniser'
 
 export class Tokeniser
 {
@@ -106,6 +106,9 @@ export class Tokeniser
 		case ':':
 			this._token.set(TokenType.colon)
 			break
+		case '"':
+			this.readStringToken()
+			break
 		}
 		this._token.endsAt(this.position)
 		this._token.calcLength(this.file)
@@ -117,5 +120,75 @@ export class Tokeniser
 		this._token.set(TokenType.comment)
 		while (!this.eof && !isNewLine(this.currentChar))
 			this.nextChar()
+	}
+
+	readHexToken()
+	{
+		let str = ''
+		this._token.set(TokenType.hexLit)
+		this.nextChar()
+		while (isHex(this.currentChar))
+			str += this.nextChar()
+		this._token.set(TokenType.hexLit, str)
+	}
+
+	readUnicode(norm: string, esc: string): string
+	{
+		let result = ''
+		if (isNormalAlpha(this.currentChar) || this.currentChar == norm)
+			result = this.currentChar
+		else if (this.currentChar == '\\')
+		{
+			this.nextChar()
+			switch (this.currentChar as string)
+			{
+			case '\\':
+				result = '\\'
+				break
+			case 'b':
+				result = '\x08'
+				break
+			case 'r':
+				result = '\x0D'
+				break
+			case 'n':
+				result = '\x0A'
+				break
+			case 't':
+				result = '\x09'
+				break
+			case 'v':
+				result = '\x0B'
+				break
+			case 'f':
+				result = '\x0C'
+				break
+			case 'a':
+				result = '\x07'
+				break
+			case 'u':
+			case 'U':
+				this.readHexToken()
+				return String.fromCodePoint(Number.parseInt(this._token.value, 16))
+			}
+			if (this.currentChar == esc)
+			{
+				this.nextChar()
+				return esc
+			}
+		}
+		if (!this.eof)
+			this.nextChar()
+		return result
+	}
+
+	readStringToken()
+	{
+		this._token.set(TokenType.stringLit)
+		this.nextChar()
+		let lit = ''
+		while (!isDoubleQuote(this.currentChar))
+			lit += this.readUnicode('\'', '"')
+		this._token.value = lit
 	}
 }
