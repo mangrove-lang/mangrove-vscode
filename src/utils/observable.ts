@@ -1,4 +1,4 @@
-import {Disposable} from "vscode"
+import {Disposable} from 'vscode'
 
 /**
  * A wrapper around a value of type `T` that can be subscribed to whenever the
