@@ -18,6 +18,7 @@ export class Tokeniser
 		this.eof = false
 		this._token = new Token()
 
+		this._token.endsAt(this.position)
 		this.nextChar()
 	}
 
@@ -40,24 +41,20 @@ export class Tokeniser
 
 	nextChar()
 	{
-		if (!this._token.valid)
-			this._token.beginsAt(this.position)
-
-		if (this.position.line == this.file.lineCount)
+		if (this.position.line + 1 == this.file.lineCount)
 		{
 			const offset = this.file.offsetAt({line: this.position.line, character: this.position.character + 1})
 			const position = this.file.positionAt(offset)
-			if (this.position == position)
+			if (this.position.line == position.line && this.position.character == position.character)
 			{
 				this.eof = true
 				this.currentChar = ''
+				return
 			}
 		}
-		const offset = this.file.offsetAt({line: this.position.line, character: this.position.character + 1})
-		let position = this.file.positionAt(offset)
-		if (this.position == position)
-			position = {line: this.position.line + 1, character: 0}
 
+		const offset = this.file.offsetAt({line: this.position.line, character: this.position.character + 1})
+		const position = this.file.positionAt(offset)
 		this.currentChar = this.file.getText({start: this.position, end: position})
 		this.position = position
 	}

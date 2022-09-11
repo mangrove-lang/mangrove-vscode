@@ -102,7 +102,7 @@ export class Token
 	{
 		this._type = TokenType.invalid
 		this._value = ''
-		this._location = {start: {line: -1, character: -1}, end: {line: -1, character: -1}}
+		this._location.start = this._location.end
 		this._length = 0
 	}
 
