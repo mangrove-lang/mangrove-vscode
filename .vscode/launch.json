@@ -1,0 +1,39 @@
+{
+	"version": "0.2.0",
+	"configurations": [
+		{
+			"type": "extensionHost",
+			"request": "launch",
+			"name": "Launch extension",
+			"runtimeExecutable": "${execPath}",
+			"args": [
+				"--extensionDevelopmentPath=${workspaceFolder}"
+			],
+			"outFiles": [
+				"${workspaceFolder}/build/**/*.js",
+				"!**/node_modules/**"
+			],
+			"preLaunchTask": {
+				"type": "npm",
+				"script": "watch"
+			}
+		},
+		{
+			"type": "node",
+			"request": "attach",
+			"name": "Attach to server",
+			"port": 6009,
+			"restart": true,
+			"outFiles": [
+				"${workspaceFolder}/build/**/*.js",
+				"!**/node_modules/**"
+			]
+		}
+	],
+	"compounds": [
+		{
+			"name": "Launch and attach",
+			"configurations": ["Launch extension", "Attach to server"]
+		}
+	]
+}
