@@ -65,7 +65,7 @@ export class SemanticTokensProvider implements DocumentSemanticTokensProvider
 		result.tokens.forEach(semanticToken =>
 		{
 			builder.push(
-				semanticToken.length,
+				semanticToken.line,
 				semanticToken.character,
 				semanticToken.length,
 				semanticToken.type,
