@@ -23,7 +23,7 @@ export interface Api
 
 export async function activate(context: ExtensionContext) : Promise<Api>
 {
-	languageServer = context.asAbsolutePath(path.join('server', 'build', 'server.js'))
+	languageServer = context.asAbsolutePath(path.join('build', 'server', 'src', 'server.js'))
 	context.subscriptions.push(
 		...[
 			configureLanguage(),
