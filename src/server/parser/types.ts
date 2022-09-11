@@ -1,4 +1,5 @@
 import {Position, Range, TextDocument} from 'vscode-languageserver-textdocument'
+import {SemanticTokenTypes} from '../../providers/semanticTokens'
 
 export enum TokenType
 {
@@ -125,5 +126,15 @@ export class Token
 	public typeIs(...types: TokenType[])
 	{
 		return types.some(type => this._type == type, this)
+	}
+
+	public toSemanticType()
+	{
+		switch (this._type)
+		{
+		case TokenType.comment:
+			return SemanticTokenTypes.comment
+		}
+		throw new Error('Unhandled token type, cannot convert to semantic type')
 	}
 }

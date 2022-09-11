@@ -14,7 +14,7 @@ export function tokenise(document: TextDocument)
 			line: location.start.line,
 			character: location.start.character,
 			length: token.length,
-			type: 0
+			type: token.toSemanticType()
 		}
 		tokens.push(semanticToken)
 	}

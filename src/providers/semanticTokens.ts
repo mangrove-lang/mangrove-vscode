@@ -1,9 +1,26 @@
+export declare enum SemanticTokenTypes
+{
+	type = 0,
+	class = 1,
+	enum = 2,
+	parameter = 3,
+	variable = 4,
+	function = 5,
+	operator = 6,
+	keyword = 7,
+	comment = 8,
+	string = 9,
+	number = 10,
+	templateType = 11,
+	templateFunction = 12
+}
+
 export interface SemanticToken
 {
 	line: number
 	character: number
 	length: number
-	type: number
+	type: SemanticTokenTypes
 	modifiers?: number
 }
 

@@ -10,13 +10,12 @@ import
 } from 'vscode'
 import
 {
-	SemanticTokenTypes,
 	SemanticTokenModifiers,
 	SemanticTokensParams,
 	RequestType
 } from 'vscode-languageclient'
 import {ClientWorkspace} from '../extension'
-import {GetSemanticTokensResult} from '../../providers/semanticTokens'
+import {GetSemanticTokensResult, SemanticTokenTypes} from '../../providers/semanticTokens'
 
 const getSemanticTokensRequest: RequestType<SemanticTokensParams, GetSemanticTokensResult, void> =
 	new RequestType<SemanticTokensParams, GetSemanticTokensResult, void>('mangrove/semanticTokens')
