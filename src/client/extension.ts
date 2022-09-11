@@ -16,7 +16,7 @@ import {LanguageClient} from 'vscode-languageclient/node'
 import {createLanguageClient, documentSelector, setupProgress} from './mangrove'
 import {Observable} from './utils/observable'
 import {startSpinner, stopSpinner} from './utils/spinner'
-import {SemanticTokensProvider} from '../providers/semanticTokens'
+import {SemanticTokensProvider} from './providers/semanticTokens'
 
 export interface Api
 {
