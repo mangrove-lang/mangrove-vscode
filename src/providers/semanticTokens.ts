@@ -1,4 +1,4 @@
-export declare enum SemanticTokenTypes
+export enum SemanticTokenTypes
 {
 	type = 0,
 	class = 1,

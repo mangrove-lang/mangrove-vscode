@@ -128,7 +128,7 @@ export class Token
 		return types.some(type => this._type == type, this)
 	}
 
-	public toSemanticType()
+	public toSemanticType(): SemanticTokenTypes
 	{
 		switch (this._type)
 		{

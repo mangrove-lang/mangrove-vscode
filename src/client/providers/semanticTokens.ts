@@ -31,7 +31,10 @@ export class SemanticTokensProvider implements DocumentSemanticTokensProvider
 
 		const tokenTypes: string[] = []
 		for (const value in SemanticTokenTypes)
-			tokenTypes.push(value)
+		{
+			if (isNaN(Number(value)))
+				tokenTypes.push(value)
+		}
 
 		const tokenModifiers: string[] = []
 		for (const value in SemanticTokenModifiers)
