@@ -4,12 +4,16 @@ import
 	DidChangeConfigurationNotification,
 	InitializeParams,
 	InitializeResult,
-	ProposedFeatures
+	ProposedFeatures,
+	TextDocuments
 } from 'vscode-languageserver/node'
+import {TextDocument} from 'vscode-languageserver-textdocument'
 
 const connection = createConnection(ProposedFeatures.all)
 let hasConfigurationCapability = false
 let hasWorkspaceFolderCapability = false
+
+const documents: TextDocuments<TextDocument> = new TextDocuments(TextDocument)
 
 connection.onInitialize((params: InitializeParams) =>
 {
@@ -35,4 +39,5 @@ connection.onInitialized(() =>
 		connection.client.register(DidChangeConfigurationNotification.type, undefined)
 })
 
+documents.listen(connection)
 connection.listen()
