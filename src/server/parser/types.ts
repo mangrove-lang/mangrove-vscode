@@ -77,6 +77,11 @@ export class Token
 		return this._value
 	}
 
+	set value(value: string)
+	{
+		this._value = value
+	}
+
 	get location()
 	{
 		return this._location
