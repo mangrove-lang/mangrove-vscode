@@ -9,6 +9,7 @@ import
 	TextDocuments
 } from 'vscode-languageserver/node'
 import {TextDocument} from 'vscode-languageserver-textdocument'
+import {getSemanticTokensRequest, handleSemanticTokensRequest} from './providers/semanticTokens'
 
 const connection = createConnection(ProposedFeatures.all)
 let hasConfigurationCapability = false
@@ -44,6 +45,8 @@ export function getDocumentFor(uri: DocumentUri)
 {
 	return documents.get(uri)
 }
+
+connection.onRequest(getSemanticTokensRequest, handleSemanticTokensRequest)
 
 documents.listen(connection)
 connection.listen()
