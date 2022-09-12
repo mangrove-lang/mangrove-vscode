@@ -51,7 +51,10 @@ export class Parser
 	{
 		const token = this.lexer.token
 		if (token.typeIs(TokenType.invalid))
-			throw Error('Contant expected, got invalid token instead')
+		{
+			console.error('Contant expected, got invalid token instead')
+			return false
+		}
 		else if (token.typeIs(TokenType.stringLit))
 			yield *this.parseStringLiteral()
 		else
@@ -119,7 +122,8 @@ export class Parser
 		{
 			const stmt = yield *this.parseExtStatement()
 			if (!stmt)
-				break
+				this.lexer.next()
+				//break
 		}
 	}
 }
