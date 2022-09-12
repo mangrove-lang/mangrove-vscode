@@ -137,6 +137,10 @@ export class Tokeniser
 		case '%':
 			this.readMulToken()
 			return
+		case '+':
+		case '-':
+			this.readAddToken()
+			return
 		}
 		this.finaliseToken()
 		this.nextChar()
@@ -291,14 +295,31 @@ export class Tokeniser
 
 	readMulToken()
 	{
-		this._token.set(TokenType.mulOp)
+		this.finaliseToken(TokenType.mulOp, this.currentChar)
 		let token = this.nextChar()
 		if (isEquals(this.currentChar))
 		{
-			token += this.nextChar()
+			token += this.currentChar
+			this.finaliseToken(TokenType.assignOp, token)
+			this.nextChar()
+		}
+	}
+
+	readAddToken()
+	{
+		this.finaliseToken(TokenType.addOp, this.currentChar)
+		let token = this.nextChar()
+		if (isEquals(this.currentChar))
+		{
+			token += this.currentChar
 			this.finaliseToken(TokenType.assignOp, token)
 		}
+		else if (token == '-' && this.currentChar == '>')
+			this.finaliseToken(TokenType.arrow)
+		else if (this.currentChar == token)
+			this.finaliseToken(TokenType.incOp, this.currentChar)
 		else
-			this.finaliseToken(TokenType.mulOp, token)
+			return
+		this.nextChar()
 	}
 }
