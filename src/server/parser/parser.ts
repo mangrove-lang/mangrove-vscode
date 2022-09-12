@@ -42,16 +42,36 @@ export class Parser
 		}
 	}
 
-	*parseStringLiteral(): Generator<Token, void, undefined>
+	*parseIdentStr(): Generator<Token, boolean, undefined>
+	{
+		const token = this.lexer.token
+		if (!token.typeIs(TokenType.ident))
+			return false
+		yield token
+		yield *this.match(TokenType.ident)
+		return true
+	}
+
+	*parseIdent(): Generator<Token, boolean, undefined>
+	{
+		const ident = yield *this.parseIdentStr()
+		if (!ident)
+			return false
+		// Do symbol table things.
+		return true
+	}
+
+	*parseStringLiteral(): Generator<Token, boolean, undefined>
 	{
 		const token = this.lexer.token
 		if (!token.typeIs(TokenType.stringLit))
-			return
+			return false
 		while (token.typeIs(TokenType.stringLit))
 		{
 			yield token
-			this.match(TokenType.stringLit)
+			yield *this.match(TokenType.stringLit)
 		}
+		return true
 	}
 
 	*parseConst(): Generator<Token, boolean, undefined>
