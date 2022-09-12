@@ -43,12 +43,12 @@ export class SemanticTokensProvider implements DocumentSemanticTokensProvider
 		this.tokensLegend = new SemanticTokensLegend(tokenTypes, tokenModifiers)
 	}
 
-	public get legend()
+	get legend()
 	{
 		return this.tokensLegend
 	}
 
-	public async provideDocumentSemanticTokens(document: TextDocument, token: CancellationToken):
+	async provideDocumentSemanticTokens(document: TextDocument, token: CancellationToken):
 		Promise<SemanticTokens>
 	{
 		await this.workspace.awaitReady()
