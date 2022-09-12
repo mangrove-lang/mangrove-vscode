@@ -141,6 +141,10 @@ export class Tokeniser
 		case '-':
 			this.readAddToken()
 			return
+		case '&':
+		case '|':
+			this.readBooleanToken()
+			return
 		}
 		this.finaliseToken()
 		this.nextChar()
@@ -318,6 +322,22 @@ export class Tokeniser
 			this.finaliseToken(TokenType.arrow)
 		else if (this.currentChar == token)
 			this.finaliseToken(TokenType.incOp, this.currentChar)
+		else
+			return
+		this.nextChar()
+	}
+
+	readBooleanToken()
+	{
+		this.finaliseToken(TokenType.bitOp, this.currentChar)
+		let token = this.nextChar()
+		if (isEquals(this.currentChar))
+		{
+			token += this.currentChar
+			this.finaliseToken(TokenType.assignOp, token)
+		}
+		else if (this.currentChar == token)
+			this.finaliseToken(TokenType.logicOp, token)
 		else
 			return
 		this.nextChar()
