@@ -141,6 +141,8 @@ export class Token
 			return SemanticTokenTypes.comment
 		case TokenType.stringLit:
 			return SemanticTokenTypes.string
+		case TokenType.visibility:
+			return SemanticTokenTypes.keyword
 		}
 		throw new Error('Unhandled token type, cannot convert to semantic type')
 	}
