@@ -5,16 +5,23 @@ import {Token, TokenType} from './types'
 export class Parser
 {
 	private lexer: Tokeniser
+	private _ident: Token
 
 	constructor(file: TextDocument)
 	{
 		this.lexer = new Tokeniser(file)
+		this._ident = new Token()
 	}
 
-	*match(tokenType: TokenType): Generator<Token, boolean, undefined>
+	get haveIdent()
+	{
+		return this._ident.valid
+	}
+
+	*match(...tokenTypes: TokenType[]): Generator<Token, boolean, undefined>
 	{
 		const token = this.lexer.token
-		if (token.typeIs(tokenType))
+		if (token.typeIs(...tokenTypes))
 		{
 			this.lexer.next()
 			yield *this.skipWhite()
