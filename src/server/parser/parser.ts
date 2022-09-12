@@ -83,7 +83,7 @@ export class Parser
 			return false
 		}
 		else if (token.typeIs(TokenType.stringLit))
-			yield *this.parseStringLiteral()
+			return yield *this.parseStringLiteral()
 		else
 		{
 			return false
@@ -94,13 +94,20 @@ export class Parser
 	*parseValue(): Generator<Token, boolean, undefined>
 	{
 		//const token = this.lexer.token
-		//if (this.haveIdent())
-		//	yield token
-		//	return
+		if (this.haveIdent)
+		{
+			yield this._ident
+			this._ident.reset()
+			return true
+		}
 		const const_ = yield *this.parseConst()
 		if (const_)
 			return true
-		return false
+		const ident = yield *this.parseIdent()
+		if (ident)
+		{
+		}
+		return ident
 	}
 
 	*parseExpression(): Generator<Token, boolean, undefined>
