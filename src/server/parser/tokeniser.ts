@@ -148,6 +148,10 @@ export class Tokeniser
 		case '^':
 			this.readBitwiseToken()
 			return
+		case '<':
+		case '>':
+			this.readRelationToken()
+			return
 		}
 		this.finaliseToken()
 		this.nextChar()
@@ -356,5 +360,29 @@ export class Tokeniser
 			this.finaliseToken(TokenType.assignOp, token)
 			this.nextChar()
 		}
+	}
+
+	readRelationToken()
+	{
+		this.finaliseToken(TokenType.relOp, this.currentChar)
+		let token = this.nextChar()
+		if (isEquals(this.currentChar))
+		{
+			token += this.currentChar
+			this.finaliseToken(TokenType.relOp, token)
+		}
+		else if (this.currentChar == token)
+		{
+			token += this.currentChar
+			this.finaliseToken(TokenType.shiftOp, token)
+			if (isEquals(this.currentChar))
+			{
+				token += this.currentChar
+				this.finaliseToken(TokenType.assignOp, token)
+			}
+		}
+		else
+			return
+		this.nextChar()
 	}
 }
