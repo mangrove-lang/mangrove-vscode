@@ -110,6 +110,44 @@ export class Parser
 		return ident
 	}
 
+	*parseRelExpr(): Generator<Token, boolean, undefined>
+	{
+		const token = this.lexer.token
+		const lhs = yield *this.parseValue()
+		if (lhs && token.typeIs(TokenType.relOp, TokenType.equOp))
+		{
+			if (!this.match(TokenType.relOp, TokenType.equOp))
+				return false
+			return yield *this.parseValue()
+		}
+		return lhs
+	}
+
+	*parseRelation(): Generator<Token, boolean, undefined>
+	{
+		const rel = yield *this.parseRelExpr()
+		if (!rel)
+			return false
+		//
+		return true
+	}
+
+	*parseLogicExpr(): Generator<Token, boolean, undefined>
+	{
+		const token = this.lexer.token
+		let lhs = yield *this.parseRelation()
+		if (!lhs)
+			return false
+		while (lhs)
+		{
+			if (!token.typeIs(TokenType.logicOp))
+				break
+			yield *this.match(TokenType.logicOp)
+			lhs = yield *this.parseRelation()
+		}
+		return true
+	}
+
 	*parseExpression(): Generator<Token, boolean, undefined>
 	{
 		const expr = yield *(function *(self): Generator<Token, boolean, undefined>
