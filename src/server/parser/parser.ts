@@ -169,10 +169,13 @@ export class Parser
 			return false
 		yield token
 		yield *this.match(TokenType.ifStmt)
-		return true
+		const cond = yield *this.parseLogicExpr()
+		if (!cond)
+			return false
+		return yield *this.parseBlock()
 	}
 
-	*parserElifExpr(): Generator<Token, boolean, undefined>
+	*parseElifExpr(): Generator<Token, boolean, undefined>
 	{
 		const token = this.lexer.token
 		if (!token.typeIs(TokenType.elifStmt))
@@ -182,7 +185,7 @@ export class Parser
 		return true
 	}
 
-	*parserElseExpr(): Generator<Token, boolean, undefined>
+	*parseElseExpr(): Generator<Token, boolean, undefined>
 	{
 		const token = this.lexer.token
 		if (!token.typeIs(TokenType.elseStmt))
@@ -197,7 +200,13 @@ export class Parser
 		const ifExpr = yield *this.parseIfExpr()
 		if (!ifExpr)
 			return false
-		//
+		while (true)
+		{
+			const elifExpr = yield *this.parseElifExpr()
+			if (!elifExpr)
+				break
+		}
+		yield *this.parseElseExpr()
 		return true
 	}
 
