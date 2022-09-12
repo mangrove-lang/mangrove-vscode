@@ -12,7 +12,8 @@ import {
 	isTrue,
 	isFalse,
 	isNull,
-	isEquals
+	isEquals,
+	isVisibility
 } from './recogniser'
 
 export class Tokeniser
@@ -182,6 +183,22 @@ export class Tokeniser
 				this._token.set(TokenType.boolLit, token)
 			else if (isNull(token))
 				this._token.set(TokenType.nullptrLit)
+			else if (token == 'and')
+				this._token.set(TokenType.logicOp, '&')
+			else if (token == 'or')
+				this._token.set(TokenType.logicOp, '|')
+			else if (token == 'not')
+				this._token.set(TokenType.invert, '!')
+
+			else if (isVisibility(token))
+				this._token.set(TokenType.visibility, token)
+			else
+				this._token.value = token
+		}
+		else
+		{
+			this._token.set(TokenType.invalid)
+			this.nextChar()
 		}
 	}
 

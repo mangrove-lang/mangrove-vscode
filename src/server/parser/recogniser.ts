@@ -44,3 +44,8 @@ export function isFalse(str: string) { return str == 'false' }
 export function isNull(str: string) { return str == 'nullptr' }
 
 export function isEquals(c: string) { return c == '=' }
+
+
+export function isNone(str: string) { return str == 'none' }
+export function isArrow(str: string) { return str == '->' }
+export function isVisibility(str: string) { return str == 'public' || str == 'private' || str == 'protected' }
