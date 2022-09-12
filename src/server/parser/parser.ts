@@ -92,9 +92,22 @@ export class Parser
 		return yield *this.parseExpression()
 	}
 
+	*parseVisibility(): Generator<Token, boolean, undefined>
+	{
+		const token = this.lexer.token
+		if (!token.typeIs(TokenType.visibility))
+			return false
+		yield token
+		yield *this.match(TokenType.visibility)
+		return !(yield *this.match(TokenType.semi))
+	}
+
 	*parseExtStatement(): Generator<Token, boolean, undefined>
 	{
-		return yield *this.parseStatement()
+		const stmt = yield *this.parseVisibility()
+		if (!stmt)
+			return yield *this.parseStatement()
+		return stmt
 	}
 
 	public *tokenise(): Generator<Token, void, undefined>
