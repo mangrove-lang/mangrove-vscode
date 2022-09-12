@@ -152,6 +152,10 @@ export class Tokeniser
 		case '>':
 			this.readRelationToken()
 			return
+		case '!':
+		case '=':
+			this.readEqualityToken()
+			return
 		}
 		this.finaliseToken()
 		this.nextChar()
@@ -384,5 +388,24 @@ export class Tokeniser
 		else
 			return
 		this.nextChar()
+	}
+
+	readEqualityToken()
+	{
+		this.finaliseToken()
+		let token = this.nextChar()
+		if (isEquals(this.currentChar))
+		{
+			token += this.currentChar
+			this.finaliseToken(TokenType.equOp, token)
+			this.nextChar()
+		}
+		else
+		{
+			if (isEquals(token))
+				this._token.set(TokenType.assignOp, token)
+			else
+				this._token.set(TokenType.invert, token)
+		}
 	}
 }
