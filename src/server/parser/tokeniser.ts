@@ -133,6 +133,10 @@ export class Tokeniser
 		case '/':
 			this.readDivToken()
 			return
+		case '*':
+		case '%':
+			this.readMulToken()
+			return
 		}
 		this.finaliseToken()
 		this.nextChar()
@@ -280,6 +284,19 @@ export class Tokeniser
 		{
 			this.nextChar()
 			this.readLineComment()
+		}
+		else
+			this.finaliseToken(TokenType.mulOp, token)
+	}
+
+	readMulToken()
+	{
+		this._token.set(TokenType.mulOp)
+		let token = this.nextChar()
+		if (isEquals(this.currentChar))
+		{
+			token += this.nextChar()
+			this.finaliseToken(TokenType.assignOp, token)
 		}
 		else
 			this.finaliseToken(TokenType.mulOp, token)
