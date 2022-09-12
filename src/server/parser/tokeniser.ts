@@ -1,6 +1,13 @@
 import {Position, TextDocument} from 'vscode-languageserver-textdocument'
 import {Token, TokenType} from './types'
-import {isNewLine, isHex, isNormalAlpha, isDoubleQuote, isSingleQuote} from './recogniser'
+import {
+	isNewLine,
+	isHex,
+	isNormalAlpha,
+	isSingleQuote,
+	isDoubleQuote,
+	isEquals
+} from './recogniser'
 
 export class Tokeniser
 {
@@ -61,6 +68,14 @@ export class Tokeniser
 		return value
 	}
 
+	finaliseToken(type?: TokenType, value?: string)
+	{
+		if (type)
+			this._token.set(type, value)
+		this._token.endsAt(this.position)
+		this._token.calcLength(this.file)
+	}
+
 	readToken()
 	{
 		switch (this.currentChar)
@@ -71,7 +86,7 @@ export class Tokeniser
 			break
 		case '#':
 			this.readLineComment()
-			break
+			return
 		case '\r':
 		case '\n':
 			this._token.set(TokenType.whitespace)
@@ -112,17 +127,48 @@ export class Tokeniser
 		case '\'':
 			this.readCharToken()
 			break
+		case '~':
+			this._token.set(TokenType.invert)
+			break
+		case '/':
+			this.readDivToken()
+			return
 		}
-		this._token.endsAt(this.position)
-		this._token.calcLength(this.file)
+		this.finaliseToken()
 		this.nextChar()
+	}
+
+	readPartComment()
+	{
+		this._token.set(TokenType.comment)
+		let foundEnd = false
+		let comment = ''
+		while (!foundEnd && !this.eof)
+		{
+			if (this.currentChar == '*')
+			{
+				const value = this.nextChar()
+				if (this.currentChar as string == '/')
+				{
+					this.nextChar()
+					foundEnd = true
+				}
+				else
+					comment += value
+			}
+			else
+				comment += this.nextChar()
+		}
+		this.finaliseToken(TokenType.comment, comment)
 	}
 
 	readLineComment()
 	{
 		this._token.set(TokenType.comment)
+		let comment = ''
 		while (!this.eof && !isNewLine(this.currentChar))
-			this.nextChar()
+			comment += this.nextChar()
+		this.finaliseToken(TokenType.comment, comment)
 	}
 
 	readHexToken()
@@ -214,5 +260,28 @@ export class Tokeniser
 			return
 		}
 		this._token.value = lit
+	}
+
+	readDivToken()
+	{
+		this._token.set(TokenType.mulOp)
+		let token = this.nextChar()
+		if (isEquals(this.currentChar))
+		{
+			token += this.nextChar()
+			this.finaliseToken(TokenType.assignOp, token)
+		}
+		else if (this.currentChar == '*')
+		{
+			this.nextChar()
+			this.readPartComment()
+		}
+		else if (this.currentChar == '/')
+		{
+			this.nextChar()
+			this.readLineComment()
+		}
+		else
+			this.finaliseToken(TokenType.mulOp, token)
 	}
 }

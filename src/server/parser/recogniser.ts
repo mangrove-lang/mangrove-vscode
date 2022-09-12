@@ -23,3 +23,6 @@ export function isNormalAlpha(c: string)
 
 export function isSingleQuote(c: string) { return c == '\'' }
 export function isDoubleQuote(c: string) { return c == '"' }
+
+
+export function isEquals(c: string) { return c == '=' }
