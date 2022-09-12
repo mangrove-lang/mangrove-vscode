@@ -46,6 +46,16 @@ export function isNull(str: string) { return str == 'nullptr' }
 export function isEquals(c: string) { return c == '=' }
 
 
+export function isReturn(str: string) { return str == 'return' }
+
+export function isIfStmt(str: string) { return str == 'if' }
+export function isElifStmt(str: string) { return str == 'elif' }
+export function isElseStmt(str: string) { return str == 'else' }
+
+export function isWhileStmt(str: string) { return str == 'while' }
+export function isDoStmt(str: string) { return str == 'do' }
+
+
 export function isNone(str: string) { return str == 'none' }
 export function isArrow(str: string) { return str == '->' }
 export function isVisibility(str: string) { return str == 'public' || str == 'private' || str == 'protected' }

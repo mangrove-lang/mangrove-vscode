@@ -13,6 +13,12 @@ import {
 	isFalse,
 	isNull,
 	isEquals,
+	isReturn,
+	isIfStmt,
+	isElifStmt,
+	isElseStmt,
+	isWhileStmt,
+	isDoStmt,
 	isVisibility
 } from './recogniser'
 
@@ -189,6 +195,19 @@ export class Tokeniser
 				this._token.set(TokenType.logicOp, '|')
 			else if (token == 'not')
 				this._token.set(TokenType.invert, '!')
+
+			else if (isReturn(token))
+				this._token.set(TokenType.returnStmt)
+			else if (isIfStmt(token))
+				this._token.set(TokenType.ifStmt)
+			else if (isElifStmt(token))
+				this._token.set(TokenType.elifStmt)
+			else if (isElseStmt(token))
+				this._token.set(TokenType.elseStmt)
+			else if (isWhileStmt(token))
+				this._token.set(TokenType.whileStmt)
+			else if (isDoStmt(token))
+				this._token.set(TokenType.doStmt)
 
 			else if (isVisibility(token))
 				this._token.set(TokenType.visibility, token)
