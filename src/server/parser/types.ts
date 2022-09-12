@@ -141,6 +141,15 @@ export class Token
 			return SemanticTokenTypes.comment
 		case TokenType.stringLit:
 			return SemanticTokenTypes.string
+		//case TokenType.boolLit:
+		case TokenType.deleteStmt:
+		case TokenType.newStmt:
+		case TokenType.returnStmt:
+		case TokenType.ifStmt:
+		case TokenType.elifStmt:
+		case TokenType.elseStmt:
+		case TokenType.whileStmt:
+		case TokenType.doStmt:
 		case TokenType.visibility:
 			return SemanticTokenTypes.keyword
 		}
