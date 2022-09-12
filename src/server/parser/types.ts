@@ -139,6 +139,8 @@ export class Token
 		{
 		case TokenType.comment:
 			return SemanticTokenTypes.comment
+		case TokenType.stringLit:
+			return SemanticTokenTypes.string
 		}
 		throw new Error('Unhandled token type, cannot convert to semantic type')
 	}
