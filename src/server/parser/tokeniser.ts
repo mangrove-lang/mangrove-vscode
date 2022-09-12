@@ -145,6 +145,9 @@ export class Tokeniser
 		case '|':
 			this.readBooleanToken()
 			return
+		case '^':
+			this.readBitwiseToken()
+			return
 		}
 		this.finaliseToken()
 		this.nextChar()
@@ -341,5 +344,17 @@ export class Tokeniser
 		else
 			return
 		this.nextChar()
+	}
+
+	readBitwiseToken()
+	{
+		this.finaliseToken(TokenType.bitOp, this.currentChar)
+		let token = this.nextChar()
+		if (isEquals(this.currentChar))
+		{
+			token += this.currentChar
+			this.finaliseToken(TokenType.assignOp, token)
+			this.nextChar()
+		}
 	}
 }
