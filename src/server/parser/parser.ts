@@ -90,9 +90,53 @@ export class Parser
 		return expr
 	}
 
+	*parseIfExpr(): Generator<Token, boolean, undefined>
+	{
+		const token = this.lexer.token
+		if (!token.typeIs(TokenType.ifStmt))
+			return false
+		yield token
+		yield *this.match(TokenType.ifStmt)
+		return true
+	}
+
+	*parserElifExpr(): Generator<Token, boolean, undefined>
+	{
+		const token = this.lexer.token
+		if (!token.typeIs(TokenType.elifStmt))
+			return false
+		yield token
+		yield *this.match(TokenType.elifStmt)
+		return true
+	}
+
+	*parserElseExpr(): Generator<Token, boolean, undefined>
+	{
+		const token = this.lexer.token
+		if (!token.typeIs(TokenType.elseStmt))
+			return false
+		yield token
+		yield *this.match(TokenType.elseStmt)
+		return yield *this.parseBlock()
+	}
+
+	*parseIfStmt(): Generator<Token, boolean, undefined>
+	{
+		const ifExpr = yield *this.parseIfExpr()
+		if (!ifExpr)
+			return false
+		//
+		return true
+	}
+
 	*parseStatement(): Generator<Token, boolean, undefined>
 	{
-		return yield *this.parseExpression()
+		let stmt = false
+		if (!stmt)
+			stmt = yield *this.parseIfStmt()
+		if (!stmt)
+			stmt = yield *this.parseExpression()
+		return stmt
 	}
 
 	*parseVisibility(): Generator<Token, boolean, undefined>
