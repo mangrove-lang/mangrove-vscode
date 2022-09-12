@@ -105,6 +105,26 @@ export class Parser
 		return !(yield *this.match(TokenType.semi))
 	}
 
+	*parseBraceBlock(): Generator<Token, boolean, undefined>
+	{
+		const token = this.lexer.token
+		if (!token.typeIs(TokenType.leftBrace))
+			return yield *this.parseStatement()
+		yield *this.match(TokenType.leftBrace)
+		while (!token.typeIs(TokenType.rightBrace))
+		{
+			const stmt = yield *this.parseStatement()
+			if (!stmt)
+				return false
+		}
+		return yield *this.match(TokenType.rightBrace)
+	}
+
+	*parseBlock(): Generator<Token, boolean, undefined>
+	{
+		return yield *this.parseBraceBlock()
+	}
+
 	*parseExtStatement(): Generator<Token, boolean, undefined>
 	{
 		const stmt = yield *this.parseVisibility()
