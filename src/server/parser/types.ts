@@ -139,7 +139,10 @@ export class Token
 		{
 		case TokenType.comment:
 			return SemanticTokenTypes.comment
+		case TokenType.ident:
+			return SemanticTokenTypes.variable
 		case TokenType.stringLit:
+		case TokenType.charLit:
 			return SemanticTokenTypes.string
 		//case TokenType.boolLit:
 		case TokenType.deleteStmt:
@@ -153,6 +156,6 @@ export class Token
 		case TokenType.visibility:
 			return SemanticTokenTypes.keyword
 		}
-		throw new Error('Unhandled token type, cannot convert to semantic type')
+		throw new Error(`Unhandled token type ${this._type}, cannot convert to semantic type`)
 	}
 }
