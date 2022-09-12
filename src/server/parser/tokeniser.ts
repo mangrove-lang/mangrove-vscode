@@ -1,6 +1,6 @@
 import {Position, TextDocument} from 'vscode-languageserver-textdocument'
 import {Token, TokenType} from './types'
-import {isNewLine, isHex, isNormalAlpha, isDoubleQuote} from './recogniser'
+import {isNewLine, isHex, isNormalAlpha, isDoubleQuote, isSingleQuote} from './recogniser'
 
 export class Tokeniser
 {
@@ -109,6 +109,9 @@ export class Tokeniser
 		case '"':
 			this.readStringToken()
 			break
+		case '\'':
+			this.readCharToken()
+			break
 		}
 		this._token.endsAt(this.position)
 		this._token.calcLength(this.file)
@@ -188,7 +191,28 @@ export class Tokeniser
 		this.nextChar()
 		let lit = ''
 		while (!isDoubleQuote(this.currentChar))
-			lit += this.readUnicode('\'', '"')
+		{
+			const value = this.readUnicode('\'', '"')
+			if (value == '')
+			{
+				this._token.set(TokenType.invalid)
+				return
+			}
+			lit += value
+		}
+		this._token.value = lit
+	}
+
+	readCharToken()
+	{
+		this._token.set(TokenType.charLit)
+		this.nextChar()
+		const lit = this.readUnicode('"', '\'')
+		if (lit == '' || !isSingleQuote(this.currentChar))
+		{
+			this._token.set(TokenType.invalid)
+			return
+		}
 		this._token.value = lit
 	}
 }
