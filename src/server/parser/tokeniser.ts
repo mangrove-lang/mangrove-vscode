@@ -2,10 +2,16 @@ import {Position, TextDocument} from 'vscode-languageserver-textdocument'
 import {Token, TokenType} from './types'
 import {
 	isNewLine,
+	isAlpha,
+	isAlphaNum,
+	isUnderscore,
 	isHex,
 	isNormalAlpha,
 	isSingleQuote,
 	isDoubleQuote,
+	isTrue,
+	isFalse,
+	isNull,
 	isEquals
 } from './recogniser'
 
@@ -156,9 +162,27 @@ export class Tokeniser
 		case '=':
 			this.readEqualityToken()
 			return
+		default:
+			this.readExtendedToken()
+			return
 		}
 		this.finaliseToken()
 		this.nextChar()
+	}
+
+	readExtendedToken()
+	{
+		this._token.set(TokenType.ident)
+		if (isAlpha(this.currentChar) || isUnderscore(this.currentChar))
+		{
+			const token = this.readAlphaNumToken()
+			if (token == '' || this.eof)
+				return
+			else if (isTrue(token) || isFalse(token))
+				this._token.set(TokenType.boolLit, token)
+			else if (isNull(token))
+				this._token.set(TokenType.nullptrLit)
+		}
 	}
 
 	readPartComment()
@@ -407,5 +431,16 @@ export class Tokeniser
 			else
 				this._token.set(TokenType.invert, token)
 		}
+	}
+
+	readAlphaNumToken()
+	{
+		let token = ''
+		while (isAlphaNum(this.currentChar) || isUnderscore(this.currentChar))
+		{
+			this.finaliseToken()
+			token += this.nextChar()
+		}
+		return token
 	}
 }

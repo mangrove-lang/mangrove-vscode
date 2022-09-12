@@ -39,5 +39,8 @@ export function isNormalAlpha(c: string)
 export function isSingleQuote(c: string) { return c == '\'' }
 export function isDoubleQuote(c: string) { return c == '"' }
 
+export function isTrue(str: string) { return str == 'true' }
+export function isFalse(str: string) { return str == 'false' }
+export function isNull(str: string) { return str == 'nullptr' }
 
 export function isEquals(c: string) { return c == '=' }
