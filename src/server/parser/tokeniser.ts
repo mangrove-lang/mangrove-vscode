@@ -29,7 +29,7 @@ import {
 
 export class Tokeniser
 {
-	private file: TextDocument
+	private _file: TextDocument
 	private currentChar: string
 	private position: Position
 	private eof: boolean
@@ -37,7 +37,7 @@ export class Tokeniser
 
 	constructor(file: TextDocument)
 	{
-		this.file = file
+		this._file = file
 		this.currentChar = ''
 		this.position = {line: 0, character: 0}
 		this.eof = false
@@ -50,6 +50,11 @@ export class Tokeniser
 	get token()
 	{
 		return this._token
+	}
+
+	get file()
+	{
+		return this._file
 	}
 
 	public next()

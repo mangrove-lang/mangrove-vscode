@@ -57,7 +57,11 @@ export enum TokenType
 	functionDef,
 	operatorDef,
 	decorator,
-	visibility
+	visibility,
+
+	// XXX: These only exist because of the current parser structure and aren't real tokens.
+	float32Lit,
+	float64Lit
 }
 
 export class Token

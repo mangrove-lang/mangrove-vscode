@@ -1,4 +1,4 @@
-import {TextDocument} from 'vscode-languageserver-textdocument'
+import {Position, TextDocument} from 'vscode-languageserver-textdocument'
 import {Tokeniser} from './tokeniser'
 import {Token, TokenType} from './types'
 
@@ -108,15 +108,52 @@ export class Parser
 			return yield *this.parseHex()
 		else if (intToken.typeIs(TokenType.intLit))
 		{
-			//const str = token.value
+			const token = this.lexer.token
 			this.lexer.next()
 			if (allowFloat && token.typeIs(TokenType.dot))
-				return false
+			{
+				yield *this.parseFloat(intToken.value, intToken.location.start)
+				return true
+			}
 			yield intToken
 			yield *this.skipWhite()
 			return true
 		}
 		return false
+	}
+
+	*parseFloat(intValue: string, tokenStart: Position): Generator<Token, void, undefined>
+	{
+		let decValue = ''
+		let suffix = ''
+		let floatBits = 64
+		const token = this.lexer.token
+		let tokenEnd = token.location.end
+		this.lexer.next()
+		if (token.typeIs(TokenType.intLit))
+		{
+			decValue = token.value
+			tokenEnd = token.location.end
+			this.lexer.next()
+		}
+		if (token.typeIs(TokenType.ident) && ['f', 'F'].includes(token.value))
+		{
+			floatBits = 32
+			suffix = token.value
+			tokenEnd = token.location.end
+			this.lexer.next()
+		}
+		const floatToken = new Token()
+		const floatValue = `${intValue}.${decValue}${suffix}`
+		if (floatBits == 32)
+			floatToken.set(TokenType.float32Lit, floatValue)
+		else
+			floatToken.set(TokenType.float64Lit, floatValue)
+		floatToken.beginsAt(tokenStart)
+		floatToken.endsAt(tokenEnd)
+		floatToken.calcLength(this.lexer.file)
+		yield floatToken
+		yield *this.skipWhite()
 	}
 
 	*parseStringLiteral(): Generator<Token, boolean, undefined>
