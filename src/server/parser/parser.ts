@@ -181,11 +181,7 @@ export class Parser
 			return yield *this.parseInt();
 		else if (token.typeIs(TokenType.stringLit))
 			return yield *this.parseStringLiteral()
-		else
-		{
-			return false
-		}
-		return true
+		return false
 	}
 
 	*parseValue(): Generator<Token, boolean, undefined>
