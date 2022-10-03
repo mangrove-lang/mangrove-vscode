@@ -1,5 +1,5 @@
 import {TextDocument} from 'vscode-languageserver-textdocument'
-import {SemanticToken} from '../../providers/semanticTokens'
+import {SemanticToken, SemanticTokenTypes} from '../../providers/semanticTokens'
 import {Parser} from './parser'
 
 export function tokenise(document: TextDocument)
@@ -17,6 +17,7 @@ export function tokenise(document: TextDocument)
 			type: token.toSemanticType()
 		}
 		tokens.push(semanticToken)
+		console.info(`Translating token ${token} to semantic type ${SemanticTokenTypes[semanticToken.type]}`)
 	}
 	return tokens
 }
