@@ -183,4 +183,9 @@ export class Token
 		}
 		throw new Error(`Unhandled token type ${this._type}, cannot convert to semantic type`)
 	}
+
+	public toString(): string
+	{
+		return `<Token ${this._type}@${this._location.start.line}:${this.location.start.character} -> ${this._value}>`
+	}
 }
