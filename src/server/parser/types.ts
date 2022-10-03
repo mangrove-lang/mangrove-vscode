@@ -166,6 +166,11 @@ export class Token
 			return SemanticTokenTypes.comment
 		case TokenType.ident:
 			return SemanticTokenTypes.variable
+		case TokenType.binLit:
+		case TokenType.octLit:
+		case TokenType.hexLit:
+		case TokenType.intLit:
+			return SemanticTokenTypes.number
 		case TokenType.stringLit:
 		case TokenType.charLit:
 			return SemanticTokenTypes.string
