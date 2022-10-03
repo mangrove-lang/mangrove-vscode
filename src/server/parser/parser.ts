@@ -169,6 +169,13 @@ export class Parser
 		return true
 	}
 
+	*parseCharLiteral(): Generator<Token, boolean, undefined>
+	{
+		const token = this.lexer.token
+		yield token
+		return yield *this.match(TokenType.charLit)
+	}
+
 	*parseBool(): Generator<Token, boolean, undefined>
 	{
 		const token = this.lexer.token
@@ -199,6 +206,8 @@ export class Parser
 			return yield *this.parseInt();
 		else if (token.typeIs(TokenType.stringLit))
 			return yield *this.parseStringLiteral()
+		else if (token.typeIs(TokenType.charLit))
+			return yield *this.parseCharLiteral();
 		return (yield *this.parseBool()) || (yield *this.parseNull())
 	}
 
