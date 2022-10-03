@@ -3,8 +3,13 @@ import {Token, TokenType} from './types'
 import {
 	isNewLine,
 	isAlpha,
+	isDigit,
 	isAlphaNum,
 	isUnderscore,
+	isBeginBin,
+	isBeginHex,
+	isBin,
+	isOct,
 	isHex,
 	isNormalAlpha,
 	isSingleQuote,
@@ -214,6 +219,8 @@ export class Tokeniser
 			else
 				this._token.value = token
 		}
+		else if (isDigit(this.currentChar))
+			this.readIntToken()
 		else
 		{
 			this._token.set(TokenType.invalid)
@@ -254,6 +261,26 @@ export class Tokeniser
 		this.finaliseToken(TokenType.comment, comment)
 	}
 
+	readBinToken()
+	{
+		let str = ''
+		this._token.set(TokenType.binLit)
+		this.nextChar()
+		while (isBin(this.currentChar))
+			str += this.nextChar()
+		this._token.set(TokenType.binLit, str)
+	}
+
+	readOctToken()
+	{
+		let str = ''
+		this._token.set(TokenType.octLit)
+		this.nextChar()
+		while (isOct(this.currentChar))
+			str += this.nextChar()
+		this._token.set(TokenType.octLit, str)
+	}
+
 	readHexToken()
 	{
 		let str = ''
@@ -262,6 +289,26 @@ export class Tokeniser
 		while (isHex(this.currentChar))
 			str += this.nextChar()
 		this._token.set(TokenType.hexLit, str)
+	}
+
+	readIntToken()
+	{
+		let str = ''
+		this._token.set(TokenType.intLit)
+		if (this.currentChar == '0')
+		{
+			str += this.nextChar()
+			if (isBeginBin(this.currentChar))
+				return this.readBinToken()
+			else if (isBeginHex(this.currentChar))
+				return this.readHexToken()
+			else if (isOct(this.currentChar))
+				return this.readOctToken()
+		}
+
+		while (isDigit(this.currentChar))
+			str += this.nextChar()
+		this._token.set(TokenType.intLit, str)
 	}
 
 	readUnicode(norm: string, esc: string): string
