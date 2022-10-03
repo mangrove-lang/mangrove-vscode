@@ -67,6 +67,29 @@ export class Token
 	private _location: Range = {start: {line: -1, character: -1}, end: {line: -1, character: -1}}
 	private _length = 0
 
+	constructor(token?: Token)
+	{
+		if (token)
+		{
+			this._type = token._type
+			this._value = token._value
+			this._location =
+			{
+				start:
+				{
+					line: token._location.start.line,
+					character: token._location.start.character
+				},
+				end:
+				{
+					line: token._location.end.line,
+					character: token._location.end.character
+				}
+			}
+			this._length = token._length
+		}
+	}
+
 	get type()
 	{
 		return this._type
@@ -132,6 +155,8 @@ export class Token
 	{
 		return types.some(type => this._type == type, this)
 	}
+
+	public clone(): Token { return new Token(this) }
 
 	public toSemanticType(): SemanticTokenTypes
 	{
