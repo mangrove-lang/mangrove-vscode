@@ -2,6 +2,16 @@ import {TextDocument} from 'vscode-languageserver-textdocument'
 import {Tokeniser} from './tokeniser'
 import {Token, TokenType} from './types'
 
+function isInt(token: Token): boolean
+{
+	return token.typeIs(
+		TokenType.binLit,
+		TokenType.octLit,
+		TokenType.hexLit,
+		TokenType.intLit
+	)
+}
+
 export class Parser
 {
 	private lexer: Tokeniser
@@ -61,6 +71,54 @@ export class Parser
 		return true
 	}
 
+	*parseBin(): Generator<Token, boolean, undefined>
+	{
+		const token = this.lexer.token
+		yield token
+		return yield *this.match(TokenType.binLit);
+	}
+
+	*parseOct(): Generator<Token, boolean, undefined>
+	{
+		const token = this.lexer.token
+		yield token
+		return yield *this.match(TokenType.octLit);
+	}
+
+	*parseHex(skip: boolean = true): Generator<Token, boolean, undefined>
+	{
+		const token = this.lexer.token
+		if (!token.typeIs(TokenType.hexLit))
+			return false
+		yield token
+		this.lexer.next()
+		if (skip)
+			yield *this.skipWhite()
+		return true
+	}
+
+	*parseInt(allowFloat: boolean = true): Generator<Token, boolean, undefined>
+	{
+		const intToken = this.lexer.token.clone()
+		if (intToken.typeIs(TokenType.binLit))
+			return yield *this.parseBin()
+		else if (intToken.typeIs(TokenType.octLit))
+			return yield *this.parseOct()
+		else if (intToken.typeIs(TokenType.hexLit))
+			return yield *this.parseHex()
+		else if (intToken.typeIs(TokenType.intLit))
+		{
+			//const str = token.value
+			this.lexer.next()
+			if (allowFloat && token.typeIs(TokenType.dot))
+				return false
+			yield intToken
+			yield *this.skipWhite()
+			return true
+		}
+		return false
+	}
+
 	*parseStringLiteral(): Generator<Token, boolean, undefined>
 	{
 		const token = this.lexer.token
@@ -82,6 +140,8 @@ export class Parser
 			console.error('Contant expected, got invalid token instead')
 			return false
 		}
+		else if (isInt(token))
+			return yield *this.parseInt();
 		else if (token.typeIs(TokenType.stringLit))
 			return yield *this.parseStringLiteral()
 		else
