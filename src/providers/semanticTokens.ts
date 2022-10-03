@@ -2,7 +2,7 @@ export enum SemanticTokenTypes
 {
 	type = 0,
 	class = 1,
-	enum = 2,
+	enumMember = 2,
 	parameter = 3,
 	variable = 4,
 	function = 5,
@@ -12,7 +12,8 @@ export enum SemanticTokenTypes
 	string = 9,
 	number = 10,
 	templateType = 11,
-	templateFunction = 12
+	templateFunction = 12,
+	const = 13
 }
 
 export interface SemanticToken

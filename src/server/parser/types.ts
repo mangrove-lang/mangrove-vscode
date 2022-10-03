@@ -178,7 +178,6 @@ export class Token
 		case TokenType.stringLit:
 		case TokenType.charLit:
 			return SemanticTokenTypes.string
-		//case TokenType.boolLit:
 		case TokenType.deleteStmt:
 		case TokenType.newStmt:
 		case TokenType.returnStmt:
@@ -189,6 +188,9 @@ export class Token
 		case TokenType.doStmt:
 		case TokenType.visibility:
 			return SemanticTokenTypes.keyword
+		case TokenType.boolLit:
+		case TokenType.nullptrLit:
+			return SemanticTokenTypes.const
 		}
 		throw new Error(`Unhandled token type ${this._type}, cannot convert to semantic type`)
 	}
