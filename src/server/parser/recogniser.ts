@@ -15,7 +15,10 @@ export function isAlpha(c: string)
 export function isDigit(c: string) { return c >= '0' && c <= '9' }
 export function isAlphaNum(c: string) { return isAlpha(c) || isDigit(c) }
 export function isUnderscore(c: string) { return c == '_' }
-
+export function isBeginBin(c: string) { return c == 'B' || c == 'b' }
+export function isBeginHex(c: string) { return c == 'X' || c == 'x' }
+export function isBin(c: string) { return c == '0' || c == '1' }
+export function isOct(c: string) { return c >= '0' && c <= '7' }
 
 export function isHex(c: string)
 {
