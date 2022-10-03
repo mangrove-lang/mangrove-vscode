@@ -169,6 +169,24 @@ export class Parser
 		return true
 	}
 
+	*parseBool(): Generator<Token, boolean, undefined>
+	{
+		const token = this.lexer.token
+		if (!token.typeIs(TokenType.boolLit))
+			return false
+		yield token
+		return yield *this.match(TokenType.boolLit)
+	}
+
+	*parseNull(): Generator<Token, boolean, undefined>
+	{
+		const token = this.lexer.token
+		if (!token.typeIs(TokenType.nullptrLit))
+			return false
+		yield token
+		return yield *this.match(TokenType.nullptrLit)
+	}
+
 	*parseConst(): Generator<Token, boolean, undefined>
 	{
 		const token = this.lexer.token
@@ -181,7 +199,7 @@ export class Parser
 			return yield *this.parseInt();
 		else if (token.typeIs(TokenType.stringLit))
 			return yield *this.parseStringLiteral()
-		return false
+		return (yield *this.parseBool()) || (yield *this.parseNull())
 	}
 
 	*parseValue(): Generator<Token, boolean, undefined>
