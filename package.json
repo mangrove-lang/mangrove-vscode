@@ -40,6 +40,7 @@
 		"installDevExtension": "npm install && ./node_modules/.bin/vsce package -o ./build/mangrove-vscode-dev.vsix && code --install-extension ./build/mangrove-vscode-dev.vsix"
 	},
 	"dependencies": {
+		"ts-results": "^3.3.0",
 		"vscode-languageclient": "^7.0.0",
 		"vscode-languageserver": "^7.0.0",
 		"vscode-languageserver-textdocument": "^1.0.7"
