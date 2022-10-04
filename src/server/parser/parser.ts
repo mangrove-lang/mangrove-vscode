@@ -64,7 +64,7 @@ export class Parser
 		if (comments)
 		{
 			for (const comment of comments)
-				yield comment.token
+				yield *comment.yieldTokens()
 		}
 		return !!comments
 	}
@@ -86,7 +86,7 @@ export class Parser
 		if (comments)
 		{
 			for (const comment of comments)
-				yield comment.token
+				yield *comment.yieldTokens()
 		}
 		return !!comments
 	}
@@ -99,7 +99,7 @@ export class Parser
 		if (comments)
 		{
 			for (const comment of comments)
-				yield comment.token
+				yield *comment.yieldTokens()
 		}
 		return !!comments
 	}
@@ -114,12 +114,8 @@ export class Parser
 		if (skip)
 		{
 			const comments = this.skipWhite()
-			if (comments)
-			{
-				for (const comment of comments)
-					yield comment.token
-			}
-			return !!comments
+			for (const comment of comments)
+				yield *comment.yieldTokens()
 		}
 		return true
 	}
@@ -144,12 +140,9 @@ export class Parser
 			}
 			yield intToken
 			const comments = this.skipWhite()
-			if (comments)
-			{
-				for (const comment of comments)
-					yield comment.token
-			}
-			return !!comments
+			for (const comment of comments)
+				yield *comment.yieldTokens()
+			return true
 		}
 		return false
 	}
@@ -186,11 +179,8 @@ export class Parser
 		floatToken.calcLength(this.lexer.file)
 		yield floatToken
 		const comments = this.skipWhite()
-		if (comments)
-		{
-			for (const comment of comments)
-				yield comment.token
-		}
+		for (const comment of comments)
+			yield *comment.yieldTokens()
 	}
 
 	*parseStringLiteral(): Generator<Token, boolean, undefined>
@@ -205,7 +195,7 @@ export class Parser
 			if (comments)
 			{
 				for (const comment of comments)
-					yield comment.token
+					yield *comment.yieldTokens()
 			}
 		}
 		return true
@@ -219,7 +209,7 @@ export class Parser
 		if (comments)
 		{
 			for (const comment of comments)
-				yield comment.token
+				yield *comment.yieldTokens()
 		}
 		return !!comments
 	}
@@ -234,7 +224,7 @@ export class Parser
 		if (comments)
 		{
 			for (const comment of comments)
-				yield comment.token
+				yield *comment.yieldTokens()
 		}
 		return !!comments
 	}
@@ -249,7 +239,7 @@ export class Parser
 		if (comments)
 		{
 			for (const comment of comments)
-				yield comment.token
+				yield *comment.yieldTokens()
 		}
 		return !!comments
 	}
@@ -295,8 +285,11 @@ export class Parser
 		const lhs = yield *this.parseValue()
 		if (lhs && token.typeIs(TokenType.relOp, TokenType.equOp))
 		{
-			if (!this.match(TokenType.relOp, TokenType.equOp))
+			const comments = this.match(TokenType.relOp, TokenType.equOp)
+			if (!comments)
 				return false
+			for (const comment of comments)
+				yield *comment.yieldTokens()
 			return yield *this.parseValue()
 		}
 		return lhs
@@ -325,7 +318,7 @@ export class Parser
 			if (comments)
 			{
 				for (const comment of comments)
-					yield comment.token
+					yield *comment.yieldTokens()
 			}
 			lhs = yield *this.parseRelation()
 		}
@@ -347,7 +340,7 @@ export class Parser
 			if (comments)
 			{
 				for (const comment of comments)
-					yield comment.token
+					yield *comment.yieldTokens()
 			}
 		}
 		return expr
@@ -363,7 +356,7 @@ export class Parser
 		if (comments)
 		{
 			for (const comment of comments)
-				yield comment.token
+				yield *comment.yieldTokens()
 		}
 		const cond = yield *this.parseLogicExpr()
 		if (!cond)
@@ -381,7 +374,7 @@ export class Parser
 		if (comments)
 		{
 			for (const comment of comments)
-				yield comment.token
+				yield *comment.yieldTokens()
 		}
 		return !!comments
 	}
@@ -396,7 +389,7 @@ export class Parser
 		if (comments)
 		{
 			for (const comment of comments)
-				yield comment.token
+				yield *comment.yieldTokens()
 		}
 		return yield *this.parseBlock()
 	}
@@ -436,13 +429,13 @@ export class Parser
 		if (comments)
 		{
 			for (const comment of comments)
-				yield comment.token
+				yield *comment.yieldTokens()
 		}
 		comments = this.match(TokenType.semi)
 		if (comments)
 		{
 			for (const comment of comments)
-				yield comment.token
+				yield *comment.yieldTokens()
 		}
 		return !!comments
 	}
@@ -456,7 +449,7 @@ export class Parser
 		if (comments)
 		{
 			for (const comment of comments)
-				yield comment.token
+				yield *comment.yieldTokens()
 		}
 		while (!token.typeIs(TokenType.rightBrace))
 		{
@@ -468,7 +461,7 @@ export class Parser
 		if (comments)
 		{
 			for (const comment of comments)
-				yield comment.token
+				yield *comment.yieldTokens()
 		}
 		return !!comments
 	}
@@ -490,11 +483,8 @@ export class Parser
 	{
 		const token = this.lexer.next()
 		const comments = this.skipWhite()
-		if (comments)
-		{
-			for (const comment of comments)
-				yield comment.token
-		}
+		for (const comment of comments)
+			yield *comment.yieldTokens()
 		while (!token.typeIs(TokenType.eof))
 		{
 			const stmt = yield *this.parseExtStatement()
