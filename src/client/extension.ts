@@ -82,9 +82,12 @@ export class ClientWorkspace
 	public async start()
 	{
 		const client = await createLanguageClient(this.folder)
-		client.onDidChangeState(({newState}) => {
+		client.onDidChangeState(({newState}) =>
+		{
 			if (newState === langClient.State.Starting)
 				this._progress.value = {state: 'progress', message: 'Starting'}
+			else if (newState === langClient.State.Running)
+				this._progress.value = {state: 'ready'}
 			else if (newState === langClient.State.Stopped)
 				this._progress.value = {state: 'standby'}
 		})
