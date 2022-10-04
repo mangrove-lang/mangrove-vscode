@@ -1,4 +1,5 @@
 import {Position, TextDocument} from 'vscode-languageserver-textdocument'
+import {ASTComment, ASTNode} from '../ast/types'
 import {Tokeniser} from './tokeniser'
 import {Token, TokenType} from './types'
 
@@ -28,28 +29,29 @@ export class Parser
 		return this._ident.valid
 	}
 
-	*match(...tokenTypes: TokenType[]): Generator<Token, boolean, undefined>
+	match(...tokenTypes: TokenType[]): ASTNode[] | undefined
 	{
 		const token = this.lexer.token
 		if (token.typeIs(...tokenTypes))
 		{
 			this.lexer.next()
-			yield *this.skipWhite()
-			return true
+			return this.skipWhite()
 		}
 		//expected(tokenType, token)
-		return false
+		return
 	}
 
-	*skipWhite(): Generator<Token, void, undefined>
+	skipWhite(): ASTNode[]
 	{
+		let comments = new Array<ASTNode>()
 		const token = this.lexer.token
 		while (token.typeIs(TokenType.whitespace, TokenType.newline, TokenType.comment))
 		{
 			if (token.typeIs(TokenType.comment))
-				yield token
+				comments.push(new ASTComment(token))
 			this.lexer.next()
 		}
+		return comments
 	}
 
 	*parseIdentStr(): Generator<Token, boolean, undefined>
@@ -58,8 +60,13 @@ export class Parser
 		if (!token.typeIs(TokenType.ident))
 			return false
 		yield token
-		yield *this.match(TokenType.ident)
-		return true
+		const comments = this.match(TokenType.ident)
+		if (comments)
+		{
+			for (const comment of comments)
+				yield comment.token
+		}
+		return !!comments
 	}
 
 	*parseIdent(): Generator<Token, boolean, undefined>
@@ -75,14 +82,26 @@ export class Parser
 	{
 		const token = this.lexer.token
 		yield token
-		return yield *this.match(TokenType.binLit);
+		const comments = this.match(TokenType.binLit)
+		if (comments)
+		{
+			for (const comment of comments)
+				yield comment.token
+		}
+		return !!comments
 	}
 
 	*parseOct(): Generator<Token, boolean, undefined>
 	{
 		const token = this.lexer.token
 		yield token
-		return yield *this.match(TokenType.octLit);
+		const comments = this.match(TokenType.octLit)
+		if (comments)
+		{
+			for (const comment of comments)
+				yield comment.token
+		}
+		return !!comments
 	}
 
 	*parseHex(skip: boolean = true): Generator<Token, boolean, undefined>
@@ -93,7 +112,15 @@ export class Parser
 		yield token
 		this.lexer.next()
 		if (skip)
-			yield *this.skipWhite()
+		{
+			const comments = this.skipWhite()
+			if (comments)
+			{
+				for (const comment of comments)
+					yield comment.token
+			}
+			return !!comments
+		}
 		return true
 	}
 
@@ -116,8 +143,13 @@ export class Parser
 				return true
 			}
 			yield intToken
-			yield *this.skipWhite()
-			return true
+			const comments = this.skipWhite()
+			if (comments)
+			{
+				for (const comment of comments)
+					yield comment.token
+			}
+			return !!comments
 		}
 		return false
 	}
@@ -153,7 +185,12 @@ export class Parser
 		floatToken.endsAt(tokenEnd)
 		floatToken.calcLength(this.lexer.file)
 		yield floatToken
-		yield *this.skipWhite()
+		const comments = this.skipWhite()
+		if (comments)
+		{
+			for (const comment of comments)
+				yield comment.token
+		}
 	}
 
 	*parseStringLiteral(): Generator<Token, boolean, undefined>
@@ -164,7 +201,12 @@ export class Parser
 		while (token.typeIs(TokenType.stringLit))
 		{
 			yield token
-			yield *this.match(TokenType.stringLit)
+			const comments = this.match(TokenType.stringLit)
+			if (comments)
+			{
+				for (const comment of comments)
+					yield comment.token
+			}
 		}
 		return true
 	}
@@ -173,7 +215,13 @@ export class Parser
 	{
 		const token = this.lexer.token
 		yield token
-		return yield *this.match(TokenType.charLit)
+		const comments = this.match(TokenType.charLit)
+		if (comments)
+		{
+			for (const comment of comments)
+				yield comment.token
+		}
+		return !!comments
 	}
 
 	*parseBool(): Generator<Token, boolean, undefined>
@@ -182,7 +230,13 @@ export class Parser
 		if (!token.typeIs(TokenType.boolLit))
 			return false
 		yield token
-		return yield *this.match(TokenType.boolLit)
+		const comments = this.match(TokenType.boolLit)
+		if (comments)
+		{
+			for (const comment of comments)
+				yield comment.token
+		}
+		return !!comments
 	}
 
 	*parseNull(): Generator<Token, boolean, undefined>
@@ -191,7 +245,13 @@ export class Parser
 		if (!token.typeIs(TokenType.nullptrLit))
 			return false
 		yield token
-		return yield *this.match(TokenType.nullptrLit)
+		const comments = this.match(TokenType.nullptrLit)
+		if (comments)
+		{
+			for (const comment of comments)
+				yield comment.token
+		}
+		return !!comments
 	}
 
 	*parseConst(): Generator<Token, boolean, undefined>
@@ -220,13 +280,12 @@ export class Parser
 			this._ident.reset()
 			return true
 		}
-		const const_ = yield *this.parseConst()
-		if (const_)
+		if (yield *this.parseConst())
 			return true
 		const ident = yield *this.parseIdent()
-		if (ident)
-		{
-		}
+		//if (ident)
+		//{
+		//}
 		return ident
 	}
 
@@ -262,7 +321,12 @@ export class Parser
 		{
 			if (!token.typeIs(TokenType.logicOp))
 				break
-			yield *this.match(TokenType.logicOp)
+			const comments = this.match(TokenType.logicOp)
+			if (comments)
+			{
+				for (const comment of comments)
+					yield comment.token
+			}
 			lhs = yield *this.parseRelation()
 		}
 		return true
@@ -278,7 +342,14 @@ export class Parser
 		})(this)
 		const token = this.lexer.token
 		if (expr && token.typeIs(TokenType.semi))
-			yield *this.match(TokenType.semi)
+		{
+			const comments = this.match(TokenType.semi)
+			if (comments)
+			{
+				for (const comment of comments)
+					yield comment.token
+			}
+		}
 		return expr
 	}
 
@@ -288,7 +359,12 @@ export class Parser
 		if (!token.typeIs(TokenType.ifStmt))
 			return false
 		yield token
-		yield *this.match(TokenType.ifStmt)
+		const comments = this.match(TokenType.ifStmt)
+		if (comments)
+		{
+			for (const comment of comments)
+				yield comment.token
+		}
 		const cond = yield *this.parseLogicExpr()
 		if (!cond)
 			return false
@@ -301,8 +377,13 @@ export class Parser
 		if (!token.typeIs(TokenType.elifStmt))
 			return false
 		yield token
-		yield *this.match(TokenType.elifStmt)
-		return true
+		const comments = this.match(TokenType.elifStmt)
+		if (comments)
+		{
+			for (const comment of comments)
+				yield comment.token
+		}
+		return !!comments
 	}
 
 	*parseElseExpr(): Generator<Token, boolean, undefined>
@@ -311,7 +392,12 @@ export class Parser
 		if (!token.typeIs(TokenType.elseStmt))
 			return false
 		yield token
-		yield *this.match(TokenType.elseStmt)
+		const comments = this.match(TokenType.elseStmt)
+		if (comments)
+		{
+			for (const comment of comments)
+				yield comment.token
+		}
 		return yield *this.parseBlock()
 	}
 
@@ -346,8 +432,19 @@ export class Parser
 		if (!token.typeIs(TokenType.visibility))
 			return false
 		yield token
-		yield *this.match(TokenType.visibility)
-		return !(yield *this.match(TokenType.semi))
+		let comments = this.match(TokenType.visibility)
+		if (comments)
+		{
+			for (const comment of comments)
+				yield comment.token
+		}
+		comments = this.match(TokenType.semi)
+		if (comments)
+		{
+			for (const comment of comments)
+				yield comment.token
+		}
+		return !!comments
 	}
 
 	*parseBraceBlock(): Generator<Token, boolean, undefined>
@@ -355,14 +452,25 @@ export class Parser
 		const token = this.lexer.token
 		if (!token.typeIs(TokenType.leftBrace))
 			return yield *this.parseStatement()
-		yield *this.match(TokenType.leftBrace)
+		let comments = this.match(TokenType.leftBrace)
+		if (comments)
+		{
+			for (const comment of comments)
+				yield comment.token
+		}
 		while (!token.typeIs(TokenType.rightBrace))
 		{
 			const stmt = yield *this.parseStatement()
 			if (!stmt)
 				return false
 		}
-		return yield *this.match(TokenType.rightBrace)
+		comments = this.match(TokenType.rightBrace)
+		if (comments)
+		{
+			for (const comment of comments)
+				yield comment.token
+		}
+		return !!comments
 	}
 
 	*parseBlock(): Generator<Token, boolean, undefined>
@@ -381,8 +489,12 @@ export class Parser
 	public *tokenise(): Generator<Token, void, undefined>
 	{
 		const token = this.lexer.next()
-		for (const token of this.skipWhite())
-			yield token
+		const comments = this.skipWhite()
+		if (comments)
+		{
+			for (const comment of comments)
+				yield comment.token
+		}
 		while (!token.typeIs(TokenType.eof))
 		{
 			const stmt = yield *this.parseExtStatement()
