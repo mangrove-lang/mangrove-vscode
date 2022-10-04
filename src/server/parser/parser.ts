@@ -1,5 +1,7 @@
+import {Ok, Err, Result} from 'ts-results'
 import {Position, TextDocument} from 'vscode-languageserver-textdocument'
-import {ASTComment, ASTNode} from '../ast/types'
+import {ASTInt} from '../ast/literals'
+import {ASTComment, ASTIntType, ASTNode} from '../ast/types'
 import {Tokeniser} from './tokeniser'
 import {Token, TokenType} from './types'
 
@@ -11,6 +13,15 @@ function isInt(token: Token): boolean
 		TokenType.hexLit,
 		TokenType.intLit
 	)
+}
+
+type ParsingErrors = 'UnreachableState'
+
+function *yieldTokens(node: Result<ASTNode, ParsingErrors>)
+{
+	if (node.ok)
+		yield *node.val.yieldTokens()
+	return node.ok
 }
 
 export class Parser
@@ -78,57 +89,45 @@ export class Parser
 		return true
 	}
 
-	*parseBin(): Generator<Token, boolean, undefined>
+	parseBin(): Result<ASTNode, ParsingErrors>
 	{
-		const token = this.lexer.token
-		yield token
-		const comments = this.match(TokenType.binLit)
-		if (comments)
-		{
-			for (const comment of comments)
-				yield *comment.yieldTokens()
-		}
-		return !!comments
+		const node = new ASTInt(ASTIntType.bin, this.lexer.token)
+		const match = this.match(TokenType.binLit)
+		if (!match)
+			return Err('UnreachableState')
+		node.add(match)
+		return Ok(node)
 	}
 
-	*parseOct(): Generator<Token, boolean, undefined>
+	parseOct(): Result<ASTNode, ParsingErrors>
 	{
-		const token = this.lexer.token
-		yield token
-		const comments = this.match(TokenType.octLit)
-		if (comments)
-		{
-			for (const comment of comments)
-				yield *comment.yieldTokens()
-		}
-		return !!comments
+		const node = new ASTInt(ASTIntType.oct, this.lexer.token)
+		const match = this.match(TokenType.octLit)
+		if (!match)
+			return Err('UnreachableState')
+		node.add(match)
+		return Ok(node)
 	}
 
-	*parseHex(skip: boolean = true): Generator<Token, boolean, undefined>
+	parseHex(): Result<ASTNode, ParsingErrors>
 	{
-		const token = this.lexer.token
-		if (!token.typeIs(TokenType.hexLit))
-			return false
-		yield token
-		this.lexer.next()
-		if (skip)
-		{
-			const comments = this.skipWhite()
-			for (const comment of comments)
-				yield *comment.yieldTokens()
-		}
-		return true
+		const node = new ASTInt(ASTIntType.hex, this.lexer.token)
+		const match = this.match(TokenType.hexLit)
+		if (!match)
+			return Err('UnreachableState')
+		node.add(match)
+		return Ok(node)
 	}
 
 	*parseInt(allowFloat: boolean = true): Generator<Token, boolean, undefined>
 	{
 		const intToken = this.lexer.token.clone()
 		if (intToken.typeIs(TokenType.binLit))
-			return yield *this.parseBin()
+			return yield *yieldTokens(this.parseBin())
 		else if (intToken.typeIs(TokenType.octLit))
-			return yield *this.parseOct()
+			return yield *yieldTokens(this.parseOct())
 		else if (intToken.typeIs(TokenType.hexLit))
-			return yield *this.parseHex()
+			return yield *yieldTokens(this.parseHex())
 		else if (intToken.typeIs(TokenType.intLit))
 		{
 			const token = this.lexer.token

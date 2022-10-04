@@ -1,4 +1,3 @@
-import { channel } from 'diagnostics_channel'
 import {SemanticToken, SemanticTokenTypes} from '../../providers/semanticTokens'
 import {Token} from '../parser/types'
 
@@ -82,9 +81,14 @@ export class ASTNodeData
 
 	constructor(token: Token) { this._token = token.clone() }
 
-	add(node: ASTNode) { this._children.push(node) }
 	get children() { return this._children }
 	get token() { return this._token } // XXX: Needs removing when the parser is converted.
+
+	add(nodes: ASTNode[])
+	{
+		for (const node of nodes)
+			this._children.push(node)
+	}
 
 	protected buildSemanticToken(semanticType: SemanticTokenTypes)
 	{
