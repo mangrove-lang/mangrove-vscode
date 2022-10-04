@@ -37,11 +37,11 @@ export class SymbolType
 
 export class Symbol
 {
-	private readonly _ident: string
+	private readonly _ident?: string
 	private _type: SymbolType = new SymbolType()
 	private _struct?: SymbolStruct
 
-	constructor(ident: string)
+	constructor(ident?: string)
 	{
 		this._ident = ident
 	}
