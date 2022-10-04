@@ -121,26 +121,25 @@ export class Parser
 
 	*parseInt(allowFloat: boolean = true): Generator<Token, boolean, undefined>
 	{
-		const intToken = this.lexer.token.clone()
-		if (intToken.typeIs(TokenType.binLit))
+		const token = this.lexer.token
+		if (token.typeIs(TokenType.binLit))
 			return yield *yieldTokens(this.parseBin())
-		else if (intToken.typeIs(TokenType.octLit))
+		else if (token.typeIs(TokenType.octLit))
 			return yield *yieldTokens(this.parseOct())
-		else if (intToken.typeIs(TokenType.hexLit))
+		else if (token.typeIs(TokenType.hexLit))
 			return yield *yieldTokens(this.parseHex())
-		else if (intToken.typeIs(TokenType.intLit))
+		else if (token.typeIs(TokenType.intLit))
 		{
-			const token = this.lexer.token
+			const node = new ASTInt(ASTIntType.dec, this.lexer.token)
+			const intToken = node.token
 			this.lexer.next()
 			if (allowFloat && token.typeIs(TokenType.dot))
 			{
 				yield *this.parseFloat(intToken.value, intToken.location.start)
 				return true
 			}
-			yield intToken
-			const comments = this.skipWhite()
-			for (const comment of comments)
-				yield *comment.yieldTokens()
+			node.add(this.skipWhite())
+			yield *node.yieldTokens()
 			return true
 		}
 		return false
