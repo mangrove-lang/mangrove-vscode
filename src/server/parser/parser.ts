@@ -17,10 +17,14 @@ function isInt(token: Token): boolean
 
 type ParsingErrors = 'UnreachableState'
 
-function *yieldTokens(node: Result<ASTNode, ParsingErrors>)
+function *yieldTokens(node: Result<ASTNode | undefined, ParsingErrors>)
 {
 	if (node.ok)
-		yield *node.val.yieldTokens()
+	{
+		const astNode = node.val
+		if (astNode)
+			yield *astNode.yieldTokens()
+	}
 	return node.ok
 }
 
@@ -119,30 +123,25 @@ export class Parser
 		return Ok(node)
 	}
 
-	*parseInt(allowFloat: boolean = true): Generator<Token, boolean, undefined>
+	parseInt(allowFloat: boolean = true): Result<ASTNode | undefined, ParsingErrors>
 	{
 		const token = this.lexer.token
 		if (token.typeIs(TokenType.binLit))
-			return yield *yieldTokens(this.parseBin())
+			return this.parseBin()
 		else if (token.typeIs(TokenType.octLit))
-			return yield *yieldTokens(this.parseOct())
+			return this.parseOct()
 		else if (token.typeIs(TokenType.hexLit))
-			return yield *yieldTokens(this.parseHex())
+			return this.parseHex()
 		else if (token.typeIs(TokenType.intLit))
 		{
 			const node = new ASTInt(ASTIntType.dec, this.lexer.token)
-			const intToken = node.token
 			this.lexer.next()
 			if (allowFloat && token.typeIs(TokenType.dot))
-			{
-				yield *this.parseFloat(intToken.value, intToken.location.start).yieldTokens()
-				return true
-			}
+				return Ok(this.parseFloat(node.token.value, node.token.location.start))
 			node.add(this.skipWhite())
-			yield *node.yieldTokens()
-			return true
+			return Ok(node)
 		}
-		return false
+		return Ok(undefined)
 	}
 
 	parseFloat(intValue: string, tokenStart: Position): ASTNode
@@ -250,7 +249,7 @@ export class Parser
 			return false
 		}
 		else if (isInt(token))
-			return yield *this.parseInt();
+			return yield *yieldTokens(this.parseInt());
 		else if (token.typeIs(TokenType.stringLit))
 			return yield *this.parseStringLiteral()
 		else if (token.typeIs(TokenType.charLit))
