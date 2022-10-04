@@ -1,6 +1,6 @@
 import {Ok, Err, Result} from 'ts-results'
 import {Position, TextDocument} from 'vscode-languageserver-textdocument'
-import {ASTInt} from '../ast/literals'
+import {ASTFloat, ASTInt} from '../ast/literals'
 import {ASTComment, ASTIntType, ASTNode} from '../ast/types'
 import {Tokeniser} from './tokeniser'
 import {Token, TokenType} from './types'
@@ -135,7 +135,7 @@ export class Parser
 			this.lexer.next()
 			if (allowFloat && token.typeIs(TokenType.dot))
 			{
-				yield *this.parseFloat(intToken.value, intToken.location.start)
+				yield *this.parseFloat(intToken.value, intToken.location.start).yieldTokens()
 				return true
 			}
 			node.add(this.skipWhite())
@@ -145,7 +145,7 @@ export class Parser
 		return false
 	}
 
-	*parseFloat(intValue: string, tokenStart: Position): Generator<Token, void, undefined>
+	parseFloat(intValue: string, tokenStart: Position): ASTNode
 	{
 		let decValue = ''
 		let suffix = ''
@@ -175,10 +175,9 @@ export class Parser
 		floatToken.beginsAt(tokenStart)
 		floatToken.endsAt(tokenEnd)
 		floatToken.calcLength(this.lexer.file)
-		yield floatToken
-		const comments = this.skipWhite()
-		for (const comment of comments)
-			yield *comment.yieldTokens()
+		const node = new ASTFloat(floatBits, floatToken)
+		node.add(this.skipWhite())
+		return node
 	}
 
 	*parseStringLiteral(): Generator<Token, boolean, undefined>
