@@ -160,7 +160,7 @@ export class Token
 		return types.some(type => this._type == type, this)
 	}
 
-	public clone(): Token { return new Token(this) }
+	public clone() { return new Token(this) }
 
 	public toSemanticType(): SemanticTokenTypes
 	{
@@ -195,8 +195,16 @@ export class Token
 		throw new Error(`Unhandled token type ${this._type}, cannot convert to semantic type`)
 	}
 
-	public toString(): string
+	public toString()
 	{
 		return `<Token ${this._type}@${this._location.start.line}:${this.location.start.character} -> ${this._value}>`
+	}
+
+	public isEqual(token: Token)
+	{
+		return this._type == token._type &&
+			this._value == token._value &&
+			this._location == token._location &&
+			this._length == token._length
 	}
 }
