@@ -1,5 +1,6 @@
 import {Ok, Err, Result} from 'ts-results'
 import {Position, TextDocument} from 'vscode-languageserver-textdocument'
+import {ASTIdent} from '../ast/values'
 import {ASTBool, ASTCharLit, ASTFloat, ASTInt, ASTNull, ASTStringLit} from '../ast/literals'
 import {ASTComment, ASTIntType, ASTNode} from '../ast/types'
 import {Tokeniser} from './tokeniser'
@@ -17,12 +18,12 @@ function isInt(token: Token): boolean
 
 type ParsingErrors = 'UnreachableState' | 'IncorrectToken'
 
-function isResultValid(result: Result<ASTNode | undefined, ParsingErrors>)
+function isResultValid<T>(result: Result<T | undefined, ParsingErrors>)
 {
 	return result.ok && result.val != undefined
 }
 
-function isResultDefined(result: Result<ASTNode | undefined, ParsingErrors>)
+function isResultDefined<T>(result: Result<T | undefined, ParsingErrors>)
 {
 	return isResultValid(result) || !result.ok
 }
@@ -37,6 +38,8 @@ function *yieldTokens(node: Result<ASTNode | undefined, ParsingErrors>)
 	}
 	return isResultValid(node)
 }
+
+type IdentAndComments = {token: Token, comments: ASTNode[]}
 
 export class Parser
 {
@@ -79,28 +82,30 @@ export class Parser
 		return comments
 	}
 
-	*parseIdentStr(): Generator<Token, boolean, undefined>
+	parseIdentStr() : Result<IdentAndComments | undefined, ParsingErrors>
 	{
-		const token = this.lexer.token
+		const token = this.lexer.token.clone()
 		if (!token.typeIsOneOf(TokenType.ident))
-			return false
-		yield token
-		const comments = this.match(TokenType.ident)
-		if (comments)
-		{
-			for (const comment of comments)
-				yield *comment.yieldTokens()
-		}
-		return !!comments
+			return Ok(undefined)
+		const match = this.match(TokenType.ident)
+		if (!match)
+			return Err('UnreachableState')
+		return Ok({token: token, comments: match})
 	}
 
-	*parseIdent(): Generator<Token, boolean, undefined>
+	parseIdent(): Result<ASTNode | undefined, ParsingErrors>
 	{
-		const ident = yield *this.parseIdentStr()
-		if (!ident)
-			return false
+		const match = this.parseIdentStr()
+		if (!match.ok)
+			return match
+		const value = match.val
+		if (value == undefined)
+			return Ok(undefined)
+		const {token: ident, comments} = value
 		// Do symbol table things.
-		return true
+		const node = new ASTIdent(ident, undefined)
+		node.add(comments)
+		return Ok(node)
 	}
 
 	parseBin(): Result<ASTNode, ParsingErrors>
@@ -182,7 +187,7 @@ export class Parser
 			floatToken.set(TokenType.float32Lit, floatValue)
 		else
 			floatToken.set(TokenType.float64Lit, floatValue)
-		
+
 		floatToken.beginsAt(tokenStart)
 		floatToken.endsAt(tokenEnd)
 		floatToken.calcLength(this.lexer.file)
@@ -275,7 +280,7 @@ export class Parser
 		}
 		if (yield *yieldTokens(this.parseConst()))
 			return true
-		const ident = yield *this.parseIdent()
+		const ident = yield *yieldTokens(this.parseIdent())
 		//if (ident)
 		//{
 		//}
