@@ -90,13 +90,15 @@ export class ASTNodeData
 			this._children.push(node)
 	}
 
-	protected buildSemanticToken(semanticType: SemanticTokenTypes)
+	protected buildSemanticToken(semanticType: SemanticTokenTypes, token?: Token)
 	{
-		const location = this._token.location
+		if (!token)
+			token = this._token
+		const location = token.location
 		return {
 			line: location.start.line,
 			character: location.start.character,
-			length: this._token.length,
+			length: token.length,
 			type: semanticType
 		} as SemanticToken
 	}
@@ -126,6 +128,5 @@ export class ASTComment extends ASTNodeData implements ASTNode
 	get valid() { return true }
 	get semanticType() { return SemanticTokenTypes.comment }
 
-	*semanticTokens(): Generator<SemanticToken, void, undefined>
-		{ yield this.buildSemanticToken(this.semanticType) }
+	*semanticTokens() { yield this.buildSemanticToken(this.semanticType) }
 }
