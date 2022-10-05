@@ -242,24 +242,24 @@ export class Parser
 		return Ok(node)
 	}
 
-	*parseConst(): Generator<Token, boolean, undefined>
+	parseConst(): Result<ASTNode | undefined, ParsingErrors>
 	{
 		const token = this.lexer.token
 		if (token.typeIs(TokenType.invalid))
 		{
 			console.error('Contant expected, got invalid token instead')
-			return false
+			return Err('IncorrectToken')
 		}
 		else if (isInt(token))
-			return yield *yieldTokens(this.parseInt())
+			return this.parseInt()
 		else if (token.typeIs(TokenType.stringLit))
-			return yield *yieldTokens(this.parseStringLiteral())
+			return this.parseStringLiteral()
 		else if (token.typeIs(TokenType.charLit))
-			return yield *yieldTokens(this.parseCharLiteral())
+			return this.parseCharLiteral()
 		const bool = this.parseBool()
-		if ((bool.ok && bool.val) || !bool.ok)
-			return yield *yieldTokens(bool)
-		return yield *yieldTokens(this.parseNull())
+		if (isResultDefined(bool))
+			return bool
+		return this.parseNull()
 	}
 
 	*parseValue(): Generator<Token, boolean, undefined>
@@ -271,7 +271,7 @@ export class Parser
 			this._ident.reset()
 			return true
 		}
-		if (yield *this.parseConst())
+		if (yield *yieldTokens(this.parseConst()))
 			return true
 		const ident = yield *this.parseIdent()
 		//if (ident)
