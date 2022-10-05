@@ -52,8 +52,7 @@ export class Symbol
 		this._type.assign(SymbolTypes.isStruct)
 	}
 
-	isEqual(symbol: Symbol)
-		{ return this._ident === symbol._ident && this._type.isEqual(symbol._type) }
+	isEqual(symbol: Symbol) { return this._ident === symbol._ident && this._type.isEqual(symbol._type) }
 
 	get value() { return this._ident }
 	set type(type: SymbolType) { this._type = type }
@@ -76,7 +75,7 @@ export class SymbolTable
 	{
 		if (this.table.has(ident))
 		{
-			console.error("Symbol already defined in current scope")
+			console.error('Symbol already defined in current scope')
 			return
 		}
 		// Check if ident is already in the table, if it is this must fail.
