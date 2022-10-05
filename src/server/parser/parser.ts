@@ -1,6 +1,6 @@
 import {Ok, Err, Result} from 'ts-results'
 import {Position, TextDocument} from 'vscode-languageserver-textdocument'
-import {ASTBool, ASTFloat, ASTInt, ASTNull} from '../ast/literals'
+import {ASTBool, ASTCharLit, ASTFloat, ASTInt, ASTNull, ASTStringLit} from '../ast/literals'
 import {ASTComment, ASTIntType, ASTNode} from '../ast/types'
 import {Tokeniser} from './tokeniser'
 import {Token, TokenType} from './types'
@@ -25,7 +25,7 @@ function *yieldTokens(node: Result<ASTNode | undefined, ParsingErrors>)
 		if (astNode)
 			yield *astNode.yieldTokens()
 	}
-	return node.ok
+	return node.ok && node.val != undefined
 }
 
 export class Parser
@@ -58,7 +58,7 @@ export class Parser
 
 	skipWhite(): ASTNode[]
 	{
-		let comments = new Array<ASTNode>()
+		const comments = new Array<ASTNode>()
 		const token = this.lexer.token
 		while (token.typeIs(TokenType.whitespace, TokenType.newline, TokenType.comment))
 		{
@@ -123,7 +123,7 @@ export class Parser
 		return Ok(node)
 	}
 
-	parseInt(allowFloat: boolean = true): Result<ASTNode | undefined, ParsingErrors>
+	parseInt(allowFloat = true): Result<ASTNode | undefined, ParsingErrors>
 	{
 		const token = this.lexer.token
 		if (token.typeIs(TokenType.binLit))
@@ -179,35 +179,31 @@ export class Parser
 		return node
 	}
 
-	*parseStringLiteral(): Generator<Token, boolean, undefined>
+	parseStringLiteral(): Result<ASTNode | undefined, ParsingErrors>
 	{
 		const token = this.lexer.token
 		if (!token.typeIs(TokenType.stringLit))
-			return false
+			return Ok(undefined)
+		const node = new ASTStringLit(token)
 		while (token.typeIs(TokenType.stringLit))
 		{
-			yield token
-			const comments = this.match(TokenType.stringLit)
-			if (comments)
-			{
-				for (const comment of comments)
-					yield *comment.yieldTokens()
-			}
+			node.addSegment(token)
+			const match = this.match(TokenType.stringLit)
+			if (!match)
+				return Err('UnreachableState')
+			node.add(match)
 		}
-		return true
+		return Ok(node)
 	}
 
-	*parseCharLiteral(): Generator<Token, boolean, undefined>
+	parseCharLiteral(): Result<ASTNode, ParsingErrors>
 	{
-		const token = this.lexer.token
-		yield token
-		const comments = this.match(TokenType.charLit)
-		if (comments)
-		{
-			for (const comment of comments)
-				yield *comment.yieldTokens()
-		}
-		return !!comments
+		const node = new ASTCharLit(this.lexer.token)
+		const match = this.match(TokenType.charLit)
+		if (!match)
+			return Err('UnreachableState')
+		node.add(match)
+		return Ok(node)
 	}
 
 	parseBool(): Result<ASTNode | undefined, ParsingErrors>
@@ -245,11 +241,11 @@ export class Parser
 			return false
 		}
 		else if (isInt(token))
-			return yield *yieldTokens(this.parseInt());
+			return yield *yieldTokens(this.parseInt())
 		else if (token.typeIs(TokenType.stringLit))
-			return yield *this.parseStringLiteral()
+			return yield *yieldTokens(this.parseStringLiteral())
 		else if (token.typeIs(TokenType.charLit))
-			return yield *this.parseCharLiteral();
+			return yield *yieldTokens(this.parseCharLiteral())
 		const bool = this.parseBool()
 		if ((bool.ok && bool.val) || !bool.ok)
 			return yield *yieldTokens(bool)
