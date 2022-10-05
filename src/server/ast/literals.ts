@@ -48,3 +48,41 @@ export class ASTFloat extends ASTNodeData implements ASTValue
 			yield *child.semanticTokens()
 	}
 }
+
+export class ASTBool extends ASTNodeData implements ASTValue
+{
+	private value: boolean
+
+	constructor(token: Token)
+	{
+		super(token)
+		this.value = token.value == 'true'
+	}
+
+	get type() { return ASTType.boolValue }
+	get valid() { return this._token.valid }
+	get semanticType() { return SemanticTokenTypes.const }
+	toString() { return `<Bool: ${this.value}>` }
+
+	*semanticTokens(): Generator<SemanticToken, void, undefined>
+	{
+		yield this.buildSemanticToken(this.semanticType)
+		for (const child of this.children)
+			yield *child.semanticTokens()
+	}
+}
+
+export class ASTNull extends ASTNodeData implements ASTValue
+{
+	get type() { return ASTType.nullValue }
+	get valid() { return this._token.valid }
+	get semanticType() { return SemanticTokenTypes.const }
+	toString() { return `<Null>` }
+
+	*semanticTokens(): Generator<SemanticToken, void, undefined>
+	{
+		yield this.buildSemanticToken(this.semanticType)
+		for (const child of this.children)
+			yield *child.semanticTokens()
+	}
+}
