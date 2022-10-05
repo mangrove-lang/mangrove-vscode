@@ -15,7 +15,17 @@ function isInt(token: Token): boolean
 	)
 }
 
-type ParsingErrors = 'UnreachableState'
+type ParsingErrors = 'UnreachableState' | 'IncorrectToken'
+
+function isResultValid(result: Result<ASTNode | undefined, ParsingErrors>)
+{
+	return result.ok && result.val != undefined
+}
+
+function isResultDefined(result: Result<ASTNode | undefined, ParsingErrors>)
+{
+	return isResultValid(result) || !result.ok
+}
 
 function *yieldTokens(node: Result<ASTNode | undefined, ParsingErrors>)
 {
@@ -25,7 +35,7 @@ function *yieldTokens(node: Result<ASTNode | undefined, ParsingErrors>)
 		if (astNode)
 			yield *astNode.yieldTokens()
 	}
-	return node.ok && node.val != undefined
+	return isResultValid(node)
 }
 
 export class Parser
