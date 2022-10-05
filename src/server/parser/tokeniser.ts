@@ -69,13 +69,18 @@ export class Tokeniser
 		return this._token
 	}
 
+	private filePosition(pos: Position)
+	{
+		const offset = this.file.offsetAt(pos)
+		return this.file.positionAt(offset)
+	}
+
 	nextChar()
 	{
 		const value = this.currentChar
 		if (this.position.line + 1 == this.file.lineCount)
 		{
-			const offset = this.file.offsetAt({line: this.position.line, character: this.position.character + 1})
-			const position = this.file.positionAt(offset)
+			const position = this.filePosition({line: this.position.line, character: this.position.character + 1})
 			if (this.position.line == position.line && this.position.character == position.character)
 			{
 				this.eof = true
@@ -84,9 +89,16 @@ export class Tokeniser
 			}
 		}
 
-		const offset = this.file.offsetAt({line: this.position.line, character: this.position.character + 1})
-		const position = this.file.positionAt(offset)
-		this.currentChar = this.file.getText({start: this.position, end: position})
+		let position = this.filePosition({line: this.position.line, character: this.position.character + 1})
+		const char = this.file.getText({start: this.position, end: position})
+		const codePoint = char.codePointAt(0)
+		if (codePoint && codePoint >= 0xd800 && codePoint < 0xdc00)
+		{
+			position = this.filePosition({line: this.position.line, character: this.position.character + 2})
+			this.currentChar = this.file.getText({start: this.position, end: position})
+		}
+		else
+			this.currentChar = char
 		this.position = position
 		return value
 	}

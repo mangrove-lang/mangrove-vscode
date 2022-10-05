@@ -36,7 +36,9 @@ export function isNormalAlpha(c: string)
 		(c >= '(' && c <= '[') ||
 		(c >= ']' && c <= '~') ||
 		(c >= '\u0080' && c <= '\uD7FF') ||
-		(c >= '\uE000' && c <= '\u{0010FFFF}')
+		// This is broken up like this because JS Surrogate Pair handling is stupid (bad).
+		(c >= '\uE000' && c <= '\uFFFF') ||
+		(c >= '\u{00010000}' && c <= '\u{0010FFFF}')
 }
 
 export function isSingleQuote(c: string) { return c == '\'' }
