@@ -1,6 +1,6 @@
 import {Ok, Err, Result} from 'ts-results'
 import {Position, TextDocument} from 'vscode-languageserver-textdocument'
-import {ASTFloat, ASTInt} from '../ast/literals'
+import {ASTBool, ASTFloat, ASTInt, ASTNull} from '../ast/literals'
 import {ASTComment, ASTIntType, ASTNode} from '../ast/types'
 import {Tokeniser} from './tokeniser'
 import {Token, TokenType} from './types'
@@ -210,34 +210,30 @@ export class Parser
 		return !!comments
 	}
 
-	*parseBool(): Generator<Token, boolean, undefined>
+	parseBool(): Result<ASTNode | undefined, ParsingErrors>
 	{
 		const token = this.lexer.token
 		if (!token.typeIs(TokenType.boolLit))
-			return false
-		yield token
-		const comments = this.match(TokenType.boolLit)
-		if (comments)
-		{
-			for (const comment of comments)
-				yield *comment.yieldTokens()
-		}
-		return !!comments
+			return Ok(undefined)
+		const node = new ASTBool(token)
+		const match = this.match(TokenType.boolLit)
+		if (!match)
+			return Err('UnreachableState')
+		node.add(match)
+		return Ok(node)
 	}
 
-	*parseNull(): Generator<Token, boolean, undefined>
+	parseNull(): Result<ASTNode | undefined, ParsingErrors>
 	{
 		const token = this.lexer.token
 		if (!token.typeIs(TokenType.nullptrLit))
-			return false
-		yield token
-		const comments = this.match(TokenType.nullptrLit)
-		if (comments)
-		{
-			for (const comment of comments)
-				yield *comment.yieldTokens()
-		}
-		return !!comments
+			return Ok(undefined)
+		const node = new ASTNull(token)
+		const match = this.match(TokenType.nullptrLit)
+		if (!match)
+			return Err('UnreachableState')
+		node.add(match)
+		return Ok(node)
 	}
 
 	*parseConst(): Generator<Token, boolean, undefined>
@@ -254,7 +250,10 @@ export class Parser
 			return yield *this.parseStringLiteral()
 		else if (token.typeIs(TokenType.charLit))
 			return yield *this.parseCharLiteral();
-		return (yield *this.parseBool()) || (yield *this.parseNull())
+		const bool = this.parseBool()
+		if ((bool.ok && bool.val) || !bool.ok)
+			return yield *yieldTokens(bool)
+		return yield *yieldTokens(this.parseNull())
 	}
 
 	*parseValue(): Generator<Token, boolean, undefined>
