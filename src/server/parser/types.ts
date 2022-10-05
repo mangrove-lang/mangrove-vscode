@@ -64,6 +64,18 @@ export enum TokenType
 	float64Lit
 }
 
+function isPositionEqual(posA: Position, posB: Position)
+{
+	return posA.line == posB.line &&
+		posA.character == posB.character
+}
+
+function isRangeEqual(rangeA: Range, rangeB: Range)
+{
+	return isPositionEqual(rangeA.start, rangeB.start) &&
+		isPositionEqual(rangeA.end, rangeB.end)
+}
+
 export class Token
 {
 	private _type: TokenType = TokenType.invalid
@@ -204,7 +216,7 @@ export class Token
 	{
 		return this._type == token._type &&
 			this._value == token._value &&
-			this._location == token._location &&
+			isRangeEqual(this._location, token._location) &&
 			this._length == token._length
 	}
 }
