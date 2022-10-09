@@ -269,18 +269,19 @@ export class Parser
 		return this.parseNull()
 	}
 
-	*parseValue(): Generator<Token, boolean, undefined>
+	parseValue(): Result<ASTNode | undefined, ParsingErrors>
 	{
 		//const token = this.lexer.token
 		if (this.haveIdent)
 		{
-			yield this._ident
+			const node = new ASTIdent(this._ident)
 			this._ident.reset()
-			return true
+			return Ok(node)
 		}
-		if (yield *yieldTokens(this.parseConst()))
-			return true
-		const ident = yield *yieldTokens(this.parseIdent())
+		const const_ = this.parseConst()
+		if (isResultDefined(const_))
+			return const_
+		const ident = this.parseIdent()
 		//if (ident)
 		//{
 		//}
@@ -290,7 +291,7 @@ export class Parser
 	*parseRelExpr(): Generator<Token, boolean, undefined>
 	{
 		const token = this.lexer.token
-		const lhs = yield *this.parseValue()
+		const lhs = yield *yieldTokens(this.parseValue())
 		if (lhs && token.typeIsOneOf(TokenType.relOp, TokenType.equOp))
 		{
 			const comments = this.match(TokenType.relOp, TokenType.equOp)
@@ -298,7 +299,7 @@ export class Parser
 				return false
 			for (const comment of comments)
 				yield *comment.yieldTokens()
-			return yield *this.parseValue()
+			return yield *yieldTokens(this.parseValue())
 		}
 		return lhs
 	}
