@@ -8,7 +8,7 @@ import {GetSemanticTokensResult} from '../../providers/semanticTokens'
 import {tokenise} from '../parser/mangrove'
 import {getDocumentFor} from '../server'
 
-export const getSemanticTokensRequest: RequestType<SemanticTokensParams, GetSemanticTokensResult, void> =
+export const getSemanticTokensRequest =
 	new RequestType<SemanticTokensParams, GetSemanticTokensResult, void>('mangrove/semanticTokens')
 
 export function handleSemanticTokensRequest(params: SemanticTokensParams, token: CancellationToken):
