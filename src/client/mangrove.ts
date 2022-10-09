@@ -58,36 +58,34 @@ interface ProgressParams
 	done?: boolean
 }
 
+function getProgressMessage(progress: ProgressParams)
+{
+	if (typeof progress.percentage === 'number')
+		return `${Math.round(progress.percentage * 100)}%`
+	else if (progress.message)
+		return progress.message
+	else if (progress.title)
+		return progress.title
+	return ''
+}
+
 export async function setupProgress(client: CommonLanguageClient, workspaceProgress: Observable<WorkspaceProgress>)
 {
 	const runningProgress: Set<string> = new Set()
 
 	await client.onReady()
-		client.onNotification(
+	client.onNotification(
 		new NotificationType<ProgressParams>('window/progress'),
-			progress =>
-			{
-				if (progress.done)
-					runningProgress.delete(progress.id)
-				else
-					runningProgress.add(progress.id)
+		progress =>
+		{
+			if (progress.done)
+				runningProgress.delete(progress.id)
+			else
+				runningProgress.add(progress.id)
 
-				if (runningProgress.size)
-				{
-					const status = (() =>
-					{
-						if (typeof progress.percentage === 'number')
-							return `${Math.round(progress.percentage * 100)}%`
-						else if (progress.message)
-							return progress.message
-						else if (progress.title)
-							return progress.title
-						return ''
-					})()
-					workspaceProgress.value = {state: 'progress', message: status}
-				}
-				else
-					workspaceProgress.value = {state: 'ready'}
-			}
+			workspaceProgress.value = runningProgress.size ?
+				{state: 'progress', message: getProgressMessage(progress)} :
+				{state: 'ready'}
+		}
 	)
 }
