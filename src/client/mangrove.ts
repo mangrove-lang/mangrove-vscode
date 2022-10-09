@@ -62,7 +62,7 @@ export async function setupProgress(client: CommonLanguageClient, workspaceProgr
 {
 	const runningProgress: Set<string> = new Set()
 
-	client.onReady().then(() =>
+	await client.onReady()
 		client.onNotification(
 		new NotificationType<ProgressParams>('window/progress'),
 			progress =>
@@ -89,6 +89,5 @@ export async function setupProgress(client: CommonLanguageClient, workspaceProgr
 				else
 					workspaceProgress.value = {state: 'ready'}
 			}
-		)
 	)
 }
