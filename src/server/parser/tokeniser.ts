@@ -255,6 +255,7 @@ export class Tokeniser
 			if (this.currentChar == '*')
 			{
 				const value = this.nextChar()
+				// tsc is too eager with type inference so this is a widening cast
 				if (this.currentChar as string == '/')
 				{
 					this.nextChar()

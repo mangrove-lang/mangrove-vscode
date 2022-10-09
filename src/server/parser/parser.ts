@@ -177,10 +177,12 @@ export class Parser
 		}
 		const floatToken = new Token()
 		const floatValue = `${intValue}.${decValue}${suffix}`
+
 		if (floatBits == 32)
 			floatToken.set(TokenType.float32Lit, floatValue)
 		else
 			floatToken.set(TokenType.float64Lit, floatValue)
+		
 		floatToken.beginsAt(tokenStart)
 		floatToken.endsAt(tokenEnd)
 		floatToken.calcLength(this.lexer.file)
@@ -328,6 +330,7 @@ export class Parser
 
 	*parseExpression(): Generator<Token, boolean, undefined>
 	{
+		// XXX: This needs to be restructured as a process that deals with ASTNodes instead of nested generators.
 		const expr = yield *(function *(self): Generator<Token, boolean, undefined>
 		{
 			//const token = this.lexer.token
