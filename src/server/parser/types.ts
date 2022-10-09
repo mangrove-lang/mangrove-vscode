@@ -139,7 +139,7 @@ export class Token
 	public set(type: TokenType, value?: string)
 	{
 		this._type = type
-		this._value = value ? value : ''
+		this._value = value ?? ''
 	}
 
 	public reset()
