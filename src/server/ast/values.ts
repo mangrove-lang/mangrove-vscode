@@ -1,6 +1,6 @@
 import {SemanticToken, SemanticTokenTypes} from '../../providers/semanticTokens'
 import {Token} from '../parser/types'
-import {Symbol} from './symbolTable'
+import {MangroveSymbol} from './symbolTable'
 import {ASTNode, ASTNodeData, ASTType} from './types'
 
 export type ASTValue = ASTNode
@@ -20,9 +20,9 @@ export class ASTInvalid extends ASTNodeData implements ASTValue
 
 export class ASTIdent extends ASTNodeData implements ASTValue
 {
-	private _symbol?: Symbol
+	private _symbol?: MangroveSymbol
 
-	constructor(token: Token, symbol?: Symbol)
+	constructor(token: Token, symbol?: MangroveSymbol)
 	{
 		super(token)
 		this._symbol = symbol
@@ -45,9 +45,9 @@ export class ASTIdent extends ASTNodeData implements ASTValue
 
 export class ASTDottedIdent extends ASTIdent
 {
-	private _symbolSeq: Symbol[] = new Array<Symbol>()
+	private _symbolSeq: MangroveSymbol[] = new Array<MangroveSymbol>()
 
-	constructor(token: Token, symbolSeq: Symbol[])
+	constructor(token: Token, symbolSeq: MangroveSymbol[])
 	{
 		const symbol = symbolSeq.length ? symbolSeq[symbolSeq.length - 1] : undefined
 		super(token, symbol)

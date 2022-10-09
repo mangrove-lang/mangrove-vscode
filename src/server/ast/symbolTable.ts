@@ -35,7 +35,7 @@ export class SymbolType
 	get isInvalid() { return this.type == SymbolTypes.invalid }
 }
 
-export class Symbol
+export class MangroveSymbol
 {
 	private readonly _ident?: string
 	private _type: SymbolType = new SymbolType()
@@ -52,7 +52,7 @@ export class Symbol
 		this._type.assign(SymbolTypes.isStruct)
 	}
 
-	isEqual(symbol: Symbol) { return this._ident === symbol._ident && this._type.isEqual(symbol._type) }
+	isEqual(symbol: MangroveSymbol) { return this._ident === symbol._ident && this._type.isEqual(symbol._type) }
 
 	get value() { return this._ident }
 	set type(type: SymbolType) { this._type = type }
@@ -63,7 +63,7 @@ export class Symbol
 export class SymbolTable
 {
 	private parentTable?: SymbolTable
-	private table: Map<string, Symbol> = new Map<string, Symbol>()
+	private table: Map<string, MangroveSymbol> = new Map()
 
 	constructor()
 	{
@@ -79,14 +79,14 @@ export class SymbolTable
 			return
 		}
 		// Check if ident is already in the table, if it is this must fail.
-		const symbol = new Symbol(ident)
+		const symbol = new MangroveSymbol(ident)
 		this.table.set(ident, symbol)
 		return symbol
 	}
 
 	findLocal(ident: string) { return this.table.get(ident) }
 
-	find(ident: string): Symbol | undefined
+	find(ident: string): MangroveSymbol | undefined
 	{
 		const symbol = this.findLocal(ident)
 		if (symbol)
@@ -102,9 +102,9 @@ export class SymbolTable
 export class SymbolStruct
 {
 	private contents: SymbolTable = new SymbolTable()
-	private members: Symbol[] = new Array<Symbol>()
+	private members: MangroveSymbol[] = new Array<MangroveSymbol>()
 
-	constructor(members?: Symbol[])
+	constructor(members?: MangroveSymbol[])
 	{
 		if (members)
 			this.members.push(...members)
