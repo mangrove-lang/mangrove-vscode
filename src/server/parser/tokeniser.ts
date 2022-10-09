@@ -78,10 +78,10 @@ export class Tokeniser
 	nextChar()
 	{
 		const value = this.currentChar
-		if (this.position.line + 1 == this.file.lineCount)
+		if (this.position.line + 1 === this.file.lineCount)
 		{
 			const position = this.filePosition({line: this.position.line, character: this.position.character + 1})
-			if (this.position.line == position.line && this.position.character == position.character)
+			if (this.position.line === position.line && this.position.character === position.character)
 			{
 				this.eof = true
 				this.currentChar = ''
@@ -205,17 +205,17 @@ export class Tokeniser
 		if (isAlpha(this.currentChar) || isUnderscore(this.currentChar))
 		{
 			const token = this.readAlphaNumToken()
-			if (token == '' || this.eof)
+			if (token === '' || this.eof)
 				return
 			else if (isTrue(token) || isFalse(token))
 				this._token.set(TokenType.boolLit, token)
 			else if (isNull(token))
 				this._token.set(TokenType.nullptrLit)
-			else if (token == 'and')
+			else if (token === 'and')
 				this._token.set(TokenType.logicOp, '&')
-			else if (token == 'or')
+			else if (token === 'or')
 				this._token.set(TokenType.logicOp, '|')
-			else if (token == 'not')
+			else if (token === 'not')
 				this._token.set(TokenType.invert, '!')
 
 			else if (isReturn(token))
@@ -252,11 +252,11 @@ export class Tokeniser
 		let comment = ''
 		while (!foundEnd && !this.eof)
 		{
-			if (this.currentChar == '*')
+			if (this.currentChar === '*')
 			{
 				const value = this.nextChar()
 				// tsc is too eager with type inference so this is a widening cast
-				if (this.currentChar as string == '/')
+				if (this.currentChar as string === '/')
 				{
 					this.nextChar()
 					foundEnd = true
@@ -313,7 +313,7 @@ export class Tokeniser
 	{
 		let str = ''
 		this._token.set(TokenType.intLit)
-		if (this.currentChar == '0')
+		if (this.currentChar === '0')
 		{
 			str += this.nextChar()
 			if (isBeginBin(this.currentChar))
@@ -332,9 +332,9 @@ export class Tokeniser
 	readUnicode(norm: string, esc: string): string
 	{
 		let result = ''
-		if (isNormalAlpha(this.currentChar) || this.currentChar == norm)
+		if (isNormalAlpha(this.currentChar) || this.currentChar === norm)
 			result = this.currentChar
-		else if (this.currentChar == '\\')
+		else if (this.currentChar === '\\')
 		{
 			this.nextChar()
 			switch (this.currentChar as string)
@@ -368,7 +368,7 @@ export class Tokeniser
 				this.readHexToken()
 				return String.fromCodePoint(Number.parseInt(this._token.value, 16))
 			}
-			if (this.currentChar == esc)
+			if (this.currentChar === esc)
 			{
 				this.nextChar()
 				return esc
@@ -387,7 +387,7 @@ export class Tokeniser
 		while (!isDoubleQuote(this.currentChar))
 		{
 			const value = this.readUnicode('\'', '"')
-			if (value == '')
+			if (value === '')
 			{
 				this._token.set(TokenType.invalid)
 				return
@@ -402,7 +402,7 @@ export class Tokeniser
 		this._token.set(TokenType.charLit)
 		this.nextChar()
 		const lit = this.readUnicode('"', '\'')
-		if (lit == '' || !isSingleQuote(this.currentChar))
+		if (lit === '' || !isSingleQuote(this.currentChar))
 		{
 			this._token.set(TokenType.invalid)
 			return
@@ -419,12 +419,12 @@ export class Tokeniser
 			token += this.nextChar()
 			this.finaliseToken(TokenType.assignOp, token)
 		}
-		else if (this.currentChar == '*')
+		else if (this.currentChar === '*')
 		{
 			this.nextChar()
 			this.readPartComment()
 		}
-		else if (this.currentChar == '/')
+		else if (this.currentChar === '/')
 		{
 			this.nextChar()
 			this.readLineComment()
@@ -454,9 +454,9 @@ export class Tokeniser
 			token += this.currentChar
 			this.finaliseToken(TokenType.assignOp, token)
 		}
-		else if (token == '-' && this.currentChar == '>')
+		else if (token === '-' && this.currentChar === '>')
 			this.finaliseToken(TokenType.arrow)
-		else if (this.currentChar == token)
+		else if (this.currentChar === token)
 			this.finaliseToken(TokenType.incOp, this.currentChar)
 		else
 			return
@@ -472,7 +472,7 @@ export class Tokeniser
 			token += this.currentChar
 			this.finaliseToken(TokenType.assignOp, token)
 		}
-		else if (this.currentChar == token)
+		else if (this.currentChar === token)
 			this.finaliseToken(TokenType.logicOp, token)
 		else
 			return
@@ -500,7 +500,7 @@ export class Tokeniser
 			token += this.currentChar
 			this.finaliseToken(TokenType.relOp, token)
 		}
-		else if (this.currentChar == token)
+		else if (this.currentChar === token)
 		{
 			token += this.currentChar
 			this.finaliseToken(TokenType.shiftOp, token)

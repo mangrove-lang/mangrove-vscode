@@ -30,9 +30,9 @@ export class SymbolType
 	combine(type: SymbolTypes) { return this.type | type }
 	append(type: SymbolTypes) { this.type |= type }
 	mask(type: SymbolTypes) { return this.type & type }
-	isEqual(symbolType: SymbolType) { return this.type == symbolType.type }
+	isEqual(symbolType: SymbolType) { return this.type === symbolType.type }
 
-	get isInvalid() { return this.type == SymbolTypes.invalid }
+	get isInvalid() { return this.type === SymbolTypes.invalid }
 }
 
 export class MangroveSymbol

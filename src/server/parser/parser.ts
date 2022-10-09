@@ -178,7 +178,7 @@ export class Parser
 		const floatToken = new Token()
 		const floatValue = `${intValue}.${decValue}${suffix}`
 
-		if (floatBits == 32)
+		if (floatBits === 32)
 			floatToken.set(TokenType.float32Lit, floatValue)
 		else
 			floatToken.set(TokenType.float64Lit, floatValue)

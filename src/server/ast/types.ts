@@ -115,7 +115,7 @@ export interface ASTNode extends ASTNodeData
 	semanticTokens(): Generator<SemanticToken, void, undefined>
 	toString(): string
 
-	// typeIs(type: ASTType) { return type == this.type }
+	// typeIs(type: ASTType) { return type === this.type }
 }
 
 export class ASTComment extends ASTNodeData implements ASTNode

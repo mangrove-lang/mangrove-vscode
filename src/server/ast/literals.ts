@@ -116,7 +116,7 @@ export class ASTBool extends ASTNodeData implements ASTValue
 	constructor(token: Token)
 	{
 		super(token)
-		this.value = token.value == 'true'
+		this.value = token.value === 'true'
 	}
 
 	get type() { return ASTType.boolValue }

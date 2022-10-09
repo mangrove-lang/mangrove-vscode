@@ -66,8 +66,8 @@ export enum TokenType
 
 function isPositionEqual(posA: Position, posB: Position)
 {
-	return posA.line == posB.line &&
-		posA.character == posB.character
+	return posA.line === posB.line &&
+		posA.character === posB.character
 }
 
 function isRangeEqual(rangeA: Range, rangeB: Range)
@@ -169,7 +169,7 @@ export class Token
 
 	public typeIsOneOf(...types: TokenType[])
 	{
-		return types.some(type => this._type == type, this)
+		return types.some(type => this._type === type, this)
 	}
 
 	public clone() { return new Token(this) }
@@ -214,9 +214,9 @@ export class Token
 
 	public isEqual(token: Token)
 	{
-		return this._type == token._type &&
-			this._value == token._value &&
+		return this._type === token._type &&
+			this._value === token._value &&
 			isRangeEqual(this._location, token._location) &&
-			this._length == token._length
+			this._length === token._length
 	}
 }
