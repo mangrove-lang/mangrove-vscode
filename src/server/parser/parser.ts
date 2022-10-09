@@ -334,7 +334,7 @@ export class Parser
 		const expr = yield *(function *(self): Generator<Token, boolean, undefined>
 		{
 			//const token = this.lexer.token
-			const expr = yield *self.parseValue()
+			const expr = yield *self.parseLogicExpr()
 			return expr
 		})(this)
 		const token = this.lexer.token
