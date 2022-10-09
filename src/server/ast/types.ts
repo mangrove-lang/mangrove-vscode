@@ -84,11 +84,7 @@ export class ASTNodeData
 	get children() { return this._children }
 	get token() { return this._token } // XXX: Needs removing when the parser is converted.
 
-	add(nodes: ASTNode[])
-	{
-		for (const node of nodes)
-			this._children.push(node)
-	}
+	add(nodes: ASTNode[]) { this._children.push(...nodes) }
 
 	protected buildSemanticToken(semanticType: SemanticTokenTypes, token?: Token)
 	{
