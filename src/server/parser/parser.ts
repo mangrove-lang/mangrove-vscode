@@ -7,7 +7,7 @@ import {Token, TokenType} from './types'
 
 function isInt(token: Token): boolean
 {
-	return token.typeIs(
+	return token.typeIsOneOf(
 		TokenType.binLit,
 		TokenType.octLit,
 		TokenType.hexLit,
@@ -57,7 +57,7 @@ export class Parser
 	match(...tokenTypes: TokenType[]): ASTNode[] | undefined
 	{
 		const token = this.lexer.token
-		if (token.typeIs(...tokenTypes))
+		if (token.typeIsOneOf(...tokenTypes))
 		{
 			this.lexer.next()
 			return this.skipWhite()
@@ -70,9 +70,9 @@ export class Parser
 	{
 		const comments = new Array<ASTNode>()
 		const token = this.lexer.token
-		while (token.typeIs(TokenType.whitespace, TokenType.newline, TokenType.comment))
+		while (token.typeIsOneOf(TokenType.whitespace, TokenType.newline, TokenType.comment))
 		{
-			if (token.typeIs(TokenType.comment))
+			if (token.typeIsOneOf(TokenType.comment))
 				comments.push(new ASTComment(token))
 			this.lexer.next()
 		}
@@ -82,7 +82,7 @@ export class Parser
 	*parseIdentStr(): Generator<Token, boolean, undefined>
 	{
 		const token = this.lexer.token
-		if (!token.typeIs(TokenType.ident))
+		if (!token.typeIsOneOf(TokenType.ident))
 			return false
 		yield token
 		const comments = this.match(TokenType.ident)
@@ -136,17 +136,17 @@ export class Parser
 	parseInt(allowFloat = true): Result<ASTNode | undefined, ParsingErrors>
 	{
 		const token = this.lexer.token
-		if (token.typeIs(TokenType.binLit))
+		if (token.typeIsOneOf(TokenType.binLit))
 			return this.parseBin()
-		else if (token.typeIs(TokenType.octLit))
+		else if (token.typeIsOneOf(TokenType.octLit))
 			return this.parseOct()
-		else if (token.typeIs(TokenType.hexLit))
+		else if (token.typeIsOneOf(TokenType.hexLit))
 			return this.parseHex()
-		else if (token.typeIs(TokenType.intLit))
+		else if (token.typeIsOneOf(TokenType.intLit))
 		{
 			const node = new ASTInt(ASTIntType.dec, this.lexer.token)
 			this.lexer.next()
-			if (allowFloat && token.typeIs(TokenType.dot))
+			if (allowFloat && token.typeIsOneOf(TokenType.dot))
 				return Ok(this.parseFloat(node.token.value, node.token.location.start))
 			node.add(this.skipWhite())
 			return Ok(node)
@@ -162,13 +162,13 @@ export class Parser
 		const token = this.lexer.token
 		let tokenEnd = token.location.end
 		this.lexer.next()
-		if (token.typeIs(TokenType.intLit))
+		if (token.typeIsOneOf(TokenType.intLit))
 		{
 			decValue = token.value
 			tokenEnd = token.location.end
 			this.lexer.next()
 		}
-		if (token.typeIs(TokenType.ident) && ['f', 'F'].includes(token.value))
+		if (token.typeIsOneOf(TokenType.ident) && ['f', 'F'].includes(token.value))
 		{
 			floatBits = 32
 			suffix = token.value
@@ -192,10 +192,10 @@ export class Parser
 	parseStringLiteral(): Result<ASTNode | undefined, ParsingErrors>
 	{
 		const token = this.lexer.token
-		if (!token.typeIs(TokenType.stringLit))
+		if (!token.typeIsOneOf(TokenType.stringLit))
 			return Ok(undefined)
 		const node = new ASTStringLit(token)
-		while (token.typeIs(TokenType.stringLit))
+		while (token.typeIsOneOf(TokenType.stringLit))
 		{
 			node.addSegment(token)
 			const match = this.match(TokenType.stringLit)
@@ -219,7 +219,7 @@ export class Parser
 	parseBool(): Result<ASTNode | undefined, ParsingErrors>
 	{
 		const token = this.lexer.token
-		if (!token.typeIs(TokenType.boolLit))
+		if (!token.typeIsOneOf(TokenType.boolLit))
 			return Ok(undefined)
 		const node = new ASTBool(token)
 		const match = this.match(TokenType.boolLit)
@@ -232,7 +232,7 @@ export class Parser
 	parseNull(): Result<ASTNode | undefined, ParsingErrors>
 	{
 		const token = this.lexer.token
-		if (!token.typeIs(TokenType.nullptrLit))
+		if (!token.typeIsOneOf(TokenType.nullptrLit))
 			return Ok(undefined)
 		const node = new ASTNull(token)
 		const match = this.match(TokenType.nullptrLit)
@@ -245,16 +245,16 @@ export class Parser
 	parseConst(): Result<ASTNode | undefined, ParsingErrors>
 	{
 		const token = this.lexer.token
-		if (token.typeIs(TokenType.invalid))
+		if (token.typeIsOneOf(TokenType.invalid))
 		{
 			console.error('Contant expected, got invalid token instead')
 			return Err('IncorrectToken')
 		}
 		else if (isInt(token))
 			return this.parseInt()
-		else if (token.typeIs(TokenType.stringLit))
+		else if (token.typeIsOneOf(TokenType.stringLit))
 			return this.parseStringLiteral()
-		else if (token.typeIs(TokenType.charLit))
+		else if (token.typeIsOneOf(TokenType.charLit))
 			return this.parseCharLiteral()
 		const bool = this.parseBool()
 		if (isResultDefined(bool))
@@ -284,7 +284,7 @@ export class Parser
 	{
 		const token = this.lexer.token
 		const lhs = yield *this.parseValue()
-		if (lhs && token.typeIs(TokenType.relOp, TokenType.equOp))
+		if (lhs && token.typeIsOneOf(TokenType.relOp, TokenType.equOp))
 		{
 			const comments = this.match(TokenType.relOp, TokenType.equOp)
 			if (!comments)
@@ -313,7 +313,7 @@ export class Parser
 			return false
 		while (lhs)
 		{
-			if (!token.typeIs(TokenType.logicOp))
+			if (!token.typeIsOneOf(TokenType.logicOp))
 				break
 			const comments = this.match(TokenType.logicOp)
 			if (comments)
@@ -335,7 +335,7 @@ export class Parser
 			return expr
 		})(this)
 		const token = this.lexer.token
-		if (expr && token.typeIs(TokenType.semi))
+		if (expr && token.typeIsOneOf(TokenType.semi))
 		{
 			const comments = this.match(TokenType.semi)
 			if (comments)
@@ -350,7 +350,7 @@ export class Parser
 	*parseIfExpr(): Generator<Token, boolean, undefined>
 	{
 		const token = this.lexer.token
-		if (!token.typeIs(TokenType.ifStmt))
+		if (!token.typeIsOneOf(TokenType.ifStmt))
 			return false
 		yield token
 		const comments = this.match(TokenType.ifStmt)
@@ -368,7 +368,7 @@ export class Parser
 	*parseElifExpr(): Generator<Token, boolean, undefined>
 	{
 		const token = this.lexer.token
-		if (!token.typeIs(TokenType.elifStmt))
+		if (!token.typeIsOneOf(TokenType.elifStmt))
 			return false
 		yield token
 		const comments = this.match(TokenType.elifStmt)
@@ -383,7 +383,7 @@ export class Parser
 	*parseElseExpr(): Generator<Token, boolean, undefined>
 	{
 		const token = this.lexer.token
-		if (!token.typeIs(TokenType.elseStmt))
+		if (!token.typeIsOneOf(TokenType.elseStmt))
 			return false
 		yield token
 		const comments = this.match(TokenType.elseStmt)
@@ -423,7 +423,7 @@ export class Parser
 	*parseVisibility(): Generator<Token, boolean, undefined>
 	{
 		const token = this.lexer.token
-		if (!token.typeIs(TokenType.visibility))
+		if (!token.typeIsOneOf(TokenType.visibility))
 			return false
 		yield token
 		let comments = this.match(TokenType.visibility)
@@ -444,7 +444,7 @@ export class Parser
 	*parseBraceBlock(): Generator<Token, boolean, undefined>
 	{
 		const token = this.lexer.token
-		if (!token.typeIs(TokenType.leftBrace))
+		if (!token.typeIsOneOf(TokenType.leftBrace))
 			return yield *this.parseStatement()
 		let comments = this.match(TokenType.leftBrace)
 		if (comments)
@@ -452,7 +452,7 @@ export class Parser
 			for (const comment of comments)
 				yield *comment.yieldTokens()
 		}
-		while (!token.typeIs(TokenType.rightBrace))
+		while (!token.typeIsOneOf(TokenType.rightBrace))
 		{
 			const stmt = yield *this.parseStatement()
 			if (!stmt)
@@ -486,7 +486,7 @@ export class Parser
 		const comments = this.skipWhite()
 		for (const comment of comments)
 			yield *comment.yieldTokens()
-		while (!token.typeIs(TokenType.eof))
+		while (!token.typeIsOneOf(TokenType.eof))
 		{
 			const stmt = yield *this.parseExtStatement()
 			if (!stmt)

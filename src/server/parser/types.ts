@@ -167,7 +167,7 @@ export class Token
 		this._length = endOffset - beginOffset
 	}
 
-	public typeIs(...types: TokenType[])
+	public typeIsOneOf(...types: TokenType[])
 	{
 		return types.some(type => this._type == type, this)
 	}
