@@ -47,7 +47,7 @@ export async function deactivate()
 const workspaces: Map<string, ClientWorkspace> = new Map()
 const activeWorkspace = new Observable<ClientWorkspace | null>(null)
 export let extensionContext: ExtensionContext
-let progress: Disposable | undefined
+let progress: Disposable
 
 export type WorkspaceProgress = {state: 'progress'; message: string} | {state: 'ready' | 'standby'}
 
@@ -120,16 +120,15 @@ export class ClientWorkspace
 
 	setupClient(): Disposable[]
 	{
-		const result: Disposable[] = []
 		const semanticTokensProvider = new SemanticTokensProvider(this)
-		result.push(
+		
+		return [
 			languages.registerDocumentSemanticTokensProvider(
 				documentSelector,
 				semanticTokensProvider,
 				semanticTokensProvider.legend
 			)
-		)
-		return result
+		]
 	}
 }
 
@@ -180,12 +179,12 @@ function clientWorkspaceForURI(uri: Uri, options?: {initialiseIfMissing: boolean
 		return undefined
 
 	const alreadyExists = workspaces.get(folder.uri.toString())
-	if (!alreadyExists && options && options.initialiseIfMissing)
-	{
-		const workspace = new ClientWorkspace(folder)
-		workspaces.set(folder.uri.toString(), workspace)
-	}
-	return workspaces.get(folder.uri.toString())
+	if(alreadyExists || !options || !options.initialiseIfMissing)
+		return alreadyExists
+	
+	const clientWorkspace = new ClientWorkspace(folder)
+	workspaces.set(folder.uri.toString(), clientWorkspace)
+	return clientWorkspace
 }
 
 function registerCommands(): Disposable[]

@@ -1,6 +1,6 @@
 import {workspace, WorkspaceFolder} from 'vscode'
 import * as path from 'path'
-import * as langClient from 'vscode-languageclient'
+import {CommonLanguageClient, LanguageClientOptions, NotificationType} from 'vscode-languageclient'
 import {
 	DocumentSelector,
 	LanguageClient,
@@ -17,7 +17,7 @@ export const documentSelector: DocumentSelector = [
 
 export async function createLanguageClient(folder: WorkspaceFolder): Promise<LanguageClient>
 {
-	const clientOptions: langClient.LanguageClientOptions =
+	const clientOptions: LanguageClientOptions =
 	{
 		documentSelector: documentSelector,
 		diagnosticCollectionName: 'mangrove',
@@ -58,13 +58,13 @@ interface ProgressParams
 	done?: boolean
 }
 
-export function setupProgress(client: langClient.CommonLanguageClient, workspaceProgress: Observable<WorkspaceProgress>)
+export async function setupProgress(client: CommonLanguageClient, workspaceProgress: Observable<WorkspaceProgress>)
 {
 	const runningProgress: Set<string> = new Set()
 
 	client.onReady().then(() =>
 		client.onNotification(
-			new langClient.NotificationType<ProgressParams>('window/progress'),
+		new NotificationType<ProgressParams>('window/progress'),
 			progress =>
 			{
 				if (progress.done)
