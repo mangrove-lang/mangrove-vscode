@@ -54,7 +54,7 @@ export class Parser
 		return this._ident.valid
 	}
 
-	match(...tokenTypes: TokenType[]): ASTNode[] | undefined
+	match(...tokenTypes: TokenType[])
 	{
 		const token = this.lexer.token
 		if (token.typeIsOneOf(...tokenTypes))
@@ -63,12 +63,12 @@ export class Parser
 			return this.skipWhite()
 		}
 		//expected(tokenType, token)
-		return
+		return undefined
 	}
 
-	skipWhite(): ASTNode[]
+	skipWhite()
 	{
-		const comments = new Array<ASTNode>()
+		const comments: ASTNode[] = []
 		const token = this.lexer.token
 		while (token.typeIsOneOf(TokenType.whitespace, TokenType.newline, TokenType.comment))
 		{
