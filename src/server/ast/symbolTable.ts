@@ -1,4 +1,4 @@
-let symbolTable: SymbolTable | undefined = undefined
+let symbolTable: SymbolTable | undefined
 
 export enum SymbolTypes
 {
