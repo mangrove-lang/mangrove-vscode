@@ -17,7 +17,7 @@ import
 import {ClientWorkspace} from '../extension'
 import {GetSemanticTokensResult, SemanticTokenTypes} from '../../providers/semanticTokens'
 
-const getSemanticTokensRequest: RequestType<SemanticTokensParams, GetSemanticTokensResult, void> =
+const getSemanticTokensRequest =
 	new RequestType<SemanticTokensParams, GetSemanticTokensResult, void>('mangrove/semanticTokens')
 
 export class SemanticTokensProvider implements DocumentSemanticTokensProvider
@@ -62,7 +62,8 @@ export class SemanticTokensProvider implements DocumentSemanticTokensProvider
 		if (result.canceled)
 			throw new CancellationError()
 		const builder: SemanticTokensBuilder = new SemanticTokensBuilder(this.tokensLegend)
-		result.tokens.forEach(semanticToken =>
+
+		for (const semanticToken of result.tokens)
 		{
 			builder.push(
 				semanticToken.line,
@@ -71,8 +72,7 @@ export class SemanticTokensProvider implements DocumentSemanticTokensProvider
 				semanticToken.type,
 				semanticToken.modifiers
 			)
-		})
-		const tokens: SemanticTokens = builder.build()
-		return tokens
+		}
+		return builder.build()
 	}
 }
