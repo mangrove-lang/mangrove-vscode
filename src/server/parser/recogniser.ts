@@ -51,6 +51,10 @@ export function isNull(str: string) { return str === 'nullptr' }
 export function isEquals(c: string) { return c === '=' }
 
 
+export function isEquality(c: string) { return c === '<' || c === '<=' || c === '>' || c === '>=' }
+export function isRelation(c: string) { return isEquality(c) || c === '!=' || c === '==' }
+
+
 export function isReturn(str: string) { return str === 'return' }
 
 export function isIfStmt(str: string) { return str === 'if' }
