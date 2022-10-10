@@ -3,9 +3,10 @@ import {Position, TextDocument} from 'vscode-languageserver-textdocument'
 import {ASTIdent} from '../ast/values'
 import {ASTBool, ASTCharLit, ASTFloat, ASTInt, ASTNull, ASTStringLit} from '../ast/literals'
 import {ASTComment, ASTIntType, ASTNode, ASTType} from '../ast/types'
-import {ASTRel} from '../ast/operations'
+import {ASTBetween, ASTRel} from '../ast/operations'
 import {Tokeniser} from './tokeniser'
 import {Token, TokenType} from './types'
+import {isEquality} from './recogniser'
 
 function isInt(token: Token): boolean
 {
@@ -313,6 +314,30 @@ export class Parser
 		return Ok(node)
 	}
 
+	parseBetweenExpr(relation: ASTRel): Result<ASTNode | undefined, ParsingErrors>
+	{
+		if (!relation.valid)
+			return Err('UnreachableState')
+		else if (!isEquality(relation.op))
+			return Err('IncorrectToken')
+		const rhsOp = this.lexer.token.clone()
+		const lhsOp = relation.op
+		if (rhsOp.value[0] != lhsOp[0])
+			return Err('IncorrectToken')
+		const match = this.match(TokenType.relOp)
+		if (!match)
+			return Err('UnreachableState')
+		const rhsRel = this.parseRelExpr()
+		if (!isResultDefined(rhsRel))
+			return Err('OperatorWithNoRHS')
+		const rhs = rhsRel.unwrap()
+		if (!rhs)
+			return Err('UnreachableState')
+		const node = new ASTBetween(relation, rhsOp, rhs)
+		node.add(match)
+		return Ok(node)
+	}
+
 	parseRelation(): Result<ASTNode | undefined, ParsingErrors>
 	{
 		const rel = this.parseRelExpr()
@@ -327,9 +352,9 @@ export class Parser
 		if (lhs.rhs.type == ASTType.ident)
 		{
 			const token = this.lexer.token
-			/*if (token.typeIsOneOf(TokenType.relOp))
-				return parseBetweenExpr(relation)
-			else */if (token.typeIsOneOf(TokenType.equOp))
+			if (token.typeIsOneOf(TokenType.relOp))
+				return this.parseBetweenExpr(lhs)
+			else if (token.typeIsOneOf(TokenType.equOp))
 				return Err('InvalidTokenSequence')
 		}
 		return rel
