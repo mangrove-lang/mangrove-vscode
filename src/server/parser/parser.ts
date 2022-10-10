@@ -2,7 +2,7 @@ import {Ok, Err, Result} from 'ts-results'
 import {Position, TextDocument} from 'vscode-languageserver-textdocument'
 import {ASTIdent} from '../ast/values'
 import {ASTBool, ASTCharLit, ASTFloat, ASTInt, ASTNull, ASTStringLit} from '../ast/literals'
-import {ASTComment, ASTIntType, ASTNode} from '../ast/types'
+import {ASTComment, ASTIntType, ASTNode, ASTType} from '../ast/types'
 import {ASTRel} from '../ast/operations'
 import {Tokeniser} from './tokeniser'
 import {Token, TokenType} from './types'
@@ -17,7 +17,7 @@ function isInt(token: Token): boolean
 	)
 }
 
-type ParsingErrors = 'UnreachableState' | 'IncorrectToken' | 'OperatorWithNoRHS'
+type ParsingErrors = 'UnreachableState' | 'IncorrectToken' | 'OperatorWithNoRHS' | 'InvalidTokenSequence'
 
 function isResultValid<T>(result: Result<T | undefined, ParsingErrors>)
 {
@@ -313,19 +313,32 @@ export class Parser
 		return Ok(node)
 	}
 
-	*parseRelation(): Generator<Token, boolean, undefined>
+	parseRelation(): Result<ASTNode | undefined, ParsingErrors>
 	{
-		const rel = yield *yieldTokens(this.parseRelExpr())
-		if (!rel)
-			return false
-		//
-		return true
+		const rel = this.parseRelExpr()
+		if (!isResultDefined(rel))
+			return rel
+		const relation = rel.unwrap()
+		if (!relation)
+			return Err('UnreachableState')
+		if (relation.type != ASTType.rel)
+			return rel
+		const lhs = relation as ASTRel
+		if (lhs.rhs.type == ASTType.ident)
+		{
+			const token = this.lexer.token
+			/*if (token.typeIsOneOf(TokenType.relOp))
+				return parseBetweenExpr(relation)
+			else */if (token.typeIsOneOf(TokenType.equOp))
+				return Err('InvalidTokenSequence')
+		}
+		return rel
 	}
 
 	*parseLogicExpr(): Generator<Token, boolean, undefined>
 	{
 		const token = this.lexer.token
-		let lhs = yield *this.parseRelation()
+		let lhs = yield *yieldTokens(this.parseRelation())
 		if (!lhs)
 			return false
 		while (lhs)
