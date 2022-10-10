@@ -3,6 +3,7 @@ import {Position, TextDocument} from 'vscode-languageserver-textdocument'
 import {ASTIdent} from '../ast/values'
 import {ASTBool, ASTCharLit, ASTFloat, ASTInt, ASTNull, ASTStringLit} from '../ast/literals'
 import {ASTComment, ASTIntType, ASTNode} from '../ast/types'
+import {ASTRel} from '../ast/operations'
 import {Tokeniser} from './tokeniser'
 import {Token, TokenType} from './types'
 
@@ -16,7 +17,7 @@ function isInt(token: Token): boolean
 	)
 }
 
-type ParsingErrors = 'UnreachableState' | 'IncorrectToken'
+type ParsingErrors = 'UnreachableState' | 'IncorrectToken' | 'OperatorWithNoRHS'
 
 function isResultValid<T>(result: Result<T | undefined, ParsingErrors>)
 {
@@ -288,25 +289,33 @@ export class Parser
 		return ident
 	}
 
-	*parseRelExpr(): Generator<Token, boolean, undefined>
+	parseRelExpr(): Result<ASTNode | ASTRel | undefined, ParsingErrors>
 	{
+		const lhsExpr = this.parseValue()
 		const token = this.lexer.token
-		const lhs = yield *yieldTokens(this.parseValue())
-		if (lhs && token.typeIsOneOf(TokenType.relOp, TokenType.equOp))
-		{
-			const comments = this.match(TokenType.relOp, TokenType.equOp)
-			if (!comments)
-				return false
-			for (const comment of comments)
-				yield *comment.yieldTokens()
-			return yield *yieldTokens(this.parseValue())
-		}
-		return lhs
+		if (!(isResultDefined(lhsExpr) && token.typeIsOneOf(TokenType.relOp, TokenType.equOp)))
+			return lhsExpr
+		const lhs = lhsExpr.unwrap()
+		if (!lhs)
+			return Err('UnreachableState')
+		const op = token.clone()
+		const match = this.match(TokenType.relOp, TokenType.equOp)
+		if (!match)
+			return Err('UnreachableState')
+		const rhsExpr = this.parseValue()
+		if (!isResultDefined(rhsExpr))
+			return Err('OperatorWithNoRHS')
+		const rhs = rhsExpr.unwrap()
+		if (!rhs)
+			return Err('UnreachableState')
+		const node = new ASTRel(lhs, op, rhs)
+		node.add(match)
+		return Ok(node)
 	}
 
 	*parseRelation(): Generator<Token, boolean, undefined>
 	{
-		const rel = yield *this.parseRelExpr()
+		const rel = yield *yieldTokens(this.parseRelExpr())
 		if (!rel)
 			return false
 		//

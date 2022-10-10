@@ -203,6 +203,8 @@ export class Token
 		case TokenType.boolLit:
 		case TokenType.nullptrLit:
 			return SemanticTokenTypes.const
+		case TokenType.relOp:
+			return SemanticTokenTypes.operator
 		}
 		throw new Error(`Unhandled token type ${this._type}, cannot convert to semantic type`)
 	}
