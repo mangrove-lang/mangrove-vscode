@@ -20,14 +20,24 @@ function isInt(token: Token): boolean
 
 type ParsingErrors = 'UnreachableState' | 'IncorrectToken' | 'OperatorWithNoRHS' | 'InvalidTokenSequence'
 
-function isResultValid<T>(result: Result<T | undefined, ParsingErrors>)
+function isResultValid<T>(result: Result<T | undefined, ParsingErrors>): result is Ok<T>
 {
 	return result.ok && result.val != undefined
 }
 
-function isResultDefined<T>(result: Result<T | undefined, ParsingErrors>)
+function isResultDefined<T>(result: Result<T | undefined, ParsingErrors>): result is Result<T, ParsingErrors>
 {
-	return isResultValid(result) || !result.ok
+	return isResultValid(result) || result.err
+}
+
+function isResultError<T>(result: Result<T, ParsingErrors>): result is Err<ParsingErrors>
+{
+	return result.err
+}
+
+function isNodeRelation(node: ASTNode | ASTRel): node is ASTRel
+{
+	return node.type == ASTType.rel
 }
 
 function *yieldTokens(node: Result<ASTNode | undefined, ParsingErrors>)
@@ -292,24 +302,20 @@ export class Parser
 
 	parseRelExpr(): Result<ASTNode | ASTRel | undefined, ParsingErrors>
 	{
-		const lhsExpr = this.parseValue()
+		const lhs = this.parseValue()
 		const token = this.lexer.token
-		if (!(isResultDefined(lhsExpr) && token.typeIsOneOf(TokenType.relOp, TokenType.equOp)))
-			return lhsExpr
-		const lhs = lhsExpr.unwrap()
-		if (!lhs)
-			return Err('UnreachableState')
+		if (!(isResultValid(lhs) && token.typeIsOneOf(TokenType.relOp, TokenType.equOp)))
+			return lhs
 		const op = token.clone()
 		const match = this.match(TokenType.relOp, TokenType.equOp)
 		if (!match)
 			return Err('UnreachableState')
-		const rhsExpr = this.parseValue()
-		if (!isResultDefined(rhsExpr))
+		const rhs = this.parseValue()
+		if (!isResultDefined(rhs))
 			return Err('OperatorWithNoRHS')
-		const rhs = rhsExpr.unwrap()
-		if (!rhs)
-			return Err('UnreachableState')
-		const node = new ASTRel(lhs, op, rhs)
+		if (isResultError(rhs))
+			return rhs
+		const node = new ASTRel(lhs.val, op, rhs.val)
 		node.add(match)
 		return Ok(node)
 	}
@@ -327,61 +333,53 @@ export class Parser
 		const match = this.match(TokenType.relOp)
 		if (!match)
 			return Err('UnreachableState')
-		const rhsRel = this.parseRelExpr()
-		if (!isResultDefined(rhsRel))
+		const rhs = this.parseRelExpr()
+		if (!isResultDefined(rhs))
 			return Err('OperatorWithNoRHS')
-		const rhs = rhsRel.unwrap()
-		if (!rhs)
-			return Err('UnreachableState')
-		const node = new ASTBetween(relation, rhsOp, rhs)
+		if (isResultError(rhs))
+			return rhs
+		const node = new ASTBetween(relation, rhsOp, rhs.val)
 		node.add(match)
 		return Ok(node)
 	}
 
 	parseRelation(): Result<ASTNode | undefined, ParsingErrors>
 	{
-		const rel = this.parseRelExpr()
-		if (!isResultDefined(rel))
-			return rel
-		const relation = rel.unwrap()
-		if (!relation)
-			return Err('UnreachableState')
-		if (relation.type != ASTType.rel)
-			return rel
-		const lhs = relation as ASTRel
-		if (lhs.rhs.type == ASTType.ident)
+		const lhs = this.parseRelExpr()
+		if (!isResultValid(lhs))
+			return lhs
+		if (!isNodeRelation(lhs.val))
+			return lhs
+		if (lhs.val.rhs.type == ASTType.ident)
 		{
 			const token = this.lexer.token
 			if (token.typeIsOneOf(TokenType.relOp))
-				return this.parseBetweenExpr(lhs)
+				return this.parseBetweenExpr(lhs.val)
 			else if (token.typeIsOneOf(TokenType.equOp))
 				return Err('InvalidTokenSequence')
 		}
-		return rel
+		return lhs
 	}
 
 	parseLogicExpr(): Result<ASTNode | undefined, ParsingErrors>
 	{
 		const relation = this.parseRelation()
-		if (!isResultDefined(relation))
+		if (!isResultValid(relation))
 			return relation
 		const token = this.lexer.token
-		let lhs = relation.unwrap()
-		if (!lhs)
-			return Err('UnreachableState')
+		let lhs = relation.val
 		while (token.typeIsOneOf(TokenType.logicOp))
 		{
 			const op = token.clone()
 			const match = this.match(TokenType.logicOp)
 			if (!match)
 				return Err('UnreachableState')
-			const rhsRel = this.parseRelation()
-			if (!isResultDefined(rhsRel))
+			const rhs = this.parseRelation()
+			if (!isResultDefined(rhs))
 				return Err('OperatorWithNoRHS')
-			const rhs = rhsRel.unwrap()
-			if (!rhs)
-				return Err('UnreachableState')
-			lhs = new ASTLogic(op, lhs, rhs)
+			if (isResultError(rhs))
+				return rhs
+			lhs = new ASTLogic(op, lhs, rhs.val)
 		}
 		return Ok(lhs)
 	}
@@ -394,11 +392,9 @@ export class Parser
 			//const token = this.lexer.token
 			return this.parseLogicExpr()
 		})()
-		if (!isResultDefined(expr))
+		if (!isResultValid(expr))
 			return expr
-		const node = expr.unwrap()
-		if (!node)
-			return Err('UnreachableState')
+		const node = expr.val
 		const token = this.lexer.token
 		if (token.typeIsOneOf(TokenType.semi))
 		{
