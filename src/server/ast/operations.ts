@@ -68,3 +68,30 @@ export class ASTBetween extends ASTNodeData implements ASTNode
 			yield *child.semanticTokens()
 	}
 }
+
+export class ASTLogic extends ASTNodeData implements ASTNode
+{
+	private _lhs: ASTNode
+	private _rhs: ASTNode
+
+	constructor(op : Token, lhs: ASTNode, rhs: ASTNode)
+	{
+		super(op)
+		this._lhs = lhs
+		this._rhs = rhs
+	}
+
+	get type() { return ASTType.logic }
+	get valid() { return this._lhs.valid && this.token.valid && this._rhs.valid }
+	get semanticType() { return SemanticTokenTypes.operator }
+	toString() { return `<Logic op: '${this.token.value}'>` }
+
+	*semanticTokens(): Generator<SemanticToken, void, undefined>
+	{
+		yield *this._lhs.semanticTokens()
+		yield this.buildSemanticToken(this.semanticType)
+		yield *this._rhs.semanticTokens()
+		for (const child of this.children)
+			yield *child.semanticTokens()
+	}
+}
