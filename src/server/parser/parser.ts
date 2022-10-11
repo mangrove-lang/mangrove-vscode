@@ -3,7 +3,7 @@ import {Position, TextDocument} from 'vscode-languageserver-textdocument'
 import {ASTIdent} from '../ast/values'
 import {ASTBool, ASTCharLit, ASTFloat, ASTInt, ASTNull, ASTStringLit} from '../ast/literals'
 import {ASTComment, ASTIntType, ASTNode, ASTType} from '../ast/types'
-import {ASTBetween, ASTRel} from '../ast/operations'
+import {ASTRel, ASTBetween, ASTLogic} from '../ast/operations'
 import {Tokeniser} from './tokeniser'
 import {Token, TokenType} from './types'
 import {isEquality} from './recogniser'
@@ -360,25 +360,30 @@ export class Parser
 		return rel
 	}
 
-	*parseLogicExpr(): Generator<Token, boolean, undefined>
+	parseLogicExpr(): Result<ASTNode | undefined, ParsingErrors>
 	{
+		const relation = this.parseRelation()
+		if (!isResultDefined(relation))
+			return relation
 		const token = this.lexer.token
-		let lhs = yield *yieldTokens(this.parseRelation())
+		let lhs = relation.unwrap()
 		if (!lhs)
-			return false
-		while (lhs)
+			return Err('UnreachableState')
+		while (token.typeIsOneOf(TokenType.logicOp))
 		{
-			if (!token.typeIsOneOf(TokenType.logicOp))
-				break
-			const comments = this.match(TokenType.logicOp)
-			if (comments)
-			{
-				for (const comment of comments)
-					yield *comment.yieldTokens()
-			}
-			lhs = yield *this.parseRelation()
+			const op = token.clone()
+			const match = this.match(TokenType.logicOp)
+			if (!match)
+				return Err('UnreachableState')
+			const rhsRel = this.parseRelation()
+			if (!isResultDefined(rhsRel))
+				return Err('OperatorWithNoRHS')
+			const rhs = rhsRel.unwrap()
+			if (!rhs)
+				return Err('UnreachableState')
+			lhs = new ASTLogic(op, lhs, rhs)
 		}
-		return true
+		return Ok(lhs)
 	}
 
 	*parseExpression(): Generator<Token, boolean, undefined>
@@ -387,7 +392,7 @@ export class Parser
 		const expr = yield *(function *(self): Generator<Token, boolean, undefined>
 		{
 			//const token = this.lexer.token
-			const expr = yield *self.parseLogicExpr()
+			const expr = yield *yieldTokens(self.parseLogicExpr())
 			return expr
 		})(this)
 		const token = this.lexer.token
@@ -415,7 +420,7 @@ export class Parser
 			for (const comment of comments)
 				yield *comment.yieldTokens()
 		}
-		const cond = yield *this.parseLogicExpr()
+		const cond = yield *yieldTokens(this.parseLogicExpr())
 		if (!cond)
 			return false
 		return yield *this.parseBlock()
