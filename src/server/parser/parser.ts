@@ -386,24 +386,26 @@ export class Parser
 		return Ok(lhs)
 	}
 
-	*parseExpression(): Generator<Token, boolean, undefined>
+	parseExpression(): Result<ASTNode | undefined, ParsingErrors>
 	{
 		// XXX: This needs to be restructured as a process that deals with ASTNodes instead of nested generators.
-		const expr = yield *(function *(self): Generator<Token, boolean, undefined>
+		const expr = ((): Result<ASTNode | undefined, ParsingErrors> =>
 		{
 			//const token = this.lexer.token
-			const expr = yield *yieldTokens(self.parseLogicExpr())
+			return this.parseLogicExpr()
+		})()
+		if (!isResultDefined(expr))
 			return expr
-		})(this)
+		const node = expr.unwrap()
+		if (!node)
+			return Err('UnreachableState')
 		const token = this.lexer.token
-		if (expr && token.typeIsOneOf(TokenType.semi))
+		if (token.typeIsOneOf(TokenType.semi))
 		{
-			const comments = this.match(TokenType.semi)
-			if (comments)
-			{
-				for (const comment of comments)
-					yield *comment.yieldTokens()
-			}
+			const match = this.match(TokenType.semi)
+			if (!match)
+				return Err('UnreachableState')
+			node.add(match)
 		}
 		return expr
 	}
@@ -477,7 +479,7 @@ export class Parser
 		if (!stmt)
 			stmt = yield *this.parseIfStmt()
 		if (!stmt)
-			stmt = yield *this.parseExpression()
+			stmt = yield *yieldTokens(this.parseExpression())
 		return stmt
 	}
 
