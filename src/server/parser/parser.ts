@@ -1,12 +1,13 @@
 import {Ok, Err, Result} from 'ts-results'
 import {Position, TextDocument} from 'vscode-languageserver-textdocument'
-import {ASTIdent} from '../ast/values'
+import {ASTIdent, ASTInvalid} from '../ast/values'
 import {ASTBool, ASTCharLit, ASTFloat, ASTInt, ASTNull, ASTStringLit} from '../ast/literals'
 import {ASTComment, ASTIntType, ASTNode, ASTType} from '../ast/types'
 import {ASTRel, ASTBetween, ASTLogic} from '../ast/operations'
 import {Tokeniser} from './tokeniser'
 import {Token, TokenType} from './types'
 import {isEquality} from './recogniser'
+import {ASTIfExpr} from '../ast/statements'
 
 function isInt(token: Token): boolean
 {
@@ -18,7 +19,8 @@ function isInt(token: Token): boolean
 	)
 }
 
-type ParsingErrors = 'UnreachableState' | 'IncorrectToken' | 'OperatorWithNoRHS' | 'InvalidTokenSequence'
+type ParsingErrors = 'UnreachableState' | 'IncorrectToken' | 'OperatorWithNoRHS' | 'InvalidTokenSequence' |
+	'MissingBlock'
 
 function isResultValid<T>(result: Result<T | undefined, ParsingErrors>): result is Ok<T>
 {
@@ -42,12 +44,8 @@ function isNodeRelation(node: ASTNode | ASTRel): node is ASTRel
 
 function *yieldTokens(node: Result<ASTNode | undefined, ParsingErrors>)
 {
-	if (node.ok)
-	{
-		const astNode = node.val
-		if (astNode)
-			yield *astNode.yieldTokens()
-	}
+	if (isResultValid(node))
+		yield *node.val.yieldTokens()
 	return isResultValid(node)
 }
 
@@ -406,22 +404,26 @@ export class Parser
 		return expr
 	}
 
-	*parseIfExpr(): Generator<Token, boolean, undefined>
+	*parseIfExpr(): Generator<Token, Result<ASTIfExpr | undefined, ParsingErrors>, undefined>
 	{
-		const token = this.lexer.token
+		const token = this.lexer.token.clone()
 		if (!token.typeIsOneOf(TokenType.ifStmt))
-			return false
-		yield token
-		const comments = this.match(TokenType.ifStmt)
-		if (comments)
-		{
-			for (const comment of comments)
-				yield *comment.yieldTokens()
-		}
-		const cond = yield *yieldTokens(this.parseLogicExpr())
-		if (!cond)
-			return false
-		return yield *this.parseBlock()
+			return Ok(undefined)
+		const match = this.match(TokenType.ifStmt)
+		if (!match)
+			return Err('UnreachableState')
+		const cond = this.parseLogicExpr()
+		if (!isResultValid(cond))
+			return cond as Result<undefined, ParsingErrors>
+		const blockExpr = yield *this.parseBlock()
+		if (!blockExpr)
+		// if (!isResultDefined(blockExpr))
+			return Err('MissingBlock')
+		// const block = blockExpr.unwrap()
+		const block: ASTNode = new ASTInvalid(new Token())
+		const node = new ASTIfExpr(token, cond.val, block)
+		node.add(match)
+		return Ok(node)
 	}
 
 	*parseElifExpr(): Generator<Token, boolean, undefined>
@@ -457,8 +459,9 @@ export class Parser
 	*parseIfStmt(): Generator<Token, boolean, undefined>
 	{
 		const ifExpr = yield *this.parseIfExpr()
-		if (!ifExpr)
+		if (!isResultValid(ifExpr))
 			return false
+		yield *yieldTokens(ifExpr)
 		while (true)
 		{
 			const elifExpr = yield *this.parseElifExpr()
