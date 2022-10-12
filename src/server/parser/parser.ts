@@ -7,7 +7,7 @@ import {ASTRel, ASTBetween, ASTLogic} from '../ast/operations'
 import {Tokeniser} from './tokeniser'
 import {Token, TokenType} from './types'
 import {isEquality} from './recogniser'
-import {ASTIfExpr, ASTElifExpr} from '../ast/statements'
+import {ASTIfExpr, ASTElifExpr, ASTElseExpr} from '../ast/statements'
 
 function isInt(token: Token): boolean
 {
@@ -448,19 +448,23 @@ export class Parser
 		return Ok(node)
 	}
 
-	*parseElseExpr(): Generator<Token, boolean, undefined>
+	*parseElseExpr(): Generator<Token, Result<ASTElseExpr | undefined, ParsingErrors>, undefined>
 	{
-		const token = this.lexer.token
+		const token = this.lexer.token.clone()
 		if (!token.typeIsOneOf(TokenType.elseStmt))
-			return false
-		yield token
-		const comments = this.match(TokenType.elseStmt)
-		if (comments)
-		{
-			for (const comment of comments)
-				yield *comment.yieldTokens()
-		}
-		return yield *this.parseBlock()
+			return Ok(undefined)
+		const match = this.match(TokenType.elseStmt)
+		if (!match)
+			return Err('UnreachableState')
+		const blockExpr = yield *this.parseBlock()
+		if (!blockExpr)
+		// if (!isResultDefined(blockExpr))
+			return Err('MissingBlock')
+		// const block = blockExpr.unwrap()
+		const block: ASTNode = new ASTInvalid(new Token())
+		const node = new ASTElseExpr(token, block)
+		node.add(match)
+		return Ok(node)
 	}
 
 	*parseIfStmt(): Generator<Token, boolean, undefined>
@@ -472,11 +476,16 @@ export class Parser
 		while (true)
 		{
 			const elifExpr = yield *this.parseElifExpr()
-			if (!isResultValid(elifExpr))
+			if (!isResultDefined(elifExpr))
 				break
+			//if (isResultError(elifExpr))
+			//	return elifExpr
 			yield *yieldTokens(elifExpr)
 		}
-		yield *this.parseElseExpr()
+		const elseExpr = yield *this.parseElseExpr()
+		//if (!isResultError(elseExpr))
+		//	return elseExpr
+		yield *yieldTokens(elseExpr)
 		return true
 	}
 
