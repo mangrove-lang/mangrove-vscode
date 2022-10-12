@@ -55,3 +55,27 @@ export class ASTElifExpr extends ASTNodeData implements ASTNode
 			yield *child.semanticTokens()
 	}
 }
+
+export class ASTElseExpr extends ASTNodeData implements ASTNode
+{
+	private _block: ASTNode
+
+	constructor(elseToken: Token, block: ASTNode)
+	{
+		super(elseToken)
+		this._block = block
+	}
+
+	get type() { return ASTType.elseExpr }
+	get valid() { return this.token.valid && this._block.valid }
+	get semanticType() { return SemanticTokenTypes.keyword }
+	toString() { return '<Else expression>' }
+
+	*semanticTokens(): Generator<SemanticToken, void, undefined>
+	{
+		yield this.buildSemanticToken(this.semanticType)
+		yield *this._block.semanticTokens()
+		for (const child of this.children)
+			yield *child.semanticTokens()
+	}
+}
