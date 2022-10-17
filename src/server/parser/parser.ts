@@ -488,13 +488,13 @@ export class Parser
 		return Ok(new ASTIfStmt(ifExpr.val, elifExprs, elseExpr.val))
 	}
 
-	*parseStatement(): Generator<Token, boolean, undefined>
+	*parseStatement(): Generator<Token, Result<ASTNode | undefined, ParsingErrors>, undefined>
 	{
-		let stmt = false
-		if (!stmt)
-			stmt = yield *yieldTokens(yield *this.parseIfStmt())
-		if (!stmt)
-			stmt = yield *yieldTokens(this.parseExpression())
+		let stmt: Result<ASTNode | undefined, ParsingErrors> = Ok(undefined)
+		if (!isResultValid(stmt))
+			stmt = yield *this.parseIfStmt()
+		if (!isResultValid(stmt))
+			stmt = this.parseExpression()
 		return stmt
 	}
 
@@ -523,7 +523,7 @@ export class Parser
 	{
 		const token = this.lexer.token
 		if (!token.typeIsOneOf(TokenType.leftBrace))
-			return yield *this.parseStatement()
+			return yield *yieldTokens(yield *this.parseStatement())
 		let comments = this.match(TokenType.leftBrace)
 		if (comments)
 		{
@@ -532,7 +532,7 @@ export class Parser
 		}
 		while (!token.typeIsOneOf(TokenType.rightBrace))
 		{
-			const stmt = yield *this.parseStatement()
+			const stmt = yield *yieldTokens(yield *this.parseStatement())
 			if (!stmt)
 				return false
 		}
@@ -554,7 +554,7 @@ export class Parser
 	{
 		const stmt = yield *this.parseVisibility()
 		if (!stmt)
-			return yield *this.parseStatement()
+			return yield *yieldTokens(yield *this.parseStatement())
 		return stmt
 	}
 
