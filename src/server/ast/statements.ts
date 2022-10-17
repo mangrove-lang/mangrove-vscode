@@ -150,11 +150,11 @@ export class ASTBlock extends ASTNodeData implements ASTNode
 	private _statements: ASTNode[] = []
 
 	get type() { return ASTType.block }
-	get valid() { return true }
+	get valid() { return this._statements.every(stmt => stmt.valid) }
 	get semanticType() { return undefined }
 	get empty() { return this._statements.length == 0 }
 	get statements() { return this._statements }
-	toString() { return `<Block containing ${this.statements.length} statements>` }
+	toString() { return `<Block: ${this.statements.length} statements>` }
 
 	*semanticTokens(): Generator<SemanticToken, void, undefined>
 	{
