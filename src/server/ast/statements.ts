@@ -1,3 +1,4 @@
+import { TextDocument } from 'vscode-languageserver-textdocument'
 import {SemanticToken, SemanticTokenTypes} from '../../providers/semanticTokens'
 import {Token} from '../parser/types'
 import {ASTNode, ASTNodeData, ASTType, ASTVisibilityType} from './types'
@@ -131,6 +132,7 @@ export class ASTVisibility extends ASTNodeData implements ASTNode
 	get type() { return ASTType.visibility }
 	get valid() { return this.token.valid }
 	get semanticType() { return SemanticTokenTypes.keyword }
+	get visibility() { return this._visibility }
 	toString() { return `<Visibility: ${this.token.value}>` }
 
 	*semanticTokens(): Generator<SemanticToken, void, undefined>
@@ -149,5 +151,41 @@ export class ASTVisibility extends ASTNodeData implements ASTNode
 		else if (value === 'private')
 			return ASTVisibilityType.privateVis
 		throw Error(`Invalid visibility value '${value}'`)
+	}
+}
+
+export class ASTBlock extends ASTNodeData implements ASTNode
+{
+	private _statements: ASTNode[] = []
+
+	get type() { return ASTType.block }
+	get valid() { return true }
+	get semanticType() { return undefined }
+	get empty() { return this._statements.length == 0 }
+	get statements() { return this._statements }
+	toString() { return `<Block containing ${this.statements.length} statements>` }
+
+	*semanticTokens(): Generator<SemanticToken, void, undefined>
+	{
+		for (const child of this.children)
+			yield *child.semanticTokens()
+	}
+
+	*yieldTokens(): Generator<Token, void, undefined> // XXX: Needs removing when the parser is converted.
+	{
+		for (const child of this.children)
+			yield *child.yieldTokens()
+	}
+
+	addStatement(stmt: ASTNode)
+	{
+		this.add([stmt])
+		this._statements.push(stmt)
+	}
+
+	adjustEnd(token: Token, file: TextDocument)
+	{
+		this._token.endsAt(token.location.end)
+		this._token.calcLength(file)
 	}
 }
