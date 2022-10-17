@@ -12,7 +12,7 @@ import
 	ASTStringLit
 } from '../ast/literals'
 import {ASTComment, ASTIntType, ASTNode, ASTType} from '../ast/types'
-import {ASTFunctionCall, ASTRel, ASTBetween, ASTLogic} from '../ast/operations'
+import {ASTFunctionCall, ASTBit, ASTRel, ASTBetween, ASTLogic} from '../ast/operations'
 import {Tokeniser} from './tokeniser'
 import {Token, TokenType} from './types'
 import {isEquality} from './recogniser'
@@ -66,6 +66,7 @@ export class Parser
 	private lexer: Tokeniser
 	private _ident: Token
 	private _symbolTable?: SymbolTable
+	//private _syntaxErrors: SyntaxError[] = []
 
 	constructor(file: TextDocument)
 	{
@@ -419,9 +420,32 @@ export class Parser
 		return Ok(new ASTFunctionCall(func, args.val))
 	}
 
+	parseBitExpr(): Result<ASTNode | undefined, ParsingErrors>
+	{
+		const value = this.parseValue()
+		if (!isResultValid(value))
+			return value
+		const token = this.lexer.token
+		let lhs = value.val
+		while (token.typeIsOneOf(TokenType.bitOp))
+		{
+			const op = token.clone()
+			const match = this.match(TokenType.bitOp)
+			if (!match)
+				return Err('UnreachableState')
+			const rhs = this.parseValue()
+			if (!isResultDefined(rhs))
+				return Err('OperatorWithNoRHS')
+			if (isResultError(rhs))
+				return rhs
+			lhs = new ASTBit(lhs, op, rhs.val)
+		}
+		return Ok(lhs)
+	}
+
 	parseRelExpr(): Result<ASTNode | ASTRel | undefined, ParsingErrors>
 	{
-		const lhs = this.parseValue()
+		const lhs = this.parseBitExpr()
 		const token = this.lexer.token
 		if (!(isResultValid(lhs) && token.typeIsOneOf(TokenType.relOp, TokenType.equOp)))
 			return lhs
@@ -429,7 +453,7 @@ export class Parser
 		const match = this.match(TokenType.relOp, TokenType.equOp)
 		if (!match)
 			return Err('UnreachableState')
-		const rhs = this.parseValue()
+		const rhs = this.parseBitExpr()
 		if (!isResultDefined(rhs))
 			return Err('OperatorWithNoRHS')
 		if (isResultError(rhs))
