@@ -89,6 +89,38 @@ export class ASTIndex extends ASTNodeData implements ASTNode
 	}
 }
 
+export class ASTSlice extends ASTNodeData implements ASTNode
+{
+	private _target: ASTIdent
+	private _begin?: ASTNode
+	private _end?: ASTNode
+
+	constructor(target: ASTIdent, begin?: ASTNode)
+	{
+		super(target.token)
+		this._target = target
+		this._begin = begin
+	}
+
+	get type() { return ASTType.slice }
+	get valid() { return this.target.valid }
+	get semanticType() { return undefined }
+	get target() { return this._target }
+	get begin() { return this._begin }
+	get end() { return this._end }
+	set end(index: ASTNode | undefined) { this._end = index }
+	toString() { return `<Slice of: '${this._target.value}>` }
+
+	*semanticTokens(): Generator<SemanticToken, void, undefined>
+	{
+		yield *this.target.semanticTokens()
+		if (this.begin)
+			yield *this.begin.semanticTokens()
+		for (const child of this.children)
+			yield *child.semanticTokens()
+	}
+}
+
 export class ASTCallArguments extends ASTNodeData implements ASTNode
 {
 	private _arguments: ASTNode[] = []
