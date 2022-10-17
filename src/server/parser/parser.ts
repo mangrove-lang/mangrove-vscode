@@ -1,7 +1,7 @@
 import {Ok, Err, Result} from 'ts-results'
 import {Position, TextDocument} from 'vscode-languageserver-textdocument'
 import {SymbolTable} from '../ast/symbolTable'
-import {ASTIdent, ASTCallArguments} from '../ast/values'
+import {ASTIdent, ASTIndex, ASTSlice, ASTCallArguments} from '../ast/values'
 import
 {
 	ASTBool,
@@ -37,7 +37,7 @@ function isInt(token: Token): boolean
 }
 
 type ParsingErrors = 'UnreachableState' | 'IncorrectToken' | 'OperatorWithNoRHS' | 'InvalidTokenSequence' |
-	'MissingBlock' | 'MissingComma' | 'MissingValue'
+	'MissingBlock' | 'MissingComma' | 'MissingValue' | 'MissingIndexOrSlice' | 'MissingRightBracket'
 
 function isResultValid<T>(result: Result<T | undefined, ParsingErrors>): result is Ok<T>
 {
@@ -292,6 +292,34 @@ export class Parser
 		if (isResultDefined(bool))
 			return bool
 		return this.parseNull()
+	}
+
+	parseSlice(index: ASTIndex, begin?: ASTNode): Result<ASTNode | undefined, ParsingErrors>
+	{
+		// Copy the index node's ident and comment data over
+		const node = new ASTSlice(index.target, begin)
+		node.add(index.children)
+		// Check if the next token is a colon (it's fatal if it is not)
+		const colon = this.match(TokenType.colon)
+		if (!colon)
+			return Err('UnreachableState')
+		node.add(colon)
+		// Now try and parse the end expression for the slice if there is one
+		const token = this.lexer.token
+		// At this point we either have `[:` or `[begin:` and want to grab the end point
+		if (!token.typeIsOneOf(TokenType.rightSquare))
+		{
+			const expr = this.parseLogicExpr()
+			if (!isResultValid(expr))
+				return expr
+			node.end = expr.val
+		}
+		// Now we should either have `[:]`, `[begin:]`, `[:end]`, or `[begin:end]`
+		const rightSquare = this.match(TokenType.rightSquare)
+		if (!rightSquare)
+			return Err('MissingRightBracket')
+		node.add(rightSquare)
+		return Ok(node)
 	}
 
 	parseValue(): Result<ASTNode | undefined, ParsingErrors>
