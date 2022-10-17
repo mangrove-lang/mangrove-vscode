@@ -1,6 +1,6 @@
 import {SemanticToken, SemanticTokenTypes} from '../../providers/semanticTokens'
 import {Token} from '../parser/types'
-import {ASTNode, ASTNodeData, ASTType} from './types'
+import {ASTNode, ASTNodeData, ASTType, ASTVisibilityType} from './types'
 
 export class ASTIfExpr extends ASTNodeData implements ASTNode
 {
@@ -115,5 +115,39 @@ export class ASTIfStmt extends ASTNodeData implements ASTNode
 			yield *elifExpr.yieldTokens()
 		if (this._elseExpr)
 			yield *this._elseExpr.yieldTokens()
+	}
+}
+
+export class ASTVisibility extends ASTNodeData implements ASTNode
+{
+	private _visibility: ASTVisibilityType
+
+	constructor(token: Token)
+	{
+		super(token)
+		this._visibility = this.stringToType(token.value)
+	}
+
+	get type() { return ASTType.visibility }
+	get valid() { return this.token.valid }
+	get semanticType() { return SemanticTokenTypes.keyword }
+	toString() { return `<Visibility: ${this.token.value}>` }
+
+	*semanticTokens(): Generator<SemanticToken, void, undefined>
+	{
+		yield this.buildSemanticToken(this.semanticType)
+		for (const child of this.children)
+			yield *child.semanticTokens()
+	}
+
+	private stringToType(value: string)
+	{
+		if (value === 'public')
+			return ASTVisibilityType.publicVis
+		else if (value === 'protected')
+			return ASTVisibilityType.protectedVis
+		else if (value === 'private')
+			return ASTVisibilityType.privateVis
+		throw Error(`Invalid visibility value '${value}'`)
 	}
 }
