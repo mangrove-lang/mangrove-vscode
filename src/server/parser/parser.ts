@@ -1,5 +1,6 @@
 import {Ok, Err, Result} from 'ts-results'
 import {Position, TextDocument} from 'vscode-languageserver-textdocument'
+import {SymbolTable} from '../ast/symbolTable'
 import {ASTIdent, ASTCallArguments} from '../ast/values'
 import
 {
@@ -64,17 +65,22 @@ export class Parser
 {
 	private lexer: Tokeniser
 	private _ident: Token
+	private _symbolTable?: SymbolTable
 
 	constructor(file: TextDocument)
 	{
 		this.lexer = new Tokeniser(file)
 		this._ident = new Token()
+		this._symbolTable = new SymbolTable(this)
 	}
 
 	get haveIdent()
 	{
 		return this._ident.valid
 	}
+
+	get symbolTable() { return this._symbolTable }
+	set symbolTable(table: SymbolTable | undefined) { this._symbolTable = table }
 
 	match(...tokenTypes: TokenType[])
 	{

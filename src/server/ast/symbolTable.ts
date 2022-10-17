@@ -1,4 +1,4 @@
-let symbolTable: SymbolTable | undefined
+import {Parser} from '../parser/parser'
 
 export enum SymbolTypes
 {
@@ -46,9 +46,9 @@ export class MangroveSymbol
 		this._ident = ident
 	}
 
-	allocStruct()
+	allocStruct(parser: Parser)
 	{
-		this._struct = new SymbolStruct()
+		this._struct = new SymbolStruct(parser)
 		this._type.assign(SymbolTypes.isStruct)
 	}
 
@@ -65,10 +65,10 @@ export class SymbolTable
 	private parentTable?: SymbolTable
 	private table: Map<string, MangroveSymbol> = new Map()
 
-	constructor()
+	constructor(parser: Parser)
 	{
-		this.parentTable = symbolTable
-		symbolTable = this
+		this.parentTable = parser.symbolTable
+		parser.symbolTable = this
 	}
 
 	add(ident: string)
@@ -96,19 +96,21 @@ export class SymbolTable
 		return
 	}
 
-	pop() { symbolTable = this.parentTable }
+	pop(parser: Parser) { parser.symbolTable = this.parentTable }
 }
 
 export class SymbolStruct
 {
-	private contents: SymbolTable = new SymbolTable()
-	private members: MangroveSymbol[] = new Array<MangroveSymbol>()
+	private contents: SymbolTable
+	private _members: MangroveSymbol[] = []
 
-	constructor(members?: MangroveSymbol[])
+	constructor(parser: Parser, members?: MangroveSymbol[])
 	{
+		this.contents = new SymbolTable(parser)
 		if (members)
-			this.members.push(...members)
+			this._members = members
 	}
 
 	get symbolTable() { return this.contents }
+	get members() { return this._members }
 }
