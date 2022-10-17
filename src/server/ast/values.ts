@@ -59,6 +59,36 @@ export class ASTDottedIdent extends ASTIdent
 	toString() { return `<DottedIdent '${this.value}'>` }
 }
 
+export class ASTIndex extends ASTNodeData implements ASTNode
+{
+	private _target: ASTIdent
+	private _index: ASTNode
+
+	constructor(target: ASTIdent)
+	{
+		super(target.token)
+		this._target = target
+		// This temporarily creates a fake invalid token which we swiftly override in parseIndex()
+		this._index = new ASTInvalid(new Token())
+	}
+
+	get type() { return ASTType.index }
+	get valid() { return this.target.valid && this.index.valid }
+	get semanticType() { return undefined }
+	get target() { return this._target }
+	get index() { return this._index }
+	set index(index: ASTNode) { this._index = index }
+	toString() { return `<Index into: '${this.target.value}>` }
+
+	*semanticTokens(): Generator<SemanticToken, void, undefined>
+	{
+		yield *this.target.semanticTokens()
+		yield *this.index.semanticTokens()
+		for (const child of this.children)
+			yield *child.semanticTokens()
+	}
+}
+
 export class ASTCallArguments extends ASTNodeData implements ASTNode
 {
 	private _arguments: ASTNode[] = []
