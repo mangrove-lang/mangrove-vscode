@@ -1,6 +1,6 @@
 import {Ok, Err, Result} from 'ts-results'
 import {Position, TextDocument} from 'vscode-languageserver-textdocument'
-import {ASTIdent, ASTInvalid} from '../ast/values'
+import {ASTIdent} from '../ast/values'
 import
 {
 	ASTBool,
@@ -56,13 +56,6 @@ function isResultError<T>(result: Result<T, ParsingErrors>): result is Err<Parsi
 function isNodeRelation(node: ASTNode | ASTRel): node is ASTRel
 {
 	return node.type == ASTType.rel
-}
-
-function *yieldTokens(node: Result<ASTNode | undefined, ParsingErrors>)
-{
-	if (isResultValid(node))
-		yield *node.val.yieldTokens()
-	return isResultValid(node)
 }
 
 type IdentAndComments = {token: Token, comments: ASTNode[]}
@@ -420,7 +413,7 @@ export class Parser
 		return expr
 	}
 
-	*parseIfExpr(): Generator<Token, Result<ASTIfExpr | undefined, ParsingErrors>, undefined>
+	parseIfExpr(): Result<ASTIfExpr | undefined, ParsingErrors>
 	{
 		const token = this.lexer.token.clone()
 		if (!token.typeIsOneOf(TokenType.ifStmt))
@@ -431,18 +424,17 @@ export class Parser
 		const cond = this.parseLogicExpr()
 		if (!isResultValid(cond))
 			return cond as Result<undefined, ParsingErrors>
-		const blockExpr = yield *this.parseBlock()
-		if (!blockExpr)
-		// if (!isResultDefined(blockExpr))
+		const block = this.parseBlock()
+		if (!isResultDefined(block))
 			return Err('MissingBlock')
-		// const block = blockExpr.unwrap()
-		const block: ASTNode = new ASTInvalid(new Token())
-		const node = new ASTIfExpr(token, cond.val, block)
+		else if (isResultError(block))
+			return block
+		const node = new ASTIfExpr(token, cond.val, block.val)
 		node.add(match)
 		return Ok(node)
 	}
 
-	*parseElifExpr(): Generator<Token, Result<ASTElifExpr | undefined, ParsingErrors>, undefined>
+	parseElifExpr(): Result<ASTElifExpr | undefined, ParsingErrors>
 	{
 		const token = this.lexer.token.clone()
 		if (!token.typeIsOneOf(TokenType.elifStmt))
@@ -453,18 +445,17 @@ export class Parser
 		const cond = this.parseLogicExpr()
 		if (!isResultValid(cond))
 			return cond as Result<undefined, ParsingErrors>
-		const blockExpr = yield *this.parseBlock()
-		if (!blockExpr)
-		// if (!isResultDefined(blockExpr))
+		const block = this.parseBlock()
+		if (!isResultDefined(block))
 			return Err('MissingBlock')
-		// const block = blockExpr.unwrap()
-		const block: ASTNode = new ASTInvalid(new Token())
-		const node = new ASTElifExpr(token, cond.val, block)
+		else if (isResultError(block))
+			return block
+		const node = new ASTElifExpr(token, cond.val, block.val)
 		node.add(match)
 		return Ok(node)
 	}
 
-	*parseElseExpr(): Generator<Token, Result<ASTElseExpr | undefined, ParsingErrors>, undefined>
+	parseElseExpr(): Result<ASTElseExpr | undefined, ParsingErrors>
 	{
 		const token = this.lexer.token.clone()
 		if (!token.typeIsOneOf(TokenType.elseStmt))
@@ -472,43 +463,42 @@ export class Parser
 		const match = this.match(TokenType.elseStmt)
 		if (!match)
 			return Err('UnreachableState')
-		const blockExpr = yield *this.parseBlock()
-		if (!blockExpr)
-		// if (!isResultDefined(blockExpr))
+		const block = this.parseBlock()
+		if (!isResultDefined(block))
 			return Err('MissingBlock')
-		// const block = blockExpr.unwrap()
-		const block: ASTNode = new ASTInvalid(new Token())
-		const node = new ASTElseExpr(token, block)
+		else if (isResultError(block))
+			return block
+		const node = new ASTElseExpr(token, block.val)
 		node.add(match)
 		return Ok(node)
 	}
 
-	*parseIfStmt(): Generator<Token, Result<ASTNode | undefined, ParsingErrors>, undefined>
+	parseIfStmt(): Result<ASTNode | undefined, ParsingErrors>
 	{
-		const ifExpr = yield *this.parseIfExpr()
+		const ifExpr = this.parseIfExpr()
 		if (!isResultValid(ifExpr))
 			return ifExpr
 		let elifExprs: ASTElifExpr[] = []
 		while (true)
 		{
-			const elifExpr = yield *this.parseElifExpr()
+			const elifExpr = this.parseElifExpr()
 			if (!isResultDefined(elifExpr))
 				break
 			if (isResultError(elifExpr))
 				return elifExpr
 			elifExprs.push(elifExpr.val)
 		}
-		const elseExpr = yield *this.parseElseExpr()
+		const elseExpr = this.parseElseExpr()
 		if (isResultError(elseExpr))
 			return elseExpr
 		return Ok(new ASTIfStmt(ifExpr.val, elifExprs, elseExpr.val))
 	}
 
-	*parseStatement(): Generator<Token, Result<ASTNode | undefined, ParsingErrors>, undefined>
+	parseStatement(): Result<ASTNode | undefined, ParsingErrors>
 	{
 		let stmt: Result<ASTNode | undefined, ParsingErrors> = Ok(undefined)
 		if (!isResultValid(stmt))
-			stmt = yield *this.parseIfStmt()
+			stmt = this.parseIfStmt()
 		if (!isResultValid(stmt))
 			stmt = this.parseExpression()
 		return stmt
@@ -555,17 +545,17 @@ export class Parser
 		return Ok(node)
 	}
 
-	*parseBlock(): Generator<Token, Result<ASTNode | undefined, ParsingErrors>, undefined>
+	parseBlock(): Result<ASTNode | undefined, ParsingErrors>
 	{
 		return this.parseBraceBlock()
 	}
 
-	*parseExtStatement(): Generator<Token, Result<ASTNode | undefined, ParsingErrors>, undefined>
+	parseExtStatement(): Result<ASTNode | undefined, ParsingErrors>
 	{
 		const stmt = this.parseVisibility()
 		if (isResultDefined(stmt))
 			return stmt
-		return yield *this.parseStatement()
+		return this.parseStatement()
 	}
 
 	public *tokenise(): Generator<Token, void, undefined>
@@ -576,7 +566,7 @@ export class Parser
 			yield *comment.yieldTokens()
 		while (!token.typeIsOneOf(TokenType.eof))
 		{
-			const stmt = yield *this.parseExtStatement()
+			const stmt = this.parseExtStatement()
 			if (!isResultDefined(stmt))
 				this.lexer.next()
 				//break
