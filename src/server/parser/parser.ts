@@ -1,13 +1,28 @@
 import {Ok, Err, Result} from 'ts-results'
 import {Position, TextDocument} from 'vscode-languageserver-textdocument'
 import {ASTIdent, ASTInvalid} from '../ast/values'
-import {ASTBool, ASTCharLit, ASTFloat, ASTInt, ASTNull, ASTStringLit} from '../ast/literals'
+import
+{
+	ASTBool,
+	ASTCharLit,
+	ASTFloat,
+	ASTInt,
+	ASTNull,
+	ASTStringLit
+} from '../ast/literals'
 import {ASTComment, ASTIntType, ASTNode, ASTType} from '../ast/types'
 import {ASTRel, ASTBetween, ASTLogic} from '../ast/operations'
 import {Tokeniser} from './tokeniser'
 import {Token, TokenType} from './types'
 import {isEquality} from './recogniser'
-import {ASTIfExpr, ASTElifExpr, ASTElseExpr, ASTIfStmt} from '../ast/statements'
+import
+{
+	ASTIfExpr,
+	ASTElifExpr,
+	ASTElseExpr,
+	ASTIfStmt,
+	ASTVisibility
+} from '../ast/statements'
 
 function isInt(token: Token): boolean
 {
@@ -498,25 +513,20 @@ export class Parser
 		return stmt
 	}
 
-	*parseVisibility(): Generator<Token, boolean, undefined>
+	parseVisibility(): Result<ASTNode | undefined, ParsingErrors>
 	{
 		const token = this.lexer.token
 		if (!token.typeIsOneOf(TokenType.visibility))
-			return false
-		yield token
-		let comments = this.match(TokenType.visibility)
-		if (comments)
-		{
-			for (const comment of comments)
-				yield *comment.yieldTokens()
-		}
-		comments = this.match(TokenType.semi)
-		if (comments)
-		{
-			for (const comment of comments)
-				yield *comment.yieldTokens()
-		}
-		return !!comments
+			return Ok(undefined)
+		const node = new ASTVisibility(token)
+		const match = this.match(TokenType.visibility)
+		if (!match)
+			return Err('UnreachableState')
+		node.add(match)
+		const semicolonMatch = this.match(TokenType.semi)
+		if (semicolonMatch !== undefined)
+			node.add(semicolonMatch)
+		return Ok(node)
 	}
 
 	*parseBraceBlock(): Generator<Token, boolean, undefined>
@@ -552,7 +562,7 @@ export class Parser
 
 	*parseExtStatement(): Generator<Token, boolean, undefined>
 	{
-		const stmt = yield *this.parseVisibility()
+		const stmt = yield *yieldTokens(this.parseVisibility())
 		if (!stmt)
 			return yield *yieldTokens(yield *this.parseStatement())
 		return stmt
