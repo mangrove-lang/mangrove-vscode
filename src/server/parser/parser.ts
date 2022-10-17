@@ -7,7 +7,7 @@ import {ASTRel, ASTBetween, ASTLogic} from '../ast/operations'
 import {Tokeniser} from './tokeniser'
 import {Token, TokenType} from './types'
 import {isEquality} from './recogniser'
-import {ASTIfExpr, ASTElifExpr, ASTElseExpr} from '../ast/statements'
+import {ASTIfExpr, ASTElifExpr, ASTElseExpr, ASTIfStmt} from '../ast/statements'
 
 function isInt(token: Token): boolean
 {
@@ -467,33 +467,32 @@ export class Parser
 		return Ok(node)
 	}
 
-	*parseIfStmt(): Generator<Token, boolean, undefined>
+	*parseIfStmt(): Generator<Token, Result<ASTNode | undefined, ParsingErrors>, undefined>
 	{
 		const ifExpr = yield *this.parseIfExpr()
 		if (!isResultValid(ifExpr))
-			return false
-		yield *yieldTokens(ifExpr)
+			return ifExpr
+		let elifExprs: ASTElifExpr[] = []
 		while (true)
 		{
 			const elifExpr = yield *this.parseElifExpr()
 			if (!isResultDefined(elifExpr))
 				break
-			//if (isResultError(elifExpr))
-			//	return elifExpr
-			yield *yieldTokens(elifExpr)
+			if (isResultError(elifExpr))
+				return elifExpr
+			elifExprs.push(elifExpr.val)
 		}
 		const elseExpr = yield *this.parseElseExpr()
-		//if (!isResultError(elseExpr))
-		//	return elseExpr
-		yield *yieldTokens(elseExpr)
-		return true
+		if (isResultError(elseExpr))
+			return elseExpr
+		return Ok(new ASTIfStmt(ifExpr.val, elifExprs, elseExpr.val))
 	}
 
 	*parseStatement(): Generator<Token, boolean, undefined>
 	{
 		let stmt = false
 		if (!stmt)
-			stmt = yield *this.parseIfStmt()
+			stmt = yield *yieldTokens(yield *this.parseIfStmt())
 		if (!stmt)
 			stmt = yield *yieldTokens(this.parseExpression())
 		return stmt
