@@ -18,6 +18,7 @@ export enum ASTType
 	dictValue,
 	slice,
 	index,
+	callArguments,
 	functionCall,
 	lambdaExpr,
 	lambdaCall,
