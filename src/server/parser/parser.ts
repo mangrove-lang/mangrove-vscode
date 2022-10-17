@@ -1,6 +1,6 @@
 import {Ok, Err, Result} from 'ts-results'
 import {Position, TextDocument} from 'vscode-languageserver-textdocument'
-import {ASTIdent} from '../ast/values'
+import {ASTIdent, ASTCallArguments} from '../ast/values'
 import
 {
 	ASTBool,
@@ -11,7 +11,7 @@ import
 	ASTStringLit
 } from '../ast/literals'
 import {ASTComment, ASTIntType, ASTNode, ASTType} from '../ast/types'
-import {ASTRel, ASTBetween, ASTLogic} from '../ast/operations'
+import {ASTFunctionCall, ASTRel, ASTBetween, ASTLogic} from '../ast/operations'
 import {Tokeniser} from './tokeniser'
 import {Token, TokenType} from './types'
 import {isEquality} from './recogniser'
@@ -36,7 +36,7 @@ function isInt(token: Token): boolean
 }
 
 type ParsingErrors = 'UnreachableState' | 'IncorrectToken' | 'OperatorWithNoRHS' | 'InvalidTokenSequence' |
-	'MissingBlock'
+	'MissingBlock' | 'MissingComma' | 'MissingValue'
 
 function isResultValid<T>(result: Result<T | undefined, ParsingErrors>): result is Ok<T>
 {
@@ -112,7 +112,7 @@ export class Parser
 		return Ok({token: token, comments: match})
 	}
 
-	parseIdent(): Result<ASTNode | undefined, ParsingErrors>
+	parseIdent(): Result<ASTIdent | undefined, ParsingErrors>
 	{
 		const match = this.parseIdentStr()
 		if (!match.ok)
@@ -290,7 +290,7 @@ export class Parser
 
 	parseValue(): Result<ASTNode | undefined, ParsingErrors>
 	{
-		//const token = this.lexer.token
+		const token = this.lexer.token
 		if (this.haveIdent)
 		{
 			const node = new ASTIdent(this._ident)
@@ -301,10 +301,52 @@ export class Parser
 		if (isResultDefined(const_))
 			return const_
 		const ident = this.parseIdent()
-		//if (ident)
-		//{
-		//}
+		if (isResultValid(ident))
+		{
+			if (token.typeIsOneOf(TokenType.leftParen))
+				return this.parseFunctionCall(ident.val)
+		}
 		return ident
+	}
+
+	parseCallArgs(): Result<ASTCallArguments | undefined, ParsingErrors>
+	{
+		const token = this.lexer.token
+		const node = new ASTCallArguments(token)
+		const leftParen = this.match(TokenType.leftParen)
+		if (!leftParen)
+			return Err('UnreachableState')
+		node.add(leftParen)
+		while (!token.typeIsOneOf(TokenType.rightParen))
+		{
+			const value = this.parseValue()
+			if (!isResultValid(value))
+				return value as Result<undefined, ParsingErrors>
+			node.addArgument(value.val)
+			if (!token.typeIsOneOf(TokenType.rightParen))
+			{
+				const comma = this.match(TokenType.comma)
+				if (!comma)
+					return Err('MissingComma')
+				else if (token.typeIsOneOf(TokenType.rightParen))
+					return Err('MissingValue')
+				node.add(comma)
+			}
+		}
+		node.adjustEnd(token, this.lexer.file)
+		const rightParen = this.match(TokenType.rightParen)
+		if (!rightParen)
+			return Err('UnreachableState')
+		node.add(rightParen)
+		return Ok(node)
+	}
+
+	parseFunctionCall(func: ASTIdent): Result<ASTNode | undefined, ParsingErrors>
+	{
+		const args = this.parseCallArgs()
+		if (!isResultValid(args))
+			return args
+		return Ok(new ASTFunctionCall(func, args.val))
 	}
 
 	parseRelExpr(): Result<ASTNode | ASTRel | undefined, ParsingErrors>
@@ -573,7 +615,8 @@ export class Parser
 			if (isResultValid(stmt))
 				nodes.push(stmt.val)
 			else
-				console.error(`Error during parsing: ${stmt.val}`)
+				console.error(`Error during parsing: ${stmt.val} at ` +
+					`${token.location.start.line}:${token.location.start.character}`)
 		}
 		return nodes
 	}
