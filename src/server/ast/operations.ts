@@ -1,6 +1,32 @@
 import {SemanticToken, SemanticTokenTypes} from '../../providers/semanticTokens'
 import {Token} from '../parser/types'
 import {ASTNode, ASTNodeData, ASTType} from './types'
+import {ASTIdent, ASTCallArguments} from './values'
+
+export class ASTFunctionCall extends ASTNodeData implements ASTNode
+{
+	private _functionName: ASTIdent
+	private _args: ASTCallArguments
+
+	constructor(func: ASTIdent, args: ASTCallArguments)
+	{
+		super(func.token)
+		this._token = func.token
+		this._functionName = func
+		this._args = args
+	}
+
+	get type() { return ASTType.functionCall }
+	get valid() { return this._functionName.valid && this._args.valid }
+	get semanticType() { return SemanticTokenTypes.function }
+	toString() { return `<FunctionCall: '${this._functionName.value}'>` }
+
+	*semanticTokens(): Generator<SemanticToken, void, undefined>
+	{
+		yield this.buildSemanticToken(this.semanticType)
+		yield *this._args.semanticTokens()
+	}
+}
 
 export class ASTRel extends ASTNodeData implements ASTNode
 {
