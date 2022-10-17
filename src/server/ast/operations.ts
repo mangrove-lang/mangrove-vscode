@@ -28,7 +28,7 @@ export class ASTFunctionCall extends ASTNodeData implements ASTNode
 	}
 }
 
-export class ASTRel extends ASTNodeData implements ASTNode
+class ASTBinaryOp extends ASTNodeData implements ASTNode
 {
 	private _lhs: ASTNode
 	private _rhs: ASTNode
@@ -40,13 +40,14 @@ export class ASTRel extends ASTNodeData implements ASTNode
 		this._rhs = rhs
 	}
 
-	get type() { return ASTType.rel }
+	get type(): ASTType { throw Error("Derived types must implement type()") }
 	get valid() { return this.lhs.valid && this.token.valid && this.rhs.valid }
 	get semanticType() { return SemanticTokenTypes.operator }
 	get lhs() { return this._lhs }
 	get op() { return this.token.value }
 	get rhs() { return this._rhs }
-	toString() { return `<Relation op: '${this.token.value}'>` }
+	get operationName(): string { throw Error("Derived types must implement operationName()") }
+	toString() { return `<${this.operationName} op: '${this.token.value}'>` }
 
 	*semanticTokens(): Generator<SemanticToken, void, undefined>
 	{
@@ -56,6 +57,18 @@ export class ASTRel extends ASTNodeData implements ASTNode
 		for (const child of this.children)
 			yield *child.semanticTokens()
 	}
+}
+
+export class ASTBit extends ASTBinaryOp
+{
+	get type() { return ASTType.bit }
+	get operationName() { return 'Bitwise' }
+}
+
+export class ASTRel extends ASTBinaryOp
+{
+	get type() { return ASTType.rel }
+	get operationName() { return 'Relation' }
 }
 
 export class ASTBetween extends ASTNodeData implements ASTNode
