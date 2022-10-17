@@ -21,7 +21,8 @@ import
 	ASTElifExpr,
 	ASTElseExpr,
 	ASTIfStmt,
-	ASTVisibility
+	ASTVisibility,
+	ASTBlock
 } from '../ast/statements'
 
 function isInt(token: Token): boolean
@@ -529,35 +530,34 @@ export class Parser
 		return Ok(node)
 	}
 
-	*parseBraceBlock(): Generator<Token, boolean, undefined>
+	parseBraceBlock(): Result<ASTNode | undefined, ParsingErrors>
 	{
 		const token = this.lexer.token
 		if (!token.typeIsOneOf(TokenType.leftBrace))
-			return yield *yieldTokens(yield *this.parseStatement())
-		let comments = this.match(TokenType.leftBrace)
-		if (comments)
-		{
-			for (const comment of comments)
-				yield *comment.yieldTokens()
-		}
+			return this.parseStatement()
+		const node = new ASTBlock(token)
+		const leftBrace = this.match(TokenType.leftBrace)
+		if (!leftBrace)
+			return Err('UnreachableState')
+		node.add(leftBrace)
 		while (!token.typeIsOneOf(TokenType.rightBrace))
 		{
-			const stmt = yield *yieldTokens(yield *this.parseStatement())
-			if (!stmt)
-				return false
+			const stmt = this.parseStatement()
+			if (!isResultValid(stmt))
+				return stmt
+			node.addStatement(stmt.val)
 		}
-		comments = this.match(TokenType.rightBrace)
-		if (comments)
-		{
-			for (const comment of comments)
-				yield *comment.yieldTokens()
-		}
-		return !!comments
+		node.adjustEnd(token, this.lexer.file)
+		const rightBrace = this.match(TokenType.rightBrace)
+		if (!rightBrace)
+			return Err('UnreachableState')
+		node.add(rightBrace)
+		return Ok(node)
 	}
 
-	*parseBlock(): Generator<Token, boolean, undefined>
+	*parseBlock(): Generator<Token, Result<ASTNode | undefined, ParsingErrors>, undefined>
 	{
-		return yield *this.parseBraceBlock()
+		return this.parseBraceBlock()
 	}
 
 	*parseExtStatement(): Generator<Token, Result<ASTNode | undefined, ParsingErrors>, undefined>
