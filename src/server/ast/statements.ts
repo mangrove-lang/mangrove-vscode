@@ -79,3 +79,41 @@ export class ASTElseExpr extends ASTNodeData implements ASTNode
 			yield *child.semanticTokens()
 	}
 }
+
+export class ASTIfStmt extends ASTNodeData implements ASTNode
+{
+	private _ifExpr: ASTIfExpr
+	private _elifExprs: ASTElifExpr[] = []
+	private _elseExpr?: ASTElseExpr
+
+	constructor(ifExpr: ASTIfExpr, elifExprs: ASTElifExpr[], elseExpr?: ASTElseExpr)
+	{
+		super(new Token())
+		this._ifExpr = ifExpr
+		this._elifExprs = elifExprs
+		this._elseExpr = elseExpr
+	}
+
+	get type() { return ASTType.ifStmt }
+	get valid() { return this._ifExpr.valid && this._elifExprs.every(expr => expr.valid) }
+	get semanticType() { return undefined }
+	toString() { return '<If statement>' }
+
+	*semanticTokens(): Generator<SemanticToken, void, undefined>
+	{
+		yield *this._ifExpr.semanticTokens()
+		for (const elifExpr of this._elifExprs)
+			yield *elifExpr.semanticTokens()
+		if (this._elseExpr)
+			yield *this._elseExpr.semanticTokens()
+	}
+
+	*yieldTokens(): Generator<Token, void, undefined> // XXX: Needs removing when the parser is converted.
+	{
+		yield *this._ifExpr.yieldTokens()
+		for (const elifExpr of this._elifExprs)
+			yield *elifExpr.yieldTokens()
+		if (this._elseExpr)
+			yield *this._elseExpr.yieldTokens()
+	}
+}
