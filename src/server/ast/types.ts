@@ -91,6 +91,7 @@ export class ASTNodeData
 		if (!token)
 			token = this._token
 		const location = token.location
+		console.info(`Translating token ${token} to semantic type ${SemanticTokenTypes[semanticType]}`)
 		return {
 			line: location.start.line,
 			character: location.start.character,
