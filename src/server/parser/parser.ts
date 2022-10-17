@@ -558,20 +558,23 @@ export class Parser
 		return this.parseStatement()
 	}
 
-	public *tokenise(): Generator<Token, void, undefined>
+	public parse(): ASTNode[]
 	{
 		const token = this.lexer.next()
-		const comments = this.skipWhite()
-		for (const comment of comments)
-			yield *comment.yieldTokens()
+		const nodes = this.skipWhite()
 		while (!token.typeIsOneOf(TokenType.eof))
 		{
 			const stmt = this.parseExtStatement()
 			if (!isResultDefined(stmt))
+			{
 				this.lexer.next()
-				//break
+				continue;
+			}
 			if (isResultValid(stmt))
-				yield *stmt.val.yieldTokens()
+				nodes.push(stmt.val)
+			else
+				console.error(`Error during parsing: ${stmt.val}`)
 		}
+		return nodes
 	}
 }
