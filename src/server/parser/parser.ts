@@ -322,6 +322,40 @@ export class Parser
 		return Ok(node)
 	}
 
+	parseIndex(ident: ASTIdent): Result<ASTNode | undefined, ParsingErrors>
+	{
+		const token = this.lexer.token
+		const node = new ASTIndex(ident)
+		const leftSquare = this.match(TokenType.leftSquare)
+		if (!leftSquare)
+			return Err('UnreachableState')
+		node.add(leftSquare)
+		let index: ASTNode | undefined
+		// Check to see if we just got `[]`
+		if (token.typeIsOneOf(TokenType.rightSquare))
+			return Err('MissingIndexOrSlice')
+		// Parse an indexing expression, as long as it's not `[:`
+		else if (!token.typeIsOneOf(TokenType.colon))
+		{
+			const expr = this.parseLogicExpr()
+			if (!isResultValid(expr))
+				return expr
+			index = expr.val
+		}
+		// Do we now have either `[:` or `[expr:`?
+		if (token.typeIsOneOf(TokenType.colon))
+			return /*parseSlice(node, index)*/Ok(undefined)
+		if (!index)
+			return Err('UnreachableState')
+		node.index = index
+		// We did not, so we should now have `[expr]` meaning a normal index expression
+		const rightSquare = this.match(TokenType.rightSquare)
+		if (!rightSquare)
+			return Err('MissingRightBracket')
+		node.add(rightSquare)
+		return Ok(node)
+	}
+
 	parseValue(): Result<ASTNode | undefined, ParsingErrors>
 	{
 		const token = this.lexer.token
@@ -339,6 +373,8 @@ export class Parser
 		{
 			if (token.typeIsOneOf(TokenType.leftParen))
 				return this.parseFunctionCall(ident.val)
+			else if (token.typeIsOneOf(TokenType.leftSquare))
+				return this.parseIndex(ident.val)
 		}
 		return ident
 	}
