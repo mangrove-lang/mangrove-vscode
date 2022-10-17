@@ -526,7 +526,7 @@ export class Parser
 		const ifExpr = this.parseIfExpr()
 		if (!isResultValid(ifExpr))
 			return ifExpr
-		let elifExprs: ASTElifExpr[] = []
+		const elifExprs: ASTElifExpr[] = []
 		while (true)
 		{
 			const elifExpr = this.parseElifExpr()
@@ -616,7 +616,7 @@ export class Parser
 			if (!isResultDefined(stmt))
 			{
 				this.lexer.next()
-				continue;
+				continue
 			}
 			if (isResultValid(stmt))
 				nodes.push(stmt.val)
