@@ -79,14 +79,6 @@ export class ASTStringLit extends ASTNodeData implements ASTValue
 			yield *child.semanticTokens()
 	}
 
-	*yieldTokens(): Generator<Token, void, undefined> // XXX: Needs removing when the parser is converted.
-	{
-		for (const segment of this.segments)
-			yield segment
-		for (const child of this.children)
-			yield *child.yieldTokens()
-	}
-
 	addSegment(token: Token)
 	{
 		if (!this.token.isEqual(token))

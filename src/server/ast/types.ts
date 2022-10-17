@@ -99,13 +99,6 @@ export class ASTNodeData
 			type: semanticType
 		} as SemanticToken
 	}
-
-	*yieldTokens(): Generator<Token, void, undefined> // XXX: Needs removing when the parser is converted.
-	{
-		yield this._token
-		for (const child of this._children)
-			yield *child.yieldTokens()
-	}
 }
 
 export interface ASTNode extends ASTNodeData

@@ -108,15 +108,6 @@ export class ASTIfStmt extends ASTNodeData implements ASTNode
 		if (this._elseExpr)
 			yield *this._elseExpr.semanticTokens()
 	}
-
-	*yieldTokens(): Generator<Token, void, undefined> // XXX: Needs removing when the parser is converted.
-	{
-		yield *this._ifExpr.yieldTokens()
-		for (const elifExpr of this._elifExprs)
-			yield *elifExpr.yieldTokens()
-		if (this._elseExpr)
-			yield *this._elseExpr.yieldTokens()
-	}
 }
 
 export class ASTVisibility extends ASTNodeData implements ASTNode
@@ -169,12 +160,6 @@ export class ASTBlock extends ASTNodeData implements ASTNode
 	{
 		for (const child of this.children)
 			yield *child.semanticTokens()
-	}
-
-	*yieldTokens(): Generator<Token, void, undefined> // XXX: Needs removing when the parser is converted.
-	{
-		for (const child of this.children)
-			yield *child.yieldTokens()
 	}
 
 	addStatement(stmt: ASTNode)
