@@ -560,12 +560,12 @@ export class Parser
 		return yield *this.parseBraceBlock()
 	}
 
-	*parseExtStatement(): Generator<Token, boolean, undefined>
+	*parseExtStatement(): Generator<Token, Result<ASTNode | undefined, ParsingErrors>, undefined>
 	{
-		const stmt = yield *yieldTokens(this.parseVisibility())
-		if (!stmt)
-			return yield *yieldTokens(yield *this.parseStatement())
-		return stmt
+		const stmt = this.parseVisibility()
+		if (isResultDefined(stmt))
+			return stmt
+		return yield *this.parseStatement()
 	}
 
 	public *tokenise(): Generator<Token, void, undefined>
@@ -577,9 +577,11 @@ export class Parser
 		while (!token.typeIsOneOf(TokenType.eof))
 		{
 			const stmt = yield *this.parseExtStatement()
-			if (!stmt)
+			if (!isResultDefined(stmt))
 				this.lexer.next()
 				//break
+			if (isResultValid(stmt))
+				yield *stmt.val.yieldTokens()
 		}
 	}
 }
