@@ -15,6 +15,7 @@ import {ASTComment, ASTIntType, ASTNode, ASTType} from '../ast/types'
 import
 {
 	ASTFunctionCall,
+	ASTInvert,
 	ASTMul,
 	ASTAdd,
 	ASTShift,
@@ -430,6 +431,46 @@ export class Parser
 		return Ok(new ASTFunctionCall(func, args.val))
 	}
 
+	parseInvertExpr(): Result<ASTNode | undefined, ParsingErrors>
+	{
+		if (this.haveIdent)
+			return this.parseValue()
+		const token = this.lexer.token
+		if (token.typeIsOneOf(TokenType.invert))
+		{
+			const op = token.clone()
+			const match = this.match(TokenType.invert)
+			if (!match)
+				return Err('UnreachableState')
+			const value = this.parseValue()
+			if (!isResultDefined(value))
+				return Err('OperatorWithNoRHS')
+			if (isResultError(value))
+				return value
+			const node = new ASTInvert(op, value.val)
+			node.add(match)
+			return Ok(node)
+		}
+		else if (token.typeIsOneOf(TokenType.addOp))
+		{
+			if (token.value !== '-')
+				return Err('IncorrectToken')
+			const op = token.clone()
+			const match = this.match(TokenType.addOp)
+			if (!match)
+				return Err('UnreachableState')
+			const value = this.parseValue()
+			if (!isResultDefined(value))
+				return Err('OperatorWithNoRHS')
+			if (isResultError(value))
+				return value
+			const node = new ASTInvert(op, value.val)
+			node.add(match)
+			return Ok(node)
+		}
+		return this.parseValue()
+	}
+
 	parseBinaryExpr<ASTNodeType extends ASTNode>(valueFn: () => Result<ASTNode | undefined, ParsingErrors>,
 		tokenType: TokenType, nodeType: {new(lhs: ASTNode, op: Token, rhs: ASTNode): ASTNodeType}):
 		Result<ASTNode | undefined, ParsingErrors>
@@ -455,7 +496,7 @@ export class Parser
 		return Ok(lhs)
 	}
 
-	parseMulExpr() { return this.parseBinaryExpr(this.parseValue, TokenType.mulOp, ASTMul) }
+	parseMulExpr() { return this.parseBinaryExpr(this.parseInvertExpr, TokenType.mulOp, ASTMul) }
 	parseAddExpr() { return this.parseBinaryExpr(this.parseMulExpr, TokenType.addOp, ASTAdd) }
 
 	parseShiftExpr(): Result<ASTNode | ASTRel | undefined, ParsingErrors>
