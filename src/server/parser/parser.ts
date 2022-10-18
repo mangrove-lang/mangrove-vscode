@@ -15,6 +15,7 @@ import {ASTComment, ASTIntType, ASTNode, ASTType} from '../ast/types'
 import
 {
 	ASTFunctionCall,
+	ASTAdd,
 	ASTShift,
 	ASTBit,
 	ASTRel,
@@ -453,9 +454,11 @@ export class Parser
 		return Ok(lhs)
 	}
 
+	parseAddExpr() { return this.parseBinaryExpr(this.parseValue, TokenType.addOp, ASTAdd) }
+
 	parseShiftExpr(): Result<ASTNode | ASTRel | undefined, ParsingErrors>
 	{
-		const lhs = this.parseValue()
+		const lhs = this.parseAddExpr()
 		if (!isResultValid(lhs))
 			return lhs
 		const token = this.lexer.token
@@ -465,7 +468,7 @@ export class Parser
 		const match = this.match(TokenType.shiftOp)
 		if (!match)
 			return Err('UnreachableState')
-		const rhs = this.parseValue()
+		const rhs = this.parseAddExpr()
 		if (!isResultDefined(rhs))
 			return Err('OperatorWithNoRHS')
 		if (isResultError(rhs))
