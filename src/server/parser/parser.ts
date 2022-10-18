@@ -12,7 +12,15 @@ import
 	ASTStringLit
 } from '../ast/literals'
 import {ASTComment, ASTIntType, ASTNode, ASTType} from '../ast/types'
-import {ASTFunctionCall, ASTBit, ASTRel, ASTBetween, ASTLogic} from '../ast/operations'
+import
+{
+	ASTFunctionCall,
+	ASTShift,
+	ASTBit,
+	ASTRel,
+	ASTBetween,
+	ASTLogic
+} from '../ast/operations'
 import {Tokeniser} from './tokeniser'
 import {Token, TokenType} from './types'
 import {isEquality} from './recogniser'
@@ -445,7 +453,29 @@ export class Parser
 		return Ok(lhs)
 	}
 
-	parseBitExpr() { return this.parseBinaryExpr(this.parseValue, TokenType.bitOp, ASTBit) }
+	parseShiftExpr(): Result<ASTNode | ASTRel | undefined, ParsingErrors>
+	{
+		const lhs = this.parseValue()
+		if (!isResultValid(lhs))
+			return lhs
+		const token = this.lexer.token
+		if (!token.typeIsOneOf(TokenType.shiftOp))
+			return lhs
+		const op = token.clone()
+		const match = this.match(TokenType.shiftOp)
+		if (!match)
+			return Err('UnreachableState')
+		const rhs = this.parseValue()
+		if (!isResultDefined(rhs))
+			return Err('OperatorWithNoRHS')
+		if (isResultError(rhs))
+			return rhs
+		const node = new ASTShift(lhs.val, op, rhs.val)
+		node.add(match)
+		return Ok(node)
+	}
+
+	parseBitExpr() { return this.parseBinaryExpr(this.parseShiftExpr, TokenType.bitOp, ASTBit) }
 
 	parseRelExpr(): Result<ASTNode | ASTRel | undefined, ParsingErrors>
 	{
