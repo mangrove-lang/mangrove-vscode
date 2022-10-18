@@ -15,6 +15,7 @@ import {ASTComment, ASTIntType, ASTNode, ASTType} from '../ast/types'
 import
 {
 	ASTFunctionCall,
+	ASTMul,
 	ASTAdd,
 	ASTShift,
 	ASTBit,
@@ -454,7 +455,8 @@ export class Parser
 		return Ok(lhs)
 	}
 
-	parseAddExpr() { return this.parseBinaryExpr(this.parseValue, TokenType.addOp, ASTAdd) }
+	parseMulExpr() { return this.parseBinaryExpr(this.parseValue, TokenType.mulOp, ASTMul) }
+	parseAddExpr() { return this.parseBinaryExpr(this.parseMulExpr, TokenType.addOp, ASTAdd) }
 
 	parseShiftExpr(): Result<ASTNode | ASTRel | undefined, ParsingErrors>
 	{
