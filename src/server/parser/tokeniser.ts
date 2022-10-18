@@ -1,6 +1,7 @@
 import {Position, TextDocument} from 'vscode-languageserver-textdocument'
 import {Token, TokenType} from './types'
-import {
+import
+{
 	isNewLine,
 	isAlpha,
 	isDigit,
@@ -18,12 +19,18 @@ import {
 	isFalse,
 	isNull,
 	isEquals,
+	isNew,
+	isDelete,
 	isReturn,
 	isIfStmt,
 	isElifStmt,
 	isElseStmt,
 	isWhileStmt,
 	isDoStmt,
+	isNone,
+	isClass,
+	isFunctionDef,
+	isOperatorDef,
 	isVisibility
 } from './recogniser'
 
@@ -218,6 +225,10 @@ export class Tokeniser
 			else if (token === 'not')
 				this._token.set(TokenType.invert, '!')
 
+			else if (isNew(token))
+				this._token.set(TokenType.newStmt)
+			else if (isDelete(token))
+				this._token.set(TokenType.deleteStmt)
 			else if (isReturn(token))
 				this._token.set(TokenType.returnStmt)
 			else if (isIfStmt(token))
@@ -231,6 +242,14 @@ export class Tokeniser
 			else if (isDoStmt(token))
 				this._token.set(TokenType.doStmt)
 
+			else if (isNone(token))
+				this._token.set(TokenType.noneType)
+			else if (isClass(token))
+				this._token.set(TokenType.classDef)
+			else if (isFunctionDef(token))
+				this._token.set(TokenType.functionDef)
+			else if (isOperatorDef(token))
+				this._token.set(TokenType.operatorDef)
 			else if (isVisibility(token))
 				this._token.set(TokenType.visibility, token)
 			else
