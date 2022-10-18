@@ -28,6 +28,33 @@ export class ASTFunctionCall extends ASTNodeData implements ASTNode
 	}
 }
 
+class ASTUnaryOp extends ASTNodeData implements ASTNode
+{
+	private _value: ASTNode
+
+	constructor(op: Token, value: ASTNode)
+	{
+		super(op)
+		this._value = value
+	}
+
+	get type(): ASTType { throw Error('Derived types must implement type()') }
+	get valid() { return this.token.valid && this.value.valid }
+	get semanticType() { return SemanticTokenTypes.operator }
+	get op() { return this.token.value }
+	get value() { return this._value }
+	get operationName(): string { throw Error('Derived types must implement operationName()') }
+	toString() { return `<${this.operationName} op: '${this.token.value}'>` }
+
+	*semanticTokens(): Generator<SemanticToken, void, undefined>
+	{
+		yield this.buildSemanticToken(this.semanticType)
+		yield *this.value.semanticTokens()
+		for (const child of this.children)
+			yield *child.semanticTokens()
+	}
+}
+
 class ASTBinaryOp extends ASTNodeData implements ASTNode
 {
 	private _lhs: ASTNode
@@ -51,12 +78,18 @@ class ASTBinaryOp extends ASTNodeData implements ASTNode
 
 	*semanticTokens(): Generator<SemanticToken, void, undefined>
 	{
-		yield *this._lhs.semanticTokens()
+		yield *this.lhs.semanticTokens()
 		yield this.buildSemanticToken(this.semanticType)
-		yield *this._rhs.semanticTokens()
+		yield *this.rhs.semanticTokens()
 		for (const child of this.children)
 			yield *child.semanticTokens()
 	}
+}
+
+export class ASTInvert extends ASTUnaryOp
+{
+	get type() { return ASTType.invert }
+	get operationName() { return 'Inversion' }
 }
 
 export class ASTMul extends ASTBinaryOp
