@@ -59,6 +59,12 @@ class ASTBinaryOp extends ASTNodeData implements ASTNode
 	}
 }
 
+export class ASTMul extends ASTBinaryOp
+{
+	get type() { return ASTType.mul }
+	get operationName() { return 'Multiplication' }
+}
+
 export class ASTAdd extends ASTBinaryOp
 {
 	get type() { return ASTType.add }
