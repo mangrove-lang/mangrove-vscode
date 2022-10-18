@@ -59,6 +59,12 @@ class ASTBinaryOp extends ASTNodeData implements ASTNode
 	}
 }
 
+export class ASTShift extends ASTBinaryOp
+{
+	get type() { return ASTType.shift }
+	get operationName() { return 'Bit-shift' }
+}
+
 export class ASTBit extends ASTBinaryOp
 {
 	get type() { return ASTType.bit }
