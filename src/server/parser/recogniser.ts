@@ -48,12 +48,16 @@ export function isTrue(str: string) { return str === 'true' }
 export function isFalse(str: string) { return str === 'false' }
 export function isNull(str: string) { return str === 'nullptr' }
 
+export function isFunctionDef(str: string) { return str === 'function' }
+
 export function isEquals(c: string) { return c === '=' }
 
 
 export function isEquality(c: string) { return c === '<' || c === '<=' || c === '>' || c === '>=' }
 export function isRelation(c: string) { return isEquality(c) || c === '!=' || c === '==' }
 
+export function isNew(str: string) { return str === 'new' }
+export function isDelete(str: string) { return str === 'delete' }
 
 export function isReturn(str: string) { return str === 'return' }
 
@@ -64,6 +68,8 @@ export function isElseStmt(str: string) { return str === 'else' }
 export function isWhileStmt(str: string) { return str === 'while' }
 export function isDoStmt(str: string) { return str === 'do' }
 
+export function isClass(str: string) { return str === 'class' }
+export function isOperatorDef(str: string) { return str === 'operator' }
 
 export function isNone(str: string) { return str === 'none' }
 export function isArrow(str: string) { return str === '->' }
