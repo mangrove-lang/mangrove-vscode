@@ -420,28 +420,32 @@ export class Parser
 		return Ok(new ASTFunctionCall(func, args.val))
 	}
 
-	parseBitExpr(): Result<ASTNode | undefined, ParsingErrors>
+	parseBinaryExpr<ASTNodeType extends ASTNode>(valueFn: () => Result<ASTNode | undefined, ParsingErrors>,
+		tokenType: TokenType, nodeType: {new(lhs: ASTNode, op: Token, rhs: ASTNode): ASTNodeType}):
+		Result<ASTNode | undefined, ParsingErrors>
 	{
-		const value = this.parseValue()
+		const value = valueFn.call(this)
 		if (!isResultValid(value))
 			return value
 		const token = this.lexer.token
 		let lhs = value.val
-		while (token.typeIsOneOf(TokenType.bitOp))
+		while (token.typeIsOneOf(tokenType))
 		{
 			const op = token.clone()
-			const match = this.match(TokenType.bitOp)
+			const match = this.match(tokenType)
 			if (!match)
 				return Err('UnreachableState')
-			const rhs = this.parseValue()
+			const rhs = valueFn.call(this)
 			if (!isResultDefined(rhs))
 				return Err('OperatorWithNoRHS')
 			if (isResultError(rhs))
 				return rhs
-			lhs = new ASTBit(lhs, op, rhs.val)
+			lhs = new nodeType(lhs, op, rhs.val)
 		}
 		return Ok(lhs)
 	}
+
+	parseBitExpr() { return this.parseBinaryExpr(this.parseValue, TokenType.bitOp, ASTBit) }
 
 	parseRelExpr(): Result<ASTNode | ASTRel | undefined, ParsingErrors>
 	{
