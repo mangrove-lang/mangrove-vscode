@@ -40,13 +40,13 @@ class ASTBinaryOp extends ASTNodeData implements ASTNode
 		this._rhs = rhs
 	}
 
-	get type(): ASTType { throw Error("Derived types must implement type()") }
+	get type(): ASTType { throw Error('Derived types must implement type()') }
 	get valid() { return this.lhs.valid && this.token.valid && this.rhs.valid }
 	get semanticType() { return SemanticTokenTypes.operator }
 	get lhs() { return this._lhs }
 	get op() { return this.token.value }
 	get rhs() { return this._rhs }
-	get operationName(): string { throw Error("Derived types must implement operationName()") }
+	get operationName(): string { throw Error('Derived types must implement operationName()') }
 	toString() { return `<${this.operationName} op: '${this.token.value}'>` }
 
 	*semanticTokens(): Generator<SemanticToken, void, undefined>
