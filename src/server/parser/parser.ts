@@ -695,6 +695,7 @@ export class Parser
 		if (!isResultValid(ifExpr))
 			return ifExpr
 		const elifExprs: ASTElifExpr[] = []
+		/*eslint no-constant-condition: ["error", { "checkLoops": false }]*/
 		while (true)
 		{
 			const elifExpr = this.parseElifExpr()
