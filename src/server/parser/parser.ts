@@ -32,6 +32,7 @@ import {Token, TokenType} from './types'
 import {isEquality} from './recogniser'
 import
 {
+	ASTNew,
 	ASTReturn,
 	ASTIfExpr,
 	ASTElifExpr,
@@ -427,11 +428,11 @@ export class Parser
 		return Ok(node)
 	}
 
-	parseFunctionCall(func: ASTIdent): Result<ASTNode | undefined, ParsingErrors>
+	parseFunctionCall(func: ASTIdent): Result<ASTFunctionCall | undefined, ParsingErrors>
 	{
 		const args = this.parseCallArgs()
 		if (!isResultValid(args))
-			return args
+			return args as Result<undefined, ParsingErrors>
 		return Ok(new ASTFunctionCall(func, args.val))
 	}
 
@@ -669,11 +670,34 @@ export class Parser
 		return Ok(lhs)
 	}
 
+	parseNewExpr(): Result<ASTNode | undefined, ParsingErrors>
+	{
+		const token = this.lexer.token.clone()
+		if (!token.typeIsOneOf(TokenType.newStmt))
+			return Ok(undefined)
+		const match = this.match(TokenType.newStmt)
+		if (!match)
+			return Err('UnreachableState')
+		const ident = this.parseIdent()
+		if (!isResultDefined(ident))
+			return Err('OperatorWithNoRHS')
+		if (isResultError(ident))
+			return ident
+		const call = this.parseFunctionCall(ident.val)
+		if (!isResultDefined(call))
+			return Err('InvalidTokenSequence')
+		if (isResultError(call))
+			return call
+		const node = new ASTNew(token, call.val)
+		node.add(match)
+		return Ok(node)
+	}
+
 	parseValueExpr(): Result<ASTNode | undefined, ParsingErrors>
 	{
 		const value = this.parseLogicExpr()
 		if (!isResultDefined(value))
-			return Ok(undefined) // XXX: Should call parseNewExpr
+			return this.parseNewExpr()
 		return value
 	}
 
