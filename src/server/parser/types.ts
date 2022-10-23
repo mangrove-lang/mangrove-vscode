@@ -1,5 +1,4 @@
 import {Position, Range, TextDocument} from 'vscode-languageserver-textdocument'
-import {SemanticTokenTypes} from '../../providers/semanticTokens'
 
 export enum TokenType
 {
@@ -173,48 +172,6 @@ export class Token
 	}
 
 	public clone() { return new Token(this) }
-
-	public toSemanticType(): SemanticTokenTypes
-	{
-		switch (this._type)
-		{
-		case TokenType.comment:
-			return SemanticTokenTypes.comment
-		case TokenType.ident:
-			return SemanticTokenTypes.variable
-		case TokenType.binLit:
-		case TokenType.octLit:
-		case TokenType.hexLit:
-		case TokenType.intLit:
-			return SemanticTokenTypes.number
-		case TokenType.stringLit:
-		case TokenType.charLit:
-			return SemanticTokenTypes.string
-		case TokenType.deleteStmt:
-		case TokenType.newStmt:
-		case TokenType.returnStmt:
-		case TokenType.ifStmt:
-		case TokenType.elifStmt:
-		case TokenType.elseStmt:
-		case TokenType.whileStmt:
-		case TokenType.doStmt:
-		case TokenType.visibility:
-			return SemanticTokenTypes.keyword
-		case TokenType.boolLit:
-		case TokenType.nullptrLit:
-			return SemanticTokenTypes.const
-		case TokenType.incOp:
-		case TokenType.mulOp:
-		case TokenType.addOp:
-		case TokenType.shiftOp:
-		case TokenType.bitOp:
-		case TokenType.relOp:
-		case TokenType.equOp:
-		case TokenType.logicOp:
-			return SemanticTokenTypes.operator
-		}
-		throw new Error(`Unhandled token type ${this._type}, cannot convert to semantic type`)
-	}
 
 	public toString()
 	{
