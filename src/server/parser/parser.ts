@@ -1,7 +1,7 @@
 import {Ok, Err, Result} from 'ts-results'
 import {Position, TextDocument} from 'vscode-languageserver-textdocument'
 import {SymbolTable} from '../ast/symbolTable'
-import {ASTIdent, ASTIndex, ASTSlice, ASTCallArguments} from '../ast/values'
+import {ASTIdent, ASTDottedIdent, ASTIndex, ASTSlice, ASTCallArguments} from '../ast/values'
 import
 {
 	ASTBool,
@@ -146,6 +146,62 @@ export class Parser
 		const {token: ident, comments} = value
 		// Do symbol table things.
 		const node = new ASTIdent(ident, undefined)
+		node.add(comments)
+		return Ok(node)
+	}
+
+	parseComments()
+	{
+		const comments: ASTNode[] = []
+		const token = this.lexer.token
+		while (token.typeIsOneOf(TokenType.comment))
+		{
+			comments.push(new ASTComment(token))
+			this.lexer.next()
+		}
+		return comments
+	}
+
+	parseDottedIdent(): Result<ASTIdent | undefined, ParsingErrors>
+	{
+		const token = this.lexer.token
+		const comments: ASTNode[] = []
+		const dottedIdent: Token[] = []
+		let haveDot = true
+		while (haveDot)
+		{
+			// Grab the next identifier in the expression
+			const ident = token.clone()
+			// And ensure that it is an identifier token or dot
+			if (!token.typeIsOneOf(TokenType.ident, TokenType.dot))
+				return Ok(undefined)//Err('IncorrectToken')
+			// If it's an ident
+			if (token.typeIsOneOf(TokenType.ident))
+			{
+				this.lexer.next()
+				// Add the newly parsed identifier to the ident list
+				dottedIdent.push(ident)
+			}
+			// Accumulate any comment nodes
+			comments.push(...this.parseComments())
+			// If there is no dot following the identifier, we're done
+			haveDot = token.typeIsOneOf(TokenType.dot)
+			if (haveDot)
+			{
+				// There was a dot, so match on it and add any comments that generates to the comments array
+				this.lexer.next()
+				// Accumulate any comment nodes
+				comments.push(...this.parseComments())
+			}
+		}
+		comments.push(...this.skipWhite())
+		if (dottedIdent.length === 1)
+		{
+			const node = new ASTIdent(dottedIdent[0], undefined)
+			node.add(comments)
+			return Ok(node)
+		}
+		const node = new ASTDottedIdent(dottedIdent, [])
 		node.add(comments)
 		return Ok(node)
 	}
@@ -385,7 +441,7 @@ export class Parser
 		const const_ = this.parseConst()
 		if (isResultDefined(const_))
 			return const_
-		const ident = this.parseIdent()
+		const ident = this.parseDottedIdent()
 		if (isResultValid(ident))
 		{
 			if (token.typeIsOneOf(TokenType.leftParen))
@@ -678,7 +734,7 @@ export class Parser
 		const match = this.match(TokenType.newStmt)
 		if (!match)
 			return Err('UnreachableState')
-		const ident = this.parseIdent()
+		const ident = this.parseDottedIdent()
 		if (!isResultDefined(ident))
 			return Err('OperatorWithNoRHS')
 		if (isResultError(ident))
