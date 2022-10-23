@@ -214,3 +214,31 @@ export class ASTLogic extends ASTNodeData implements ASTNode
 			yield *child.semanticTokens()
 	}
 }
+
+export class ASTAssign extends ASTNodeData implements ASTNode
+{
+	private _ident: ASTIdent
+	private _value: ASTNode
+
+	constructor(assignOp: Token, ident: ASTIdent, value: ASTNode)
+	{
+		super(assignOp)
+		this._ident = ident
+		this._value = value
+	}
+
+	get type() { return ASTType.assign }
+	get valid() { return this._token.valid && this.ident.valid && this._value.valid }
+	get semanticType() { return SemanticTokenTypes.operator }
+	get ident() { return this._ident }
+	toString() { return `<Assignment ${this.token.value} op: '${this.ident.fullName}>` }
+
+	*semanticTokens(): Generator<SemanticToken, void, undefined>
+	{
+		yield *this._ident.semanticTokens()
+		yield this.buildSemanticToken(this.semanticType)
+		yield *this._value.semanticTokens()
+		for (const child of this.children)
+			yield *child.semanticTokens()
+	}
+}
