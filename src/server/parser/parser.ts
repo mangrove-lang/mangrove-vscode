@@ -40,6 +40,7 @@ import
 	ASTElseExpr,
 	ASTIfStmt,
 	ASTVisibility,
+	ASTClass,
 	ASTBlock
 } from '../ast/statements'
 
@@ -898,11 +899,43 @@ export class Parser
 		return Ok(new ASTIfStmt(ifExpr.val, elifExprs, elseExpr.val))
 	}
 
+	parseClassDef(): Result<ASTNode | undefined, ParsingErrors>
+	{
+		const token = this.lexer.token.clone()
+		const match = this.match(TokenType.classDef)
+		if (!match)
+			return Err('UnreachableState')
+		const ident = this.parseIdent()
+		if (!isResultDefined(ident))
+			return Err('InvalidTokenSequence')
+		if (isResultError(ident))
+			return ident
+		//ident.val.symbol.allocStruct(this)
+		const block = this.parseBlock()
+		if (!isResultDefined(block))
+			return Err('MissingBlock')
+		if (isResultError(block))
+			return block
+		const node = new ASTClass(token, ident.val, block.val)
+		node.add(match)
+		return Ok(node)
+	}
+
+	parseDefine(): Result<ASTNode | undefined, ParsingErrors>
+	{
+		const token = this.lexer.token
+		if (token.typeIsOneOf(TokenType.classDef))
+			return this.parseClassDef()
+		return Ok(undefined)
+	}
+
 	parseStatement(): Result<ASTNode | undefined, ParsingErrors>
 	{
 		let stmt: Result<ASTNode | undefined, ParsingErrors> = Ok(undefined)
 		if (!isResultValid(stmt))
 			stmt = this.parseIfStmt()
+		if (!isResultValid(stmt))
+			stmt = this.parseDefine()
 		if (!isResultValid(stmt))
 			stmt = this.parseExpression()
 		return stmt
