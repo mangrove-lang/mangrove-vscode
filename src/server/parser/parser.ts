@@ -1,7 +1,7 @@
 import {Ok, Err, Result} from 'ts-results'
 import {Position, TextDocument} from 'vscode-languageserver-textdocument'
 import {SymbolTable} from '../ast/symbolTable'
-import {ASTIdent, ASTDottedIdent, ASTIndex, ASTSlice, ASTCallArguments} from '../ast/values'
+import {ASTIdent, ASTDottedIdent, ASTIdentDef, ASTIndex, ASTSlice, ASTCallArguments} from '../ast/values'
 import
 {
 	ASTBool,
@@ -25,11 +25,12 @@ import
 	ASTBit,
 	ASTRel,
 	ASTBetween,
-	ASTLogic
+	ASTLogic,
+	ASTAssign
 } from '../ast/operations'
 import {Tokeniser} from './tokeniser'
 import {Token, TokenType} from './types'
-import {isEquality} from './recogniser'
+import {isEquality, isEquals} from './recogniser'
 import
 {
 	ASTNew,
@@ -78,6 +79,7 @@ function isNodeRelation(node: ASTNode | ASTRel): node is ASTRel
 }
 
 type IdentAndComments = {token: Token, comments: ASTNode[]}
+type IdentDef = {type?: ASTIdent, ident: ASTIdent}
 
 export class Parser
 {
@@ -791,6 +793,52 @@ export class Parser
 		return Ok(node)
 	}
 
+	parseTargetIdent(): Result<IdentDef | undefined, ParsingErrors>
+	{
+		const dottedIdent = this.parseDottedIdent()
+		if (!isResultDefined(dottedIdent))
+			return Ok(undefined)
+		if (isResultError(dottedIdent))
+			return dottedIdent
+		return Ok({ident: dottedIdent.val})
+	}
+
+	parseAssignExpr(): Result<ASTNode | undefined, ParsingErrors>
+	{
+		const targetIdent = this.parseTargetIdent()
+		if (!isResultDefined(targetIdent))
+			return Ok(undefined)
+		if (isResultError(targetIdent))
+			return targetIdent
+		const {type, ident} = targetIdent.val
+		const token = this.lexer.token
+		if (!token.typeIsOneOf(TokenType.assignOp))
+		{
+			if (!type)
+				return Ok(ident)
+			return Ok(new ASTIdentDef(type, ident))
+		}
+		if (!isEquals(token.value))
+		{
+			if (type)
+				return Err('InvalidTokenSequence')
+			return /*this.parseAssignOpExpr(ident)*/Ok(ident)
+		}
+		const target = type ? new ASTIdentDef(type, ident) : ident
+		const op = token.clone()
+		const match = this.match(TokenType.assignOp)
+		if (!match)
+			return Err('UnreachableState')
+		const value = this.parseValueExpr()
+		if (!isResultDefined(value))
+			return Err('OperatorWithNoRHS')
+		if (isResultError(value))
+			return value
+		const node = new ASTAssign(op, target, value.val)
+		node.add(match)
+		return Ok(node)
+	}
+
 	parseExpression(): Result<ASTNode | undefined, ParsingErrors>
 	{
 		// XXX: This needs to be restructured as a process that deals with ASTNodes instead of nested generators.
@@ -801,6 +849,9 @@ export class Parser
 				return this.parseDeleteExpr()
 			if (token.typeIsOneOf(TokenType.returnStmt))
 				return this.parseReturnExpr()
+			const expr = this.parseAssignExpr()
+			if (isResultDefined(expr))
+				return expr
 			return this.parseLogicExpr()
 		})()
 		if (!isResultValid(expr))
