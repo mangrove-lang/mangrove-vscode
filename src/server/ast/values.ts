@@ -76,6 +76,32 @@ export class ASTDottedIdent extends ASTIdent
 	}
 }
 
+export class ASTIdentDef extends ASTIdent
+{
+	private _type: ASTIdent
+
+	constructor(type: ASTIdent, ident: ASTIdent)
+	{
+		super(ident.token, ident.symbol)
+		this._type = type
+	}
+
+	get identType() { return this._type }
+	toString() { return `<IdentDef '${this.identType.fullName} ${this.fullName}'>` }
+
+	*semanticTokens(): Generator<SemanticToken, void, undefined>
+	{
+		// XXX: _type should be an ASTTypeDef node which does this for us
+		yield this.buildSemanticToken(SemanticTokenTypes.type, this.identType.token)
+		for (const child of this.identType.children)
+			yield *child.semanticTokens()
+
+		yield this.buildSemanticToken(this.semanticType)
+		for (const child of this.children)
+			yield *child.semanticTokens()
+	}
+}
+
 export class ASTIndex extends ASTNodeData implements ASTNode
 {
 	private _target: ASTIdent
