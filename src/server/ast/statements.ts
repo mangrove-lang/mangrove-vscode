@@ -2,6 +2,31 @@ import { TextDocument } from 'vscode-languageserver-textdocument'
 import {SemanticToken, SemanticTokenTypes} from '../../providers/semanticTokens'
 import {Token} from '../parser/types'
 import {ASTNode, ASTNodeData, ASTType, ASTVisibilityType} from './types'
+import {ASTFunctionCall} from './operations'
+
+export class ASTNew extends ASTNodeData implements ASTNode
+{
+	private _ctorCall: ASTFunctionCall
+
+	constructor(newToken: Token, ctorCall: ASTFunctionCall)
+	{
+		super(newToken)
+		this._ctorCall = ctorCall
+	}
+
+	get type() { return ASTType.newExpr }
+	get valid() { return this.token.valid && this._ctorCall.valid }
+	get semanticType() { return SemanticTokenTypes.keyword }
+	toString() { return '<New expression>' }
+
+	*semanticTokens(): Generator<SemanticToken, void, undefined>
+	{
+		yield this.buildSemanticToken(this.semanticType)
+		yield *this._ctorCall.semanticTokens()
+		for (const child of this.children)
+			yield *child.semanticTokens()
+	}
+}
 
 export class ASTReturn extends ASTNodeData implements ASTNode
 {
