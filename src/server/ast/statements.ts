@@ -219,6 +219,36 @@ export class ASTVisibility extends ASTNodeData implements ASTNode
 	}
 }
 
+export class ASTClass extends ASTNodeData implements ASTNode
+{
+	private _name: ASTIdent
+	private _body: ASTNode
+
+	constructor(classToken: Token, name: ASTIdent, body: ASTNode)
+	{
+		super(classToken)
+		this._name = name
+		this._body = body
+	}
+
+	get type() { return ASTType.classDef }
+	get valid() { return this.token.valid && this._name.valid && this.body.valid }
+	get semanticType() { return SemanticTokenTypes.keyword }
+	get name() { return this._name.fullName }
+	// get symbolTable() { return this._name.symbolTable }
+	get body() { return this._body }
+	toString() { return `<Class: ${this.name}>` }
+
+	*semanticTokens(): Generator<SemanticToken, void, undefined>
+	{
+		yield this.buildSemanticToken(this.semanticType)
+		yield *this._name.semanticTokens()
+		yield *this.body.semanticTokens()
+		for (const child of this.children)
+			yield *child.semanticTokens()
+	}
+}
+
 export class ASTBlock extends ASTNodeData implements ASTNode
 {
 	private _statements: ASTNode[] = []
