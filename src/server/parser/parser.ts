@@ -15,6 +15,8 @@ import {ASTComment, ASTIntType, ASTNode, ASTType} from '../ast/types'
 import
 {
 	ASTFunctionCall,
+	ASTPrefixOp,
+	ASTPostfixOp,
 	ASTDeref,
 	ASTInvert,
 	ASTMul,
@@ -432,6 +434,40 @@ export class Parser
 		return Ok(new ASTFunctionCall(func, args.val))
 	}
 
+	parseIncExpr(): Result<ASTNode | undefined, ParsingErrors>
+	{
+		const token = this.lexer.token
+		if (!this.haveIdent && token.typeIsOneOf(TokenType.incOp))
+		{
+			const op = token.clone()
+			const match = this.match(TokenType.incOp)
+			if (!match)
+				return Err('UnreachableState')
+			const value = this.parseValue()
+			if (!isResultDefined(value))
+				return Err('OperatorWithNoRHS')
+			if (isResultError(value))
+				return value
+			const node = new ASTPrefixOp(op, value.val)
+			node.add(match)
+			return Ok(node)
+		}
+		const value = this.parseValue()
+		if (!isResultValid(value))
+			return value;
+		if (token.typeIsOneOf(TokenType.incOp))
+		{
+			const op = token.clone()
+			const match = this.match(TokenType.incOp)
+			if (!match)
+				return Err('UnreachableState')
+			const node = new ASTPostfixOp(op, value.val)
+			node.add(match)
+			return Ok(node)
+		}
+		return value
+	}
+
 	parseDerefExpr(): Result<ASTNode | undefined, ParsingErrors>
 	{
 		const token = this.lexer.token
@@ -443,7 +479,7 @@ export class Parser
 			const match = this.match(TokenType.mulOp)
 			if (!match)
 				return Err('UnreachableState')
-			const value = this.parseValue()
+			const value = this.parseIncExpr()
 			if (!isResultDefined(value))
 				return Err('OperatorWithNoRHS')
 			if (isResultError(value))
@@ -452,13 +488,13 @@ export class Parser
 			node.add(match)
 			return Ok(node)
 		}
-		return this.parseValue()
+		return this.parseIncExpr()
 	}
 
 	parseInvertExpr(): Result<ASTNode | undefined, ParsingErrors>
 	{
 		if (this.haveIdent)
-			return this.parseValue()
+			return this.parseIncExpr()
 		const token = this.lexer.token
 		if (token.typeIsOneOf(TokenType.invert))
 		{
