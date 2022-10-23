@@ -33,6 +33,7 @@ import {isEquality} from './recogniser'
 import
 {
 	ASTNew,
+	ASTDelete,
 	ASTReturn,
 	ASTIfExpr,
 	ASTElifExpr,
@@ -749,6 +750,22 @@ export class Parser
 		return Ok(node)
 	}
 
+	parseDeleteExpr(): Result<ASTNode | undefined, ParsingErrors>
+	{
+		const token = this.lexer.token.clone()
+		const match = this.match(TokenType.deleteStmt)
+		if (!match)
+			return Err('UnreachableState')
+		const ident = this.parseDottedIdent()
+		if (!isResultDefined(ident))
+			return Err('OperatorWithNoRHS')
+		if (isResultError(ident))
+			return ident
+		const node = new ASTDelete(token, ident.val)
+		node.add(match)
+		return Ok(node)
+	}
+
 	parseValueExpr(): Result<ASTNode | undefined, ParsingErrors>
 	{
 		const value = this.parseLogicExpr()
@@ -779,6 +796,8 @@ export class Parser
 		const expr = ((): Result<ASTNode | undefined, ParsingErrors> =>
 		{
 			const token = this.lexer.token
+			if (token.typeIsOneOf(TokenType.deleteStmt))
+				return this.parseDeleteExpr()
 			if (token.typeIsOneOf(TokenType.returnStmt))
 				return this.parseReturnExpr()
 			return this.parseLogicExpr()
