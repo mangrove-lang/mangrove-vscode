@@ -1,3 +1,4 @@
+//import {assert} from 'console'
 import {TextDocument} from 'vscode-languageserver-textdocument'
 import {SemanticToken, SemanticTokenTypes} from '../../providers/semanticTokens'
 import {Token} from '../parser/types'
@@ -32,7 +33,8 @@ export class ASTIdent extends ASTNodeData implements ASTValue
 	get type() { return ASTType.ident }
 	get valid() { return !!this._symbol && !!this._symbol.value }
 	get semanticType() { return SemanticTokenTypes.variable }
-	get value() { return this._symbol && this._symbol.value }
+	//get value() { return this._symbol && this._symbol.value }
+	get value() { return this.token.value }
 	get symbol() { return this._symbol }
 	toString() { return `<Ident '${this.value}'>` }
 
@@ -46,17 +48,30 @@ export class ASTIdent extends ASTNodeData implements ASTValue
 
 export class ASTDottedIdent extends ASTIdent
 {
-	private _symbolSeq: MangroveSymbol[] = new Array<MangroveSymbol>()
+	private _idents: Token[]
+	private _symbolSeq: MangroveSymbol[] = []
 
-	constructor(token: Token, symbolSeq: MangroveSymbol[])
+	constructor(identTokens: Token[], symbolSeq: MangroveSymbol[])
 	{
+		//assert(identTokens.length != symbolSeq.length, "Must have one symbol entry per ident in dotted ident")
+		const token = identTokens[identTokens.length - 1]
 		const symbol = symbolSeq.length ? symbolSeq[symbolSeq.length - 1] : undefined
+
 		super(token, symbol)
+		this._idents = identTokens
 		this._symbolSeq.push(...symbolSeq)
 	}
 
 	get type() { return ASTType.dottedIdent }
-	toString() { return `<DottedIdent '${this.value}'>` }
+	toString() { return `<DottedIdent '${this._idents.map(ident => ident.value).join('.')}'>` }
+
+	*semanticTokens(): Generator<SemanticToken, void, undefined>
+	{
+		for (const ident of this._idents)
+			yield this.buildSemanticToken(this.semanticType, ident)
+		for (const child of this.children)
+			yield *child.semanticTokens()
+	}
 }
 
 export class ASTIndex extends ASTNodeData implements ASTNode
