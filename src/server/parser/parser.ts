@@ -588,7 +588,7 @@ export class Parser
 	{
 		const lhs = this.parseBitExpr()
 		const token = this.lexer.token
-		if (!(isResultValid(lhs) && token.typeIsOneOf(TokenType.relOp, TokenType.equOp)))
+		if (!isResultValid(lhs) || !token.typeIsOneOf(TokenType.relOp, TokenType.equOp))
 			return lhs
 		const op = token.clone()
 		const match = this.match(TokenType.relOp, TokenType.equOp)
