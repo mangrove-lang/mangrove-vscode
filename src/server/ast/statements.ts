@@ -3,6 +3,30 @@ import {SemanticToken, SemanticTokenTypes} from '../../providers/semanticTokens'
 import {Token} from '../parser/types'
 import {ASTNode, ASTNodeData, ASTType, ASTVisibilityType} from './types'
 
+export class ASTReturn extends ASTNodeData implements ASTNode
+{
+	private _expr: ASTNode
+
+	constructor(returnToken: Token, expr: ASTNode)
+	{
+		super(returnToken)
+		this._expr = expr
+	}
+
+	get type() { return ASTType.returnStmt }
+	get valid() { return this.token.valid && this._expr.valid }
+	get semanticType() { return SemanticTokenTypes.keyword }
+	toString() { return '<Return statement>' }
+
+	*semanticTokens(): Generator<SemanticToken, void, undefined>
+	{
+		yield this.buildSemanticToken(this.semanticType)
+		yield *this._expr.semanticTokens()
+		for (const child of this.children)
+			yield *child.semanticTokens()
+	}
+}
+
 export class ASTIfExpr extends ASTNodeData implements ASTNode
 {
 	private _cond: ASTNode
