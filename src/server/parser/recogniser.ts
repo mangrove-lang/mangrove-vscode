@@ -59,6 +59,9 @@ export function isRelation(c: string) { return isEquality(c) || c === '!=' || c 
 export function isNew(str: string) { return str === 'new' }
 export function isDelete(str: string) { return str === 'delete' }
 
+export function isFrom(str: string) { return str === 'from' }
+export function isImport(str: string) { return str === 'import' }
+
 export function isReturn(str: string) { return str === 'return' }
 
 export function isIfStmt(str: string) { return str === 'if' }
@@ -70,6 +73,9 @@ export function isDoStmt(str: string) { return str === 'do' }
 
 export function isClass(str: string) { return str === 'class' }
 export function isOperatorDef(str: string) { return str === 'operator' }
+
+export function isLocationSpec(str: string) { return str === 'eeprom' || str === 'flash' || str === 'rom' }
+export function isStorageSpec(str: string) { return str === 'const' || str === 'volatile' || str === 'static' }
 
 export function isNone(str: string) { return str === 'none' }
 export function isArrow(str: string) { return str === '->' }
