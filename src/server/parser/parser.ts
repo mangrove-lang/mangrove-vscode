@@ -512,7 +512,7 @@ export class Parser
 		}
 		const value = this.parseValue()
 		if (!isResultValid(value))
-			return value;
+			return value
 		if (token.typeIsOneOf(TokenType.incOp))
 		{
 			const op = token.clone()
