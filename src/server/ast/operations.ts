@@ -19,7 +19,8 @@ export class ASTFunctionCall extends ASTNodeData implements ASTNode
 	get type() { return ASTType.functionCall }
 	get valid() { return this._functionName.valid && this._args.valid }
 	get semanticType() { return SemanticTokenTypes.function }
-	toString() { return `<FunctionCall: '${this._functionName.value}'>` }
+	get functionName() { return this._functionName.fullName }
+	toString() { return `<FunctionCall: '${this.functionName}'>` }
 
 	*semanticTokens(): Generator<SemanticToken, void, undefined>
 	{
