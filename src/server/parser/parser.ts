@@ -32,6 +32,7 @@ import {Token, TokenType} from './types'
 import {isEquality} from './recogniser'
 import
 {
+	ASTReturn,
 	ASTIfExpr,
 	ASTElifExpr,
 	ASTElseExpr,
@@ -667,12 +668,38 @@ export class Parser
 		return Ok(lhs)
 	}
 
+	parseValueExpr(): Result<ASTNode | undefined, ParsingErrors>
+	{
+		const value = this.parseLogicExpr()
+		if (!isResultDefined(value))
+			return Ok(undefined) // XXX: Should call parseNewExpr
+		return value
+	}
+
+	parseReturnExpr(): Result<ASTNode | undefined, ParsingErrors>
+	{
+		const token = this.lexer.token.clone()
+		const match = this.match(TokenType.returnStmt)
+		if (!match)
+			return Err('UnreachableState')
+		const value = this.parseValueExpr()
+		if (!isResultDefined(value))
+			return Err('OperatorWithNoRHS')
+		if (isResultError(value))
+			return value
+		const node = new ASTReturn(token, value.val)
+		node.add(match)
+		return Ok(node)
+	}
+
 	parseExpression(): Result<ASTNode | undefined, ParsingErrors>
 	{
 		// XXX: This needs to be restructured as a process that deals with ASTNodes instead of nested generators.
 		const expr = ((): Result<ASTNode | undefined, ParsingErrors> =>
 		{
-			//const token = this.lexer.token
+			const token = this.lexer.token
+			if (token.typeIsOneOf(TokenType.returnStmt))
+				return this.parseReturnExpr()
 			return this.parseLogicExpr()
 		})()
 		if (!isResultValid(expr))
