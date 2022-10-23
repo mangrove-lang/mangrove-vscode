@@ -18,7 +18,7 @@ export class ASTNew extends ASTNodeData implements ASTNode
 	get type() { return ASTType.newExpr }
 	get valid() { return this.token.valid && this._ctorCall.valid }
 	get semanticType() { return SemanticTokenTypes.keyword }
-	toString() { return '<New expression>' }
+	toString() { return `<New '${this._ctorCall.functionName}'>` }
 
 	*semanticTokens(): Generator<SemanticToken, void, undefined>
 	{
