@@ -27,6 +27,8 @@ import
 	isElseStmt,
 	isWhileStmt,
 	isDoStmt,
+	isStorageSpec,
+	isLocationSpec,
 	isNone,
 	isClass,
 	isFunctionDef,
@@ -224,7 +226,10 @@ export class Tokeniser
 				this._token.set(TokenType.logicOp, '|')
 			else if (token === 'not')
 				this._token.set(TokenType.invert, '!')
-
+			else if (isLocationSpec(token))
+				this._token.set(TokenType.locationSpec)
+			else if (isStorageSpec(token))
+				this._token.set(TokenType.storageSpec)
 			else if (isNew(token))
 				this._token.set(TokenType.newStmt)
 			else if (isDelete(token))
