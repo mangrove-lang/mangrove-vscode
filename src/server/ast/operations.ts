@@ -86,6 +86,28 @@ class ASTBinaryOp extends ASTNodeData implements ASTNode
 	}
 }
 
+export class ASTPrefixOp extends ASTUnaryOp
+{
+	get type() { return ASTType.deref }
+
+	get operationName()
+	{
+		const operation = this.token.value === '+' ? 'increment' : 'decrement'
+		return `Prefix ${operation}`
+	}
+}
+
+export class ASTPostfixOp extends ASTUnaryOp
+{
+	get type() { return ASTType.deref }
+
+	get operationName()
+	{
+		const operation = this.token.value === '+' ? 'increment' : 'decrement'
+		return `Postfix ${operation}`
+	}
+}
+
 export class ASTDeref extends ASTUnaryOp
 {
 	get type() { return ASTType.deref }
