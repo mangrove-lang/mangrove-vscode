@@ -214,8 +214,8 @@ export class Tokeniser
 			const token = this.readAlphaNumToken()
 			if (token === '' || this.eof)
 				return
-			else if (isTrue(token) || isFalse(token))
-				this._token.set(TokenType.boolLit, token)
+			if (isTrue(token) || isFalse(token))
+				this._token.set(TokenType.boolLit)
 			else if (isNull(token))
 				this._token.set(TokenType.nullptrLit)
 			else if (token === 'and')
@@ -251,8 +251,10 @@ export class Tokeniser
 			else if (isOperatorDef(token))
 				this._token.set(TokenType.operatorDef)
 			else if (isVisibility(token))
-				this._token.set(TokenType.visibility, token)
-			else
+				this._token.set(TokenType.visibility)
+			// If we get down to here, it's a plain identifier
+			// Make sure the token's value is set to the identifier string now we've classified the type
+			if (this._token.value === '')
 				this._token.value = token
 		}
 		else if (isDigit(this.currentChar))
