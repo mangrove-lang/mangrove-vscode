@@ -664,6 +664,7 @@ export class Parser
 			if (isResultError(rhs))
 				return rhs
 			lhs = new ASTLogic(op, lhs, rhs.val)
+			lhs.add(match)
 		}
 		return Ok(lhs)
 	}
