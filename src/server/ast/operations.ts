@@ -86,6 +86,12 @@ class ASTBinaryOp extends ASTNodeData implements ASTNode
 	}
 }
 
+export class ASTDeref extends ASTUnaryOp
+{
+	get type() { return ASTType.deref }
+	get operationName() { return 'Dereference' }
+}
+
 export class ASTInvert extends ASTUnaryOp
 {
 	get type() { return ASTType.invert }
