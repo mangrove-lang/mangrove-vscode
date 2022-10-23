@@ -41,6 +41,7 @@
 	},
 	"dependencies": {
 		"ts-results": "^3.3.0",
+		"tslib": "^2.4.0",
 		"vscode-languageclient": "^7.0.0",
 		"vscode-languageserver": "^7.0.0",
 		"vscode-languageserver-textdocument": "^1.0.7"
