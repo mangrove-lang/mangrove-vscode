@@ -1,7 +1,8 @@
-import { TextDocument } from 'vscode-languageserver-textdocument'
+import {TextDocument} from 'vscode-languageserver-textdocument'
 import {SemanticToken, SemanticTokenTypes} from '../../providers/semanticTokens'
 import {Token} from '../parser/types'
 import {ASTNode, ASTNodeData, ASTType, ASTVisibilityType} from './types'
+import {ASTIdent} from './values'
 import {ASTFunctionCall} from './operations'
 
 export class ASTNew extends ASTNodeData implements ASTNode
@@ -23,6 +24,30 @@ export class ASTNew extends ASTNodeData implements ASTNode
 	{
 		yield this.buildSemanticToken(this.semanticType)
 		yield *this._ctorCall.semanticTokens()
+		for (const child of this.children)
+			yield *child.semanticTokens()
+	}
+}
+
+export class ASTDelete extends ASTNodeData implements ASTNode
+{
+	private _ident: ASTIdent
+
+	constructor(deleteToken: Token, ident: ASTIdent)
+	{
+		super(deleteToken)
+		this._ident = ident
+	}
+
+	get type() { return ASTType.deleteExpr }
+	get valid() { return this.token.valid && this._ident.valid }
+	get semanticType() { return SemanticTokenTypes.keyword }
+	toString() { return `<Delete: '${this._ident.fullName}'>` }
+
+	*semanticTokens(): Generator<SemanticToken, void, undefined>
+	{
+		yield this.buildSemanticToken(this.semanticType)
+		yield *this._ident.semanticTokens()
 		for (const child of this.children)
 			yield *child.semanticTokens()
 	}
