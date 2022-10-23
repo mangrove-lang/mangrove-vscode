@@ -36,7 +36,8 @@ export class ASTIdent extends ASTNodeData implements ASTValue
 	//get value() { return this._symbol && this._symbol.value }
 	get value() { return this.token.value }
 	get symbol() { return this._symbol }
-	toString() { return `<Ident '${this.value}'>` }
+	get fullName() { return this.token.value }
+	toString() { return `<Ident '${this.fullName}'>` }
 
 	*semanticTokens(): Generator<SemanticToken, void, undefined>
 	{
@@ -63,7 +64,8 @@ export class ASTDottedIdent extends ASTIdent
 	}
 
 	get type() { return ASTType.dottedIdent }
-	toString() { return `<DottedIdent '${this._idents.map(ident => ident.value).join('.')}'>` }
+	get fullName() { return this._idents.map(ident => ident.value).join('.') }
+	toString() { return `<DottedIdent '${this.fullName}'>` }
 
 	*semanticTokens(): Generator<SemanticToken, void, undefined>
 	{
