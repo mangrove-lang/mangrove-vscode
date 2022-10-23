@@ -722,7 +722,7 @@ export class Parser
 				return Err('OperatorWithNoRHS')
 			if (isResultError(rhs))
 				return rhs
-			lhs = new ASTLogic(op, lhs, rhs.val)
+			lhs = new ASTLogic(lhs, op, rhs.val)
 			lhs.add(match)
 		}
 		return Ok(lhs)
