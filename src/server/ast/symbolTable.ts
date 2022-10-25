@@ -2,17 +2,18 @@ import {Parser} from '../parser/parser'
 
 export enum SymbolTypes
 {
-	isInteger = 0x01,
-	isUnsigned = 0x03,
+	integer = 0x01,
+	unsigned = integer | 0x02,
 	int8Bit = 0x00,
 	int16Bit = 0x04,
 	int32Bit = 0x08,
 	int64Bit = 0x0C,
-	isCharacter = 0x10,
-	isList = 0x20,
-	isString = 0x30,
-	isStruct = 0x40,
-	isDict = 0x60,
+	character = 0x10,
+	list = 0x20,
+	string = character | list,
+	struct = 0x40,
+	dict = struct | list,
+	type = 0x80,
 	invalid = 0xFF
 }
 
@@ -49,7 +50,7 @@ export class MangroveSymbol
 	allocStruct(parser: Parser)
 	{
 		this._struct = new SymbolStruct(parser)
-		this._type.assign(SymbolTypes.isStruct)
+		this._type.assign(SymbolTypes.struct)
 	}
 
 	isEqual(symbol: MangroveSymbol) { return this._ident === symbol._ident && this._type.isEqual(symbol._type) }
