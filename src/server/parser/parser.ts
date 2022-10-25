@@ -1,12 +1,13 @@
 import {Ok, Err, Result} from 'ts-results'
 import {Position, TextDocument} from 'vscode-languageserver-textdocument'
-import {MangroveSymbol, SymbolTable, SymbolTypes} from '../ast/symbolTable'
+import {MangroveSymbol, SymbolTable} from '../ast/symbolTable'
 import {addBuiltinTypesTo} from '../ast/builtins'
 import
 {
 	ASTIdent,
 	ASTDottedIdent,
 	ASTStorage,
+	ASTTypeDecl,
 	ASTIdentDef,
 	ASTIndex,
 	ASTSlice,
@@ -70,7 +71,12 @@ type ParsingErrors = 'UnreachableState' | 'IncorrectToken' | 'OperatorWithNoRHS'
 
 function isResultValid<T>(result: Result<T | undefined, ParsingErrors>): result is Ok<T>
 {
-	return result.ok && result.val != undefined
+	return result.ok && result.val !== undefined
+}
+
+function isResultInvalid<T>(result: Result<T | undefined, ParsingErrors>): result is Ok<undefined>
+{
+	return result.ok && result.val === undefined
 }
 
 function isResultDefined<T>(result: Result<T | undefined, ParsingErrors>): result is Result<T, ParsingErrors>
@@ -880,29 +886,27 @@ export class Parser
 		return Ok(node)
 	}
 
-	parseTypeDecl(): Result<ASTIdent | undefined, ParsingErrors>
+	parseTypeDecl(): Result<ASTTypeDecl | undefined, ParsingErrors>
 	{
 		// First try to get any storage specification modifiers
 		const storageSpec = this.parseStorageSpec()
 		if (isResultError(storageSpec))
 			return storageSpec
-		const storage = storageSpec.val
 		// If we didn't error, now try and get a type
 		const typeIdent = this.parseIdent()
 		// If we have storage specifiers and do not have an identifier, that's a failure
-		if (storage && !isResultDefined(typeIdent))
+		if (storageSpec.val && !isResultDefined(typeIdent))
 			return Err('InvalidTokenSequence')
-		if (!isResultValid(typeIdent))
+		if (isResultInvalid(typeIdent) || isResultError(typeIdent))
 			return typeIdent
+		// This literally only exists to fix TS's type assertions as it can't figure out
+		// that `Ok<ASTIdent>` is the only possible type for typeIdent after the previous if.
+		if (!isResultDefined(typeIdent))
+			return Err('UnreachableState')
 		const symbol = typeIdent.val.symbol
 		// Check if the identifier is a type ident
-		if (symbol && symbol.type.mask(SymbolTypes.type) === SymbolTypes.type)
-		{
-			// XXX: Turn the identifier into a type node
-			if (storage)
-				typeIdent.val.add([storage])
-			return typeIdent
-		}
+		if (symbol?.isType)
+			return Ok(new ASTTypeDecl(typeIdent.val, storageSpec.val))
 		// If it is not or we can't tell, push it over to the look-aside storage and gracefully fail
 		this._ident = typeIdent.val
 		return Ok(undefined)
