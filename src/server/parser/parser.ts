@@ -1,6 +1,7 @@
 import {Ok, Err, Result} from 'ts-results'
 import {Position, TextDocument} from 'vscode-languageserver-textdocument'
 import {SymbolTable} from '../ast/symbolTable'
+import {addBuiltinTypesTo} from '../ast/builtins'
 import {ASTIdent, ASTDottedIdent, ASTIdentDef, ASTIndex, ASTSlice, ASTCallArguments} from '../ast/values'
 import
 {
@@ -93,6 +94,7 @@ export class Parser
 		this.lexer = new Tokeniser(file)
 		this._ident = new Token()
 		this._symbolTable = new SymbolTable(this)
+		addBuiltinTypesTo(this._symbolTable)
 	}
 
 	get haveIdent()

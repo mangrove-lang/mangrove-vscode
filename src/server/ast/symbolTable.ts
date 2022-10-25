@@ -87,6 +87,7 @@ export class SymbolTable
 		return symbol
 	}
 
+	insert(symbol: MangroveSymbol) { this.table.set(symbol.value, symbol) }
 	findLocal(ident: string) { return this.table.get(ident) }
 
 	find(ident: string): MangroveSymbol | undefined
