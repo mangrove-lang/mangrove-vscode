@@ -32,7 +32,7 @@ export class SymbolType
 	assign(type: SymbolTypes) { this.type = type }
 	combine(type: SymbolTypes) { return this.type | type }
 	append(type: SymbolTypes) { this.type |= type }
-	mask(type: SymbolTypes) { return this.type & type }
+	mask(type: SymbolTypes) : SymbolTypes { return this.type & type }
 	isEqual(symbolType: SymbolType) { return this.type === symbolType.type }
 
 	get isInvalid() { return this.type === SymbolTypes.invalid }
@@ -63,6 +63,10 @@ export class MangroveSymbol
 	set type(type: SymbolType) { this._type = type }
 	get type() { return this._type }
 	get structure() { return this._struct }
+	toString() { return `<Symbol: '${this.value}' (${this.type})>`; }
+
+	get isType() { return this.type.mask(SymbolTypes.type) === SymbolTypes.type }
+	get isStruct() { return this.type.mask(SymbolTypes.struct) === SymbolTypes.struct }
 }
 
 export class SymbolTable
