@@ -793,8 +793,40 @@ export class Parser
 		return Ok(node)
 	}
 
+	parseTypeDef(): Result<ASTIdent | undefined, ParsingErrors>
+	{
+		// TODO: handle storage and location specs
+		const typeIdent = this.parseIdent()
+		if (!isResultValid(typeIdent))
+			return typeIdent
+		// TODO: test to make sure typeIdent refers to a type identifier and not a value variable
+		return typeIdent
+	}
+
+	parseIdentDef(): Result<IdentDef | undefined, ParsingErrors>
+	{
+		const type = this.parseTypeDef()
+		if (!isResultDefined(type))
+			return Ok(undefined)
+		if (isResultError(type))
+			return type
+		const ident = this.parseIdent()
+		if (!isResultDefined(ident))
+		{
+			//return Err('InvalidTokenSequence')
+			this._ident = type.val.token
+			return Ok(undefined)
+		}
+		if (isResultError(ident))
+			return ident
+		return Ok({type: type.val, ident: ident.val})
+	}
+
 	parseTargetIdent(): Result<IdentDef | undefined, ParsingErrors>
 	{
+		const identDef = this.parseIdentDef()
+		if (isResultDefined(identDef))
+			return identDef
 		const dottedIdent = this.parseDottedIdent()
 		if (!isResultDefined(dottedIdent))
 			return Ok(undefined)
