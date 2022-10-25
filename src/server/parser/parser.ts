@@ -67,7 +67,8 @@ function isInt(token: Token): boolean
 }
 
 type ParsingErrors = 'UnreachableState' | 'IncorrectToken' | 'OperatorWithNoRHS' | 'InvalidTokenSequence' |
-	'MissingBlock' | 'MissingComma' | 'MissingValue' | 'MissingIndexOrSlice' | 'MissingRightBracket'
+	'MissingBlock' | 'MissingComma' | 'MissingValue' | 'MissingIndexOrSlice' | 'MissingRightBracket' |
+	'SymbolAlreadyDefined'
 
 function isResultValid<T>(result: Result<T | undefined, ParsingErrors>): result is Ok<T>
 {
@@ -924,6 +925,11 @@ export class Parser
 			return Err('InvalidTokenSequence')
 		if (isResultError(ident))
 			return ident
+		const symbol = this.symbolTable.add(ident.val.value)
+		if (!symbol)
+			return Err('SymbolAlreadyDefined')
+		//symbol.type.append()
+		ident.val.symbol = symbol
 		return Ok({type: type.val, ident: ident.val})
 	}
 
