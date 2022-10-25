@@ -841,7 +841,8 @@ export class Parser
 			comments.push(...match)
 		}
 		// XXX: Need to parse const and volatile via `parseCVSpec() and `parseConstSpec()`
-		const node = new ASTStorage(staticToken)
+		const node = new ASTStorage()
+		node.staticSpec = staticToken
 		node.add(comments)
 		return Ok(node)
 	}

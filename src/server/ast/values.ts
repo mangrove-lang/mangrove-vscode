@@ -97,11 +97,10 @@ export class ASTStorage extends ASTNodeData implements ASTNode
 	private _const?: Token
 	private _volatile?: Token
 
-	constructor(staticToken?: Token, constToken?: Token, volatileToken?: Token)
+	constructor(constToken?: Token, volatileToken?: Token)
 	{
 		// Dummy token to make the constructor happy. `this._token` is intentionally unused in this type
 		super(new Token())
-		this._static = staticToken
 		this._const = constToken
 		this._volatile = volatileToken
 	}
@@ -111,8 +110,10 @@ export class ASTStorage extends ASTNodeData implements ASTNode
 	get valid() { return true }
 	get semanticType() { return SemanticTokenTypes.keyword }
 	get staticSpec() { return this._static }
+	set staticSpec(token: Token | undefined) { this._static = token }
 	get constSpec() { return this._const }
 	get volatileSpec() { return this._volatile }
+	set volatileSpec(token: Token | undefined) { this._volatile = token }
 
 	toString()
 	{
