@@ -38,13 +38,15 @@ export class SymbolType
 
 export class MangroveSymbol
 {
-	private readonly _ident?: string
+	private readonly _ident: string
 	private _type: SymbolType = new SymbolType()
 	private _struct?: SymbolStruct
 
-	constructor(ident?: string)
+	constructor(ident: string, type?: SymbolType)
 	{
 		this._ident = ident
+		if (type)
+			this._type = type
 	}
 
 	allocStruct(parser: Parser)
