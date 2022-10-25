@@ -134,6 +134,35 @@ export class ASTStorage extends ASTNodeData implements ASTNode
 	}
 }
 
+export class ASTTypeDecl extends ASTIdent
+{
+	private _storageSpec?: ASTStorage
+
+	constructor(type: ASTIdent, storageSpec?: ASTStorage)
+	{
+		super(type.token, type.symbol)
+		this.add(type.children)
+		this._storageSpec = storageSpec
+	}
+
+	get storageSpec() { return this._storageSpec }
+
+	toString()
+	{
+		const storage = this._storageSpec?.specification ?? ''
+		return `<TypeDecl '${storage} ${this.token.value}'>`
+	}
+
+	*semanticTokens(): Generator<SemanticToken, void, undefined>
+	{
+		if (this.storageSpec)
+			yield *this.storageSpec.semanticTokens()
+		yield this.buildSemanticToken(this.semanticType)
+		for (const child of this.children)
+			yield *child.semanticTokens()
+	}
+}
+
 export class ASTIdentDef extends ASTIdent
 {
 	private _type: ASTIdent
