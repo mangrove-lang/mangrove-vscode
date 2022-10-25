@@ -863,16 +863,29 @@ export class Parser
 		return Ok(node)
 	}
 
-	parseTypeDef(): Result<ASTIdent | undefined, ParsingErrors>
+	parseTypeDecl(): Result<ASTIdent | undefined, ParsingErrors>
 	{
-		// TODO: handle storage and location specs
+		// First try to get any storage specification modifiers
+		const storageSpec = this.parseStorageSpec()
+		if (isResultError(storageSpec))
+			return storageSpec
+		const storage = storageSpec.val
+		// If we didn't error, now try and get a type
 		const typeIdent = this.parseIdent()
+		// If we have storage specifiers and do not have an identifier, that's a failure
+		if (storage && !isResultDefined(typeIdent))
+			return Err('InvalidTokenSequence')
 		if (!isResultValid(typeIdent))
 			return typeIdent
 		const symbol = typeIdent.val.symbol
 		// Check if the identifier is a type ident
 		if (symbol && symbol.type.mask(SymbolTypes.type) === SymbolTypes.type)
+		{
+			// XXX: Turn the identifier into a type node
+			if (storage)
+				typeIdent.val.add([storage])
 			return typeIdent
+		}
 		// If it is not or we can't tell, push it over to the look-aside storage and gracefully fail
 		this._ident = typeIdent.val
 		return Ok(undefined)
@@ -880,7 +893,7 @@ export class Parser
 
 	parseIdentDef(): Result<IdentDef | undefined, ParsingErrors>
 	{
-		const type = this.parseTypeDef()
+		const type = this.parseTypeDecl()
 		if (!isResultDefined(type))
 			return Ok(undefined)
 		if (isResultError(type))
