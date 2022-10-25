@@ -115,13 +115,13 @@ export class ASTStorage extends ASTNodeData implements ASTNode
 	get volatileSpec() { return this._volatile }
 	set volatileSpec(token: Token | undefined) { this._volatile = token }
 
-	toString()
+	get specification()
 	{
-		const staticSpec = this.staticSpec?.value ?? ''
-		const constSpec = this.constSpec?.value ?? ''
-		const volatileSpec = this.volatileSpec?.value ?? ''
-		return `<Storage spec: ${staticSpec} ${constSpec} ${volatileSpec}>`
+		const specs = [this.staticSpec?.value, this.constSpec?.value, this.volatileSpec?.value]
+		return specs.filter(str => !!str).join(' ')
 	}
+
+	toString() { return `<Storage spec: ${this.specification}>` }
 
 	*semanticTokens(): Generator<SemanticToken, void, undefined>
 	{
