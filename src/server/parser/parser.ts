@@ -85,23 +85,25 @@ type IdentDef = {type?: ASTIdent, ident: ASTIdent}
 export class Parser
 {
 	private lexer: Tokeniser
-	private _ident: Token
+	private _ident?: ASTIdent
 	private _symbolTable: SymbolTable
 	//private _syntaxErrors: SyntaxError[] = []
 
 	constructor(file: TextDocument)
 	{
 		this.lexer = new Tokeniser(file)
-		this._ident = new Token()
 		this._symbolTable = new SymbolTable(this)
 		addBuiltinTypesTo(this._symbolTable)
 	}
 
-	get haveIdent()
+	private get ident()
 	{
-		return this._ident.valid
+		const ident = this._ident
+		this._ident = undefined
+		return ident
 	}
 
+	private get haveIdent() { return this._ident && this._ident.valid }
 	get symbolTable() { return this._symbolTable }
 	set symbolTable(table: SymbolTable) { this._symbolTable = table }
 
@@ -143,6 +145,10 @@ export class Parser
 
 	parseIdent(): Result<ASTIdent | undefined, ParsingErrors>
 	{
+		// If we have an identifier in look-aside storage, pick that rather than parsing a new one.
+		if (this._ident)
+			return Ok(this.ident)
+		// Otherwise try and parse a new identifier
 		const match = this.parseIdentStr()
 		if (!match.ok)
 			return match
@@ -439,11 +445,7 @@ export class Parser
 	{
 		const token = this.lexer.token
 		if (this.haveIdent)
-		{
-			const node = new ASTIdent(this._ident)
-			this._ident.reset()
-			return Ok(node)
-		}
+			return Ok(this.ident)
 		const const_ = this.parseConst()
 		if (isResultDefined(const_))
 			return const_
@@ -816,7 +818,7 @@ export class Parser
 		if (!isResultDefined(ident))
 		{
 			//return Err('InvalidTokenSequence')
-			this._ident = type.val.token
+			this._ident = type.val
 			return Ok(undefined)
 		}
 		if (isResultError(ident))
