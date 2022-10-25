@@ -1156,6 +1156,12 @@ export class Parser
 		while (!token.typeIsOneOf(TokenType.eof))
 		{
 			const stmt = this.parseExtStatement()
+			if (!isResultValid(stmt) && this.haveIdent)
+			{
+				const ident = this.ident as ASTIdent
+				console.error(`Spurious left-over ident: ${ident}`)
+				nodes.push(ident)
+			}
 			if (!isResultDefined(stmt))
 			{
 				this.lexer.next()
