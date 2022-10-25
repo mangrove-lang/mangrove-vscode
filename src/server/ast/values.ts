@@ -71,8 +71,12 @@ export class ASTDottedIdent extends ASTIdent
 
 	*semanticTokens(): Generator<SemanticToken, void, undefined>
 	{
-		for (const ident of this._idents)
-			yield this.buildSemanticToken(this.semanticType, ident)
+		for (const [i, ident] of this._idents.entries())
+		{
+			const symbol = this._symbolSeq[i]
+			const semanticType = symbol && symbol.isType ? SemanticTokenTypes.type : SemanticTokenTypes.variable
+			yield this.buildSemanticToken(semanticType, ident)
+		}
 		for (const child of this.children)
 			yield *child.semanticTokens()
 	}
