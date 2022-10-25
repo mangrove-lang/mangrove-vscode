@@ -96,7 +96,11 @@ export class SymbolTable
 		return
 	}
 
-	pop(parser: Parser) { parser.symbolTable = this.parentTable }
+	pop(parser: Parser)
+	{
+		if (this.parentTable)
+			parser.symbolTable = this.parentTable
+	}
 }
 
 export class SymbolStruct

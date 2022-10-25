@@ -85,7 +85,7 @@ export class Parser
 {
 	private lexer: Tokeniser
 	private _ident: Token
-	private _symbolTable?: SymbolTable
+	private _symbolTable: SymbolTable
 	//private _syntaxErrors: SyntaxError[] = []
 
 	constructor(file: TextDocument)
@@ -101,7 +101,7 @@ export class Parser
 	}
 
 	get symbolTable() { return this._symbolTable }
-	set symbolTable(table: SymbolTable | undefined) { this._symbolTable = table }
+	set symbolTable(table: SymbolTable) { this._symbolTable = table }
 
 	match(...tokenTypes: TokenType[])
 	{
