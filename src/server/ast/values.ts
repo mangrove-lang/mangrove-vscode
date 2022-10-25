@@ -97,11 +97,7 @@ export class ASTIdentDef extends ASTIdent
 
 	*semanticTokens(): Generator<SemanticToken, void, undefined>
 	{
-		// XXX: _type should be an ASTTypeDef node which does this for us
-		yield this.buildSemanticToken(SemanticTokenTypes.type, this.identType.token)
-		for (const child of this.identType.children)
-			yield *child.semanticTokens()
-
+		yield *this.identType.semanticTokens()
 		yield this.buildSemanticToken(this.semanticType)
 		for (const child of this.children)
 			yield *child.semanticTokens()
