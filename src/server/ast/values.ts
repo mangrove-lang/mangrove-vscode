@@ -50,9 +50,9 @@ export class ASTIdent extends ASTNodeData implements ASTValue
 export class ASTDottedIdent extends ASTIdent
 {
 	private _idents: Token[]
-	private _symbolSeq: MangroveSymbol[] = []
+	private _symbolSeq: (MangroveSymbol | undefined)[] = []
 
-	constructor(identTokens: Token[], symbolSeq: MangroveSymbol[])
+	constructor(identTokens: Token[], symbolSeq: (MangroveSymbol | undefined)[])
 	{
 		//assert(identTokens.length != symbolSeq.length, "Must have one symbol entry per ident in dotted ident")
 		const token = identTokens[identTokens.length - 1]

@@ -1,6 +1,6 @@
 import {Ok, Err, Result} from 'ts-results'
 import {Position, TextDocument} from 'vscode-languageserver-textdocument'
-import {SymbolTable, SymbolTypes} from '../ast/symbolTable'
+import {MangroveSymbol, SymbolTable, SymbolTypes} from '../ast/symbolTable'
 import {addBuiltinTypesTo} from '../ast/builtins'
 import {ASTIdent, ASTDottedIdent, ASTIdentDef, ASTIndex, ASTSlice, ASTCallArguments} from '../ast/values'
 import
@@ -176,9 +176,12 @@ export class Parser
 
 	parseDottedIdent(): Result<ASTIdent | undefined, ParsingErrors>
 	{
+		if (this.haveIdent)
+			return Ok(this.ident)
 		const token = this.lexer.token
 		const comments: ASTNode[] = []
 		const dottedIdent: Token[] = []
+		const symbols: (MangroveSymbol | undefined)[] = []
 		let haveDot = true
 		while (haveDot)
 		{
@@ -191,6 +194,23 @@ export class Parser
 			if (token.typeIsOneOf(TokenType.ident))
 			{
 				this.lexer.next()
+				const symbol = ((ident: string) =>
+				{
+					if (symbols.length)
+					{
+						const lastSymbol = symbols[symbols.length - 1]
+						if (lastSymbol)
+						{
+							const struct = lastSymbol.structure
+							if (struct)
+								return struct.symbolTable.findLocal(ident)
+						}
+						return undefined
+					}
+					else
+						return this.symbolTable.find(ident)
+				})(ident.value)
+				symbols.push(symbol)
 				// Add the newly parsed identifier to the ident list
 				dottedIdent.push(ident)
 			}
@@ -209,11 +229,11 @@ export class Parser
 		comments.push(...this.skipWhite())
 		if (dottedIdent.length === 1)
 		{
-			const node = new ASTIdent(dottedIdent[0], undefined)
+			const node = new ASTIdent(dottedIdent[0], symbols[0])
 			node.add(comments)
 			return Ok(node)
 		}
-		const node = new ASTDottedIdent(dottedIdent, [])
+		const node = new ASTDottedIdent(dottedIdent, symbols)
 		node.add(comments)
 		return Ok(node)
 	}
