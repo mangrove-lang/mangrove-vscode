@@ -840,10 +840,10 @@ export class Parser
 		return Ok(node)
 	}
 
-	parseCVSpec(): Result<ASTStorage | undefined, ParsingErrors>
+	parseCVSpec(volatileValid: boolean): Result<ASTStorage | undefined, ParsingErrors>
 	{
 		const spec = this.parseConstSpec()
-		if (!isResultValid(spec))
+		if (!isResultValid(spec) || !volatileValid)
 			return spec
 		const token = this.lexer.token
 		if (!token.typeIsOneOf(TokenType.storageSpec) || !isVolatile(token.value))
@@ -857,7 +857,7 @@ export class Parser
 		return spec
 	}
 
-	parseStorageSpec(): Result<ASTStorage | undefined, ParsingErrors>
+	parseStorageSpec(volatileValid = true): Result<ASTStorage | undefined, ParsingErrors>
 	{
 		const token = this.lexer.token
 		if (!token.typeIsOneOf(TokenType.storageSpec))
@@ -871,7 +871,7 @@ export class Parser
 				return Err('UnreachableState')
 			comments = match
 		}
-		const storageSpec = this.parseCVSpec()
+		const storageSpec = this.parseCVSpec(volatileValid)
 		if (isResultError(storageSpec))
 			return storageSpec
 		const node = storageSpec.val ?? new ASTStorage()
