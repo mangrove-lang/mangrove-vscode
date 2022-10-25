@@ -2,7 +2,16 @@ import {Ok, Err, Result} from 'ts-results'
 import {Position, TextDocument} from 'vscode-languageserver-textdocument'
 import {MangroveSymbol, SymbolTable, SymbolTypes} from '../ast/symbolTable'
 import {addBuiltinTypesTo} from '../ast/builtins'
-import {ASTIdent, ASTDottedIdent, ASTIdentDef, ASTIndex, ASTSlice, ASTCallArguments} from '../ast/values'
+import
+{
+	ASTIdent,
+	ASTDottedIdent,
+	ASTStorage,
+	ASTIdentDef,
+	ASTIndex,
+	ASTSlice,
+	ASTCallArguments
+} from '../ast/values'
 import
 {
 	ASTBool,
@@ -31,7 +40,7 @@ import
 } from '../ast/operations'
 import {Tokeniser} from './tokeniser'
 import {Token, TokenType} from './types'
-import {isEquality, isEquals} from './recogniser'
+import {isEquality, isEquals, isStatic} from './recogniser'
 import
 {
 	ASTNew,
@@ -814,6 +823,26 @@ export class Parser
 			return value
 		const node = new ASTReturn(token, value.val)
 		node.add(match)
+		return Ok(node)
+	}
+
+	parseStorageSpec(): Result<ASTStorage | undefined, ParsingErrors>
+	{
+		const token = this.lexer.token
+		if (!token.typeIsOneOf(TokenType.storageSpec))
+			return Ok(undefined)
+		const comments: ASTNode[] = []
+		const staticToken = isStatic(token.value) ? token.clone() : undefined
+		if (staticToken)
+		{
+			const match = this.match(TokenType.storageSpec)
+			if (!match)
+				return Err('UnreachableState')
+			comments.push(...match)
+		}
+		// XXX: Need to parse const and volatile via `parseCVSpec() and `parseConstSpec()`
+		const node = new ASTStorage(staticToken)
+		node.add(comments)
 		return Ok(node)
 	}
 
