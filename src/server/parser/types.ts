@@ -41,8 +41,10 @@ export enum TokenType
 	type,
 	assignOp,
 
-	deleteStmt,
+	fromStmt,
+	importStmt,
 	newStmt,
+	deleteStmt,
 	returnStmt,
 	ifStmt,
 	elifStmt,
