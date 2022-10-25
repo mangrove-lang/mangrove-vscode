@@ -2,19 +2,21 @@ import {Parser} from '../parser/parser'
 
 export enum SymbolTypes
 {
-	integer = 0x01,
-	unsigned = integer | 0x02,
-	int8Bit = 0x00,
-	int16Bit = 0x04,
-	int32Bit = 0x08,
-	int64Bit = 0x0C,
-	character = 0x10,
-	list = 0x20,
+	invalid = 0x0000,
+	integer = 0x0001,
+	signed = integer | 0x0000,
+	unsigned = integer | 0x0002,
+	int8Bit = integer | 0x0000,
+	int16Bit = integer | 0x0004,
+	int32Bit = integer | 0x0008,
+	int64Bit = integer | 0x000C,
+	character = 0x0010,
+	list = 0x0020,
 	string = character | list,
-	struct = 0x40,
+	struct = 0x0040,
 	dict = struct | list,
-	type = 0x80,
-	invalid = 0xFF
+	bool = 0x0080,
+	type = 0x8000
 }
 
 export class SymbolType
