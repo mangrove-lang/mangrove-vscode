@@ -30,7 +30,7 @@ export class ASTIdent extends ASTNodeData implements ASTValue
 		this._symbol = symbol
 	}
 
-	get isType() { return this.symbol && this.symbol.isType }
+	get isType() { return this.symbol?.isType ?? false }
 
 	get type() { return ASTType.ident }
 	get valid() { return !!this._symbol && !!this._symbol.value }
