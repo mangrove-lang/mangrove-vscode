@@ -1,9 +1,11 @@
 import {TextDocument} from 'vscode-languageserver-textdocument'
 import {SemanticToken, SemanticTokenTypes} from '../../providers/semanticTokens'
 import {Token} from '../parser/types'
+import {Parser} from '../parser/parser'
 import {ASTNode, ASTNodeData, ASTType, ASTVisibilityType} from './types'
 import {ASTIdent} from './values'
 import {ASTFunctionCall} from './operations'
+import {SymbolTable} from './symbolTable'
 
 export class ASTNew extends ASTNodeData implements ASTNode
 {
@@ -251,13 +253,21 @@ export class ASTClass extends ASTNodeData implements ASTNode
 
 export class ASTBlock extends ASTNodeData implements ASTNode
 {
+	private _symbolTable: SymbolTable
 	private _statements: ASTNode[] = []
+
+	constructor(token: Token, parser: Parser)
+	{
+		super(token)
+		this._symbolTable = new SymbolTable(parser)
+	}
 
 	get type() { return ASTType.block }
 	get valid() { return this._statements.every(stmt => stmt.valid) }
 	get semanticType() { return undefined }
 	get empty() { return this._statements.length == 0 }
 	get statements() { return this._statements }
+	get symbolTable() { return this._symbolTable }
 	toString() { return `<Block: ${this.statements.length} statements>` }
 
 	*semanticTokens(): Generator<SemanticToken, void, undefined>

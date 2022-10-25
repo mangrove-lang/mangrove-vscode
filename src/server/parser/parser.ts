@@ -1154,21 +1154,24 @@ export class Parser
 	parseBraceBlock(): Result<ASTNode | undefined, ParsingErrors>
 	{
 		const token = this.lexer.token
-		if (!token.typeIsOneOf(TokenType.leftBrace))
-			return this.parseStatement()
-		const node = new ASTBlock(token)
+		const beginToken = token.clone()
 		const leftBrace = this.match(TokenType.leftBrace)
 		if (!leftBrace)
 			return Err('UnreachableState')
+		const node = new ASTBlock(beginToken, this)
 		node.add(leftBrace)
 		while (!token.typeIsOneOf(TokenType.rightBrace))
 		{
 			const stmt = this.parseStatement()
 			if (!isResultValid(stmt))
+			{
+				this.symbolTable.pop(this)
 				return stmt
+			}
 			node.addStatement(stmt.val)
 		}
 		node.adjustEnd(token, this.lexer.file)
+		this.symbolTable.pop(this)
 		const rightBrace = this.match(TokenType.rightBrace)
 		if (!rightBrace)
 			return Err('UnreachableState')
@@ -1178,7 +1181,10 @@ export class Parser
 
 	parseBlock(): Result<ASTNode | undefined, ParsingErrors>
 	{
-		return this.parseBraceBlock()
+		const token = this.lexer.token
+		if (token.typeIsOneOf(TokenType.leftBrace))
+			return this.parseBraceBlock()
+		return this.parseStatement()
 	}
 
 	parseExtStatement(): Result<ASTNode | undefined, ParsingErrors>
