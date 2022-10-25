@@ -91,6 +91,48 @@ export class ASTDottedIdent extends ASTIdent
 	}
 }
 
+export class ASTStorage extends ASTNodeData implements ASTNode
+{
+	private _static?: Token
+	private _const?: Token
+	private _volatile?: Token
+
+	constructor(staticToken?: Token, constToken?: Token, volatileToken?: Token)
+	{
+		// Dummy token to make the constructor happy. `this._token` is intentionally unused in this type
+		super(new Token())
+		this._static = staticToken
+		this._const = constToken
+		this._volatile = volatileToken
+	}
+
+	get type() { return ASTType.storageSpec }
+	// Need to test each of the 3 tokens and if a given one is not `undefined`, test its validity
+	get valid() { return true }
+	get semanticType() { return SemanticTokenTypes.keyword }
+	get staticSpec() { return this._static }
+	get constSpec() { return this._const }
+	get volatileSpec() { return this._volatile }
+
+	toString()
+	{
+		const staticSpec = this.staticSpec?.value ?? ''
+		const constSpec = this.constSpec?.value ?? ''
+		const volatileSpec = this.volatileSpec?.value ?? ''
+		return `<Storage spec: ${staticSpec} ${constSpec} ${volatileSpec}>`
+	}
+
+	*semanticTokens(): Generator<SemanticToken, void, undefined>
+	{
+		if (this._static)
+			yield this.buildSemanticToken(this.semanticType, this._static)
+		if (this._const)
+			yield this.buildSemanticToken(this.semanticType, this._const)
+		if (this._volatile)
+			yield this.buildSemanticToken(this.semanticType, this._volatile)
+	}
+}
+
 export class ASTIdentDef extends ASTIdent
 {
 	private _type: ASTIdent
