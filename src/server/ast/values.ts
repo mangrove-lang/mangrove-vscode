@@ -141,6 +141,7 @@ export class ASTIdentDef extends ASTIdent
 	constructor(type: ASTIdent, ident: ASTIdent)
 	{
 		super(ident.token, ident.symbol)
+		this.add(ident.children)
 		this._type = type
 	}
 
