@@ -862,14 +862,14 @@ export class Parser
 		const token = this.lexer.token
 		if (!token.typeIsOneOf(TokenType.storageSpec))
 			return Ok(undefined)
-		const comments: ASTNode[] = []
+		let comments: ASTNode[] = []
 		const staticToken = isStatic(token.value) ? token.clone() : undefined
 		if (staticToken)
 		{
 			const match = this.match(TokenType.storageSpec)
 			if (!match)
 				return Err('UnreachableState')
-			comments.push(...match)
+			comments = match
 		}
 		const storageSpec = this.parseCVSpec()
 		if (isResultError(storageSpec))
