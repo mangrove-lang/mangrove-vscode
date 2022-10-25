@@ -47,6 +47,15 @@ export class ASTIdent extends ASTNodeData implements ASTValue
 		for (const child of this.children)
 			yield *child.semanticTokens()
 	}
+
+	set symbol(symbol: MangroveSymbol | undefined)
+	{
+		if (!symbol)
+			return
+		if (this._symbol)
+			throw Error('Cannot replace an existing symbol on an identifier')
+		this._symbol = symbol
+	}
 }
 
 export class ASTDottedIdent extends ASTIdent
