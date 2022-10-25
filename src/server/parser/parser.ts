@@ -1,6 +1,6 @@
 import {Ok, Err, Result} from 'ts-results'
 import {Position, TextDocument} from 'vscode-languageserver-textdocument'
-import {SymbolTable} from '../ast/symbolTable'
+import {SymbolTable, SymbolTypes} from '../ast/symbolTable'
 import {addBuiltinTypesTo} from '../ast/builtins'
 import {ASTIdent, ASTDottedIdent, ASTIdentDef, ASTIndex, ASTSlice, ASTCallArguments} from '../ast/values'
 import
@@ -156,8 +156,8 @@ export class Parser
 		if (value == undefined)
 			return Ok(undefined)
 		const {token: ident, comments} = value
-		// Do symbol table things.
-		const node = new ASTIdent(ident, undefined)
+		const symbol = this.symbolTable.find(ident.value)
+		const node = new ASTIdent(ident, symbol)
 		node.add(comments)
 		return Ok(node)
 	}
@@ -803,8 +803,13 @@ export class Parser
 		const typeIdent = this.parseIdent()
 		if (!isResultValid(typeIdent))
 			return typeIdent
-		// TODO: test to make sure typeIdent refers to a type identifier and not a value variable
-		return typeIdent
+		const symbol = typeIdent.val.symbol
+		// Check if the identifier is a type ident
+		if (symbol && symbol.type.mask(SymbolTypes.type) === SymbolTypes.type)
+			return typeIdent
+		// If it is not or we can't tell, push it over to the look-aside storage and gracefully fail
+		this._ident = typeIdent.val
+		return Ok(undefined)
 	}
 
 	parseIdentDef(): Result<IdentDef | undefined, ParsingErrors>
@@ -816,11 +821,7 @@ export class Parser
 			return type
 		const ident = this.parseIdent()
 		if (!isResultDefined(ident))
-		{
-			//return Err('InvalidTokenSequence')
-			this._ident = type.val
-			return Ok(undefined)
-		}
+			return Err('InvalidTokenSequence')
 		if (isResultError(ident))
 			return ident
 		return Ok({type: type.val, ident: ident.val})
