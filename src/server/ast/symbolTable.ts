@@ -54,7 +54,7 @@ export class MangroveSymbol
 	allocStruct(parser: Parser)
 	{
 		this._struct = new SymbolStruct(parser)
-		this._type.assign(SymbolTypes.struct)
+		this._type.assign(SymbolTypes.struct | SymbolTypes.type)
 	}
 
 	isEqual(symbol: MangroveSymbol) { return this._ident === symbol._ident && this._type.isEqual(symbol._type) }
