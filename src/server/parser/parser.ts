@@ -40,7 +40,7 @@ import
 } from '../ast/operations'
 import {Tokeniser} from './tokeniser'
 import {Token, TokenType} from './types'
-import {isConst, isEquality, isEquals, isStatic} from './recogniser'
+import {isConst, isEquality, isEquals, isStatic, isVolatile} from './recogniser'
 import
 {
 	ASTNew,
@@ -840,6 +840,23 @@ export class Parser
 		return Ok(node)
 	}
 
+	parseCVSpec(): Result<ASTStorage | undefined, ParsingErrors>
+	{
+		const spec = this.parseConstSpec()
+		if (!isResultValid(spec))
+			return spec
+		const token = this.lexer.token
+		if (!token.typeIsOneOf(TokenType.storageSpec) || !isVolatile(token.value))
+			return spec
+		const storageSpec = spec.val
+		storageSpec.volatileSpec = token.clone()
+		const match = this.match(TokenType.storageSpec)
+		if (!match)
+			return Err('UnreachableState')
+		storageSpec.add(match)
+		return spec
+	}
+
 	parseStorageSpec(): Result<ASTStorage | undefined, ParsingErrors>
 	{
 		const token = this.lexer.token
@@ -854,7 +871,7 @@ export class Parser
 				return Err('UnreachableState')
 			comments.push(...match)
 		}
-		const storageSpec = this.parseConstSpec()
+		const storageSpec = this.parseCVSpec()
 		if (isResultError(storageSpec))
 			return storageSpec
 		const node = storageSpec.val ?? new ASTStorage()
