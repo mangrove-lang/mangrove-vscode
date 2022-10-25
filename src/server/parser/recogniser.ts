@@ -74,8 +74,10 @@ export function isDoStmt(str: string) { return str === 'do' }
 export function isClass(str: string) { return str === 'class' }
 export function isOperatorDef(str: string) { return str === 'operator' }
 
+export function isStatic(str: string) { return str === 'static' }
+export function isVolatile(str: string) { return str === 'volatile' }
 export function isLocationSpec(str: string) { return str === 'eeprom' || str === 'flash' || str === 'rom' }
-export function isStorageSpec(str: string) { return str === 'const' || str === 'volatile' || str === 'static' }
+export function isStorageSpec(str: string) { return str === 'const' || isVolatile(str) || isStatic(str) }
 
 export function isNone(str: string) { return str === 'none' }
 export function isArrow(str: string) { return str === '->' }
