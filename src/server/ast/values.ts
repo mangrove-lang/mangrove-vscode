@@ -253,22 +253,20 @@ export class ASTCallArguments extends ASTNodeData implements ASTNode
 	private _arguments: ASTNode[] = []
 
 	get type() { return ASTType.callArguments }
-	get valid() { return this._arguments.every(arg => arg.valid) }
+	get valid() { return this.arguments.every(arg => arg.valid) }
 	get semanticType() { return undefined }
-	get empty() { return this._arguments.length == 0 }
+	get empty() { return this.arguments.length == 0 }
 	get arguments() { return this._arguments }
 	toString() { return `<CallArguments: ${this.arguments.length} parameters>` }
 
+	addArgument(argument: ASTNode) { this.arguments.push(argument) }
+
 	*semanticTokens(): Generator<SemanticToken, void, undefined>
 	{
+		for (const argument of this.arguments)
+			yield *argument.semanticTokens()
 		for (const child of this.children)
 			yield *child.semanticTokens()
-	}
-
-	addArgument(argument: ASTNode)
-	{
-		this.add([argument])
-		this._arguments.push(argument)
 	}
 
 	adjustEnd(token: Token, file: TextDocument)
