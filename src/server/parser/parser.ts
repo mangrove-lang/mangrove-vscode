@@ -1275,13 +1275,13 @@ export class Parser
 
 	parseStatement(): Result<ASTNode | undefined, ParsingErrors>
 	{
-		let stmt: Result<ASTNode | undefined, ParsingErrors> = Ok(undefined)
-		if (!isResultValid(stmt))
-			stmt = this.parseIfStmt()
-		if (!isResultValid(stmt))
-			stmt = this.parseDefine()
-		if (!isResultValid(stmt))
-			stmt = this.parseExpression()
+		const token = this.lexer.token
+		if (token.typeIsOneOf(TokenType.ifStmt))
+			return this.parseIfStmt()
+
+		const stmt = this.parseDefine()
+		if (isResultInvalid(stmt))
+			return this.parseExpression()
 		return stmt
 	}
 
