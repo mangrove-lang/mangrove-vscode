@@ -3,7 +3,7 @@ import {SemanticToken, SemanticTokenTypes} from '../../providers/semanticTokens'
 import {Token} from '../parser/types'
 import {Parser} from '../parser/parser'
 import {ASTNode, ASTNodeData, ASTType, ASTVisibilityType} from './types'
-import {ASTIdent, ASTTypeDecl} from './values'
+import {ASTIdent, ASTStorage, ASTTypeDecl} from './values'
 import {ASTFunctionCall} from './operations'
 import {SymbolTable} from './symbolTable'
 
@@ -246,6 +246,33 @@ export class ASTParams extends ASTNodeData implements ASTNode
 	{
 		this._token.endsAt(token.location.end)
 		this._token.calcLength(file)
+	}
+}
+
+export class ASTReturnType extends ASTNodeData implements ASTNode
+{
+	private _functionTypeSpec?: ASTStorage
+	private _returnType: ASTTypeDecl
+
+	constructor(arrowToken: Token, functionTypeSpec: ASTStorage | undefined, returnType: ASTTypeDecl)
+	{
+		super(arrowToken)
+		this._functionTypeSpec = functionTypeSpec
+		this._returnType = returnType
+	}
+
+	get type() { return ASTType.returnType }
+	get valid() { return this.token.valid && (this._functionTypeSpec?.valid ?? true) && this._returnType.valid }
+	get semanticType() { return undefined }
+	get functionTypeSpec() { return this._functionTypeSpec }
+	get returnType() { return this._returnType }
+	toString() { return `<ReturnType: '${this.returnType.fullName}' on ${this.functionTypeSpec?.specification ?? ''} function>` }
+
+	*semanticTokens(): Generator<SemanticToken, void, undefined>
+	{
+		if (this.functionTypeSpec)
+			yield *this.functionTypeSpec.semanticTokens()
+		yield *this.returnType.semanticTokens()
 	}
 }
 

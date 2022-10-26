@@ -47,7 +47,7 @@ export enum ASTType
 	classDef,
 	locationSpec,
 	storageSpec,
-	typeDef,
+	returnType,
 	functionDef,
 	operatorDef,
 	visibility,
