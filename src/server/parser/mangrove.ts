@@ -8,6 +8,8 @@ export function tokenise(document: TextDocument)
 	const tokens: SemanticToken[] = []
 	for (const node of parser.parse())
 		tokens.push(...node.semanticTokens())
+	console.log(`Semantic token generation for ${document.uri} complete.`)
+	console.log('-----------------------------')
 	return tokens
 }
 
