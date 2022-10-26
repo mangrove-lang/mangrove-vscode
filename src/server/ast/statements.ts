@@ -336,7 +336,7 @@ export class ASTClass extends ASTNodeData implements ASTNode
 	get valid() { return this.token.valid && this._name.valid && this.body.valid }
 	get semanticType() { return SemanticTokenTypes.keyword }
 	get name() { return this._name.fullName }
-	// get symbolTable() { return this._name.symbolTable }
+	get symbolTable() { return this._name.symbol?.structure?.symbolTable }
 	get body() { return this._body }
 	toString() { return `<Class: ${this.name}>` }
 
