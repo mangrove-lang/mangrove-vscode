@@ -1099,7 +1099,7 @@ export class Parser
 		return Ok(new ASTIfStmt(ifExpr.val, elifExprs, elseExpr.val))
 	}
 
-	parseParams(): Result<ASTNode | undefined, ParsingErrors>
+	parseParams(): Result<ASTParams | undefined, ParsingErrors>
 	{
 		const token = this.lexer.token
 		const beginToken = token.clone()
@@ -1173,7 +1173,7 @@ export class Parser
 		return Ok(undefined)
 	}
 
-	parseReturnType(): Result<ASTNode | undefined, ParsingErrors>
+	parseReturnType(): Result<ASTReturnType | undefined, ParsingErrors>
 	{
 		const functionTypeSpec = this.parseStorageSpec(false)
 		if (isResultError(functionTypeSpec))
