@@ -3,7 +3,7 @@ import {SemanticToken, SemanticTokenTypes} from '../../providers/semanticTokens'
 import {Token} from '../parser/types'
 import {Parser} from '../parser/parser'
 import {ASTNode, ASTNodeData, ASTType, ASTVisibilityType} from './types'
-import {ASTIdent} from './values'
+import {ASTIdent, ASTTypeDecl} from './values'
 import {ASTFunctionCall} from './operations'
 import {SymbolTable} from './symbolTable'
 
@@ -218,6 +218,34 @@ export class ASTVisibility extends ASTNodeData implements ASTNode
 		else if (value === 'private')
 			return ASTVisibilityType.privateVis
 		throw Error(`Invalid visibility value '${value}'`)
+	}
+}
+
+export class ASTParams extends ASTNodeData implements ASTNode
+{
+	private _params: ASTTypeDecl[] = []
+
+	get type() { return ASTType.callArguments }
+	get valid() { return this.parameters.every(arg => arg.valid) }
+	get semanticType() { return undefined }
+	get empty() { return this.parameters.length == 0 }
+	get parameters() { return this._params }
+	toString() { return `<Parameters: ${this.parameters.length} parameters>` }
+
+	addParameter(parameter: ASTTypeDecl) { this.parameters.push(parameter) }
+
+	*semanticTokens(): Generator<SemanticToken, void, undefined>
+	{
+		for (const parameter of this.parameters)
+			yield *parameter.semanticTokens()
+		for (const child of this.children)
+			yield *child.semanticTokens()
+	}
+
+	adjustEnd(token: Token, file: TextDocument)
+	{
+		this._token.endsAt(token.location.end)
+		this._token.calcLength(file)
 	}
 }
 
