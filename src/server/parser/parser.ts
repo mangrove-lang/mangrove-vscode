@@ -53,6 +53,7 @@ import
 	ASTIfStmt,
 	ASTVisibility,
 	ASTParams,
+	ASTReturnType,
 	ASTClass,
 	ASTBlock
 } from '../ast/statements'
@@ -69,7 +70,7 @@ function isInt(token: Token): boolean
 
 type ParsingErrors = 'UnreachableState' | 'IncorrectToken' | 'OperatorWithNoRHS' | 'InvalidTokenSequence' |
 	'MissingBlock' | 'MissingComma' | 'MissingValue' | 'MissingIndexOrSlice' | 'MissingRightBracket' |
-	'MissingParams' | 'SymbolAlreadyDefined'
+	'MissingParams' | 'MissingReturnType' | 'SymbolAlreadyDefined'
 
 function isResultValid<T>(result: Result<T | undefined, ParsingErrors>): result is Ok<T>
 {
@@ -1170,6 +1171,28 @@ export class Parser
 		// If it is not or we can't tell, push it over to the look-aside storage and gracefully fail
 		this._ident = typeIdent.val
 		return Ok(undefined)
+	}
+
+	parseReturnType(): Result<ASTNode | undefined, ParsingErrors>
+	{
+		const functionTypeSpec = this.parseStorageSpec(false)
+		if (isResultError(functionTypeSpec))
+			return functionTypeSpec
+		const token = this.lexer.token
+		if (!token.typeIsOneOf(TokenType.arrow))
+			return Err('IncorrectToken')
+		const arrow = token.clone()
+		const match = this.match(TokenType.arrow)
+		if (!match)
+			return Err('UnreachableState')
+		const returnType = this.parseReturnTypeDecl()
+		if (!isResultValid(returnType))
+			return Err('MissingReturnType')
+		if (isResultError(returnType))
+			return returnType
+		const node = new ASTReturnType(arrow, functionTypeSpec.val, returnType.val)
+		node.add(match)
+		return Ok(node)
 	}
 
 	parseClassDef(): Result<ASTNode | undefined, ParsingErrors>
