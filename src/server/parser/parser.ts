@@ -1361,8 +1361,10 @@ export class Parser
 			if (isResultValid(stmt))
 				nodes.push(stmt.val)
 			else
-				console.error(`Error during parsing: ${stmt.val} at ` +
-					`${token.location.start.line}:${token.location.start.character}`)
+			{
+				const start = token.location.start
+				console.error(`Error during parsing: ${stmt.val} at ${start.line + 1}:${start.character + 1}`)
+			}
 		}
 		return nodes
 	}
