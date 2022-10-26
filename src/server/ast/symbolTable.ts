@@ -16,6 +16,7 @@ export enum SymbolTypes
 	struct = 0x0040,
 	dict = struct | list,
 	bool = 0x0080,
+	none = 0x4000,
 	type = 0x8000
 }
 
