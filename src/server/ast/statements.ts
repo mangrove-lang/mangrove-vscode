@@ -225,9 +225,9 @@ export class ASTParams extends ASTNodeData implements ASTNode
 {
 	private _params: ASTTypeDecl[] = []
 
-	get type() { return ASTType.callArguments }
+	get type() { return ASTType.params }
 	get valid() { return this.parameters.every(arg => arg.valid) }
-	get semanticType() { return undefined }
+	get semanticType() { return SemanticTokenTypes.parameter }
 	get empty() { return this.parameters.length == 0 }
 	get parameters() { return this._params }
 	toString() { return `<Parameters: ${this.parameters.length} parameters>` }
@@ -236,6 +236,7 @@ export class ASTParams extends ASTNodeData implements ASTNode
 
 	*semanticTokens(): Generator<SemanticToken, void, undefined>
 	{
+		// XXX: Need to get the semantic type for this node passed through to the name component of ASTTypeDecl.
 		for (const parameter of this.parameters)
 			yield *parameter.semanticTokens()
 		for (const child of this.children)
