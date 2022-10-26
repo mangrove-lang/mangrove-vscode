@@ -1,6 +1,6 @@
 import {Ok, Err, Result} from 'ts-results'
 import {Position, TextDocument} from 'vscode-languageserver-textdocument'
-import {MangroveSymbol, SymbolTable} from '../ast/symbolTable'
+import {MangroveSymbol, SymbolTable, SymbolType, SymbolTypes} from '../ast/symbolTable'
 import {addBuiltinTypesTo} from '../ast/builtins'
 import
 {
@@ -54,6 +54,7 @@ import
 	ASTVisibility,
 	ASTParams,
 	ASTReturnType,
+	ASTFunction,
 	ASTClass,
 	ASTBlock
 } from '../ast/statements'
@@ -1217,11 +1218,54 @@ export class Parser
 		return Ok(node)
 	}
 
+	parseFunctionDef(): Result<ASTNode | undefined, ParsingErrors>
+	{
+		const functionToken = this.lexer.token.clone()
+		const match = this.match(TokenType.functionDef)
+		if (!match)
+			return Err('UnreachableState')
+
+		const ident = this.parseIdent()
+		if (!isResultDefined(ident))
+			return Err('InvalidTokenSequence')
+		if (isResultError(ident))
+			return ident
+
+		const functionName = ident.val
+		if (functionName.symbol)
+			return Err('SymbolAlreadyDefined')
+		functionName.symbol = new MangroveSymbol(functionName.value, new SymbolType(SymbolTypes.function))
+
+		const params = this.parseParams()
+		if (!isResultDefined(params))
+			return Err('InvalidTokenSequence')
+		if (isResultError(params))
+			return params
+
+		const returnType = this.parseReturnType()
+		if (!isResultDefined(returnType))
+			return Err('MissingReturnType')
+		if (isResultError(returnType))
+			return returnType
+
+		const block = this.parseBlock()
+		if (!isResultDefined(block))
+			return Err('MissingBlock')
+		if (isResultError(block))
+			return block
+
+		const node = new ASTFunction(functionToken, functionName, params.val, returnType.val, block.val)
+		node.add(match)
+		return Ok(node)
+	}
+
 	parseDefine(): Result<ASTNode | undefined, ParsingErrors>
 	{
 		const token = this.lexer.token
 		if (token.typeIsOneOf(TokenType.classDef))
 			return this.parseClassDef()
+		if (token.typeIsOneOf(TokenType.functionDef))
+			return this.parseFunctionDef()
 		return Ok(undefined)
 	}
 
