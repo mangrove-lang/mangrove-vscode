@@ -37,7 +37,6 @@ export class ASTIdent extends ASTNodeData implements ASTValue
 	get semanticType() { return this.isType ? SemanticTokenTypes.type : SemanticTokenTypes.variable }
 	//get value() { return this._symbol && this._symbol.value }
 	get value() { return this.token.value }
-	get symbol() { return this._symbol }
 	get fullName() { return this.token.value }
 	toString() { return `<Ident '${this.fullName}'>` }
 
@@ -48,6 +47,7 @@ export class ASTIdent extends ASTNodeData implements ASTValue
 			yield *child.semanticTokens()
 	}
 
+	get symbol() { return this._symbol }
 	set symbol(symbol: MangroveSymbol | undefined)
 	{
 		if (!symbol)

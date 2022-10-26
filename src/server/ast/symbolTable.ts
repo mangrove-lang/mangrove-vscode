@@ -63,7 +63,7 @@ export class MangroveSymbol
 	set type(type: SymbolType) { this._type = type }
 	get type() { return this._type }
 	get structure() { return this._struct }
-	toString() { return `<Symbol: '${this.value}' (${this.type})>`; }
+	toString() { return `<Symbol: '${this.value}' (${this.type})>` }
 
 	get isType() { return this.type.mask(SymbolTypes.type) === SymbolTypes.type }
 	get isStruct() { return this.type.mask(SymbolTypes.struct) === SymbolTypes.struct }
