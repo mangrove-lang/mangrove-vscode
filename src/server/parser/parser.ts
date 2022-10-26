@@ -848,7 +848,7 @@ export class Parser
 		return Ok(node)
 	}
 
-	parseCVSpec(volatileValid: boolean): Result<ASTStorage | undefined, ParsingErrors>
+	parseCVSpec(volatileValid: boolean = true): Result<ASTStorage | undefined, ParsingErrors>
 	{
 		const spec = this.parseConstSpec()
 		if (!isResultValid(spec) || !volatileValid)
@@ -1128,6 +1128,48 @@ export class Parser
 			return Err('UnreachableState')
 		node.add(rightParen)
 		return Ok(node)
+	}
+
+	parseNoneType(): Result<ASTTypeDecl | undefined, ParsingErrors>
+	{
+		const noneToken = this.lexer.token.clone()
+		const match = this.match(TokenType.noneType)
+		if (!match)
+			return Err('UnreachableState')
+		const symbol = this.symbolTable.find(noneToken.value)
+		if (!symbol)
+			return Err('UnreachableState')
+		const node = new ASTTypeDecl(new ASTIdent(noneToken, symbol))
+		node.add(match)
+		return Ok(node)
+	}
+
+	parseReturnTypeDecl(): Result<ASTTypeDecl | undefined, ParsingErrors>
+	{
+		if (this.lexer.token.typeIsOneOf(TokenType.noneType))
+			return this.parseNoneType()
+		// First try to get any storage specification modifiers
+		const storageSpec = this.parseCVSpec()
+		if (isResultError(storageSpec))
+			return storageSpec
+		// If we didn't error, now try and get a type
+		const typeIdent = this.parseIdent()
+		// If we have storage specifiers and do not have an identifier, that's a failure
+		if (storageSpec.val && !isResultDefined(typeIdent))
+			return Err('InvalidTokenSequence')
+		if (isResultInvalid(typeIdent) || isResultError(typeIdent))
+			return typeIdent
+		// This literally only exists to fix TS's type assertions as it can't figure out
+		// that `Ok<ASTIdent>` is the only possible type for typeIdent after the previous if.
+		if (!isResultDefined(typeIdent))
+			return Err('UnreachableState')
+		const symbol = typeIdent.val.symbol
+		// Check if the identifier is a type ident
+		if (symbol?.isType)
+			return Ok(new ASTTypeDecl(typeIdent.val, storageSpec.val))
+		// If it is not or we can't tell, push it over to the look-aside storage and gracefully fail
+		this._ident = typeIdent.val
+		return Ok(undefined)
 	}
 
 	parseClassDef(): Result<ASTNode | undefined, ParsingErrors>
