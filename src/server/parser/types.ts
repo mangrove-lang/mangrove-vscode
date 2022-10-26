@@ -177,7 +177,10 @@ export class Token
 
 	public toString()
 	{
-		return `<Token ${this._type}@${this._location.start.line}:${this.location.start.character} -> ${this._value}>`
+		// The token location has 1 added to both the character and line because internally they're base-0
+		// but in the file itself they're base-1.
+		const start = this.location.start
+		return `<Token ${this._type}@${start.line + 1}:${start.character + 1} -> ${this._value}>`
 	}
 
 	public isEqual(token: Token)
