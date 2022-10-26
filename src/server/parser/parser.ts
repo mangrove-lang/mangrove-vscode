@@ -52,6 +52,7 @@ import
 	ASTElseExpr,
 	ASTIfStmt,
 	ASTVisibility,
+	ASTParams,
 	ASTClass,
 	ASTBlock
 } from '../ast/statements'
@@ -68,7 +69,7 @@ function isInt(token: Token): boolean
 
 type ParsingErrors = 'UnreachableState' | 'IncorrectToken' | 'OperatorWithNoRHS' | 'InvalidTokenSequence' |
 	'MissingBlock' | 'MissingComma' | 'MissingValue' | 'MissingIndexOrSlice' | 'MissingRightBracket' |
-	'SymbolAlreadyDefined'
+	'MissingParams' | 'SymbolAlreadyDefined'
 
 function isResultValid<T>(result: Result<T | undefined, ParsingErrors>): result is Ok<T>
 {
@@ -887,12 +888,16 @@ export class Parser
 		return Ok(node)
 	}
 
-	parseTypeDecl(): Result<ASTTypeDecl | undefined, ParsingErrors>
+	parseTypeDecl(locationValid = true): Result<ASTTypeDecl | undefined, ParsingErrors>
 	{
 		// First try to get any storage specification modifiers
 		const storageSpec = this.parseStorageSpec()
 		if (isResultError(storageSpec))
 			return storageSpec
+		if (locationValid)
+		{
+			// TODO: parse location specifications
+		}
 		// If we didn't error, now try and get a type
 		const typeIdent = this.parseIdent()
 		// If we have storage specifiers and do not have an identifier, that's a failure
@@ -1091,6 +1096,38 @@ export class Parser
 		if (isResultError(elseExpr))
 			return elseExpr
 		return Ok(new ASTIfStmt(ifExpr.val, elifExprs, elseExpr.val))
+	}
+
+	parseParams(): Result<ASTNode | undefined, ParsingErrors>
+	{
+		const token = this.lexer.token
+		const beginToken = token.clone()
+		const leftParen = this.match(TokenType.leftParen)
+		if (!leftParen)
+			return Err('MissingParams')
+		const node = new ASTParams(beginToken)
+		node.add(leftParen)
+		while (!token.typeIsOneOf(TokenType.rightParen))
+		{
+			const parameter = this.parseTypeDecl(false)
+			if (!isResultValid(parameter))
+				return parameter as Result<undefined, ParsingErrors>
+			node.addParameter(parameter.val)
+			if (!token.typeIsOneOf(TokenType.rightParen))
+			{
+				const comma = this.match(TokenType.comma)
+				if (!comma)
+					return Err('MissingComma')
+				else if (token.typeIsOneOf(TokenType.rightParen))
+					return Err('MissingValue')
+				node.add(comma)
+			}
+		}
+		const rightParen = this.match(TokenType.rightParen)
+		if (!rightParen)
+			return Err('UnreachableState')
+		node.add(rightParen)
+		return Ok(node)
 	}
 
 	parseClassDef(): Result<ASTNode | undefined, ParsingErrors>
