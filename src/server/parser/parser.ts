@@ -1207,13 +1207,17 @@ export class Parser
 			return Err('InvalidTokenSequence')
 		if (isResultError(ident))
 			return ident
+		const className = ident.val
+		if (className.symbol)
+			return Err('SymbolAlreadyDefined')
+		className.symbol = new MangroveSymbol(className.value, new SymbolType(SymbolTypes.struct | SymbolTypes.type))
 		//ident.val.symbol.allocStruct(this)
 		const block = this.parseBlock()
 		if (!isResultDefined(block))
 			return Err('MissingBlock')
 		if (isResultError(block))
 			return block
-		const node = new ASTClass(token, ident.val, block.val)
+		const node = new ASTClass(token, className, block.val)
 		node.add(match)
 		return Ok(node)
 	}
