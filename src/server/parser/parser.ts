@@ -1007,14 +1007,9 @@ export class Parser
 		if (!isResultValid(expr))
 			return expr
 		const node = expr.val
-		const token = this.lexer.token
-		if (token.typeIsOneOf(TokenType.semi))
-		{
-			const match = this.match(TokenType.semi)
-			if (!match)
-				return Err('UnreachableState')
+		const match = this.match(TokenType.semi)
+		if (match)
 			node.add(match)
-		}
 		return expr
 	}
 
@@ -1296,7 +1291,7 @@ export class Parser
 			return Err('UnreachableState')
 		node.add(match)
 		const semicolonMatch = this.match(TokenType.semi)
-		if (semicolonMatch !== undefined)
+		if (semicolonMatch)
 			node.add(semicolonMatch)
 		return Ok(node)
 	}
