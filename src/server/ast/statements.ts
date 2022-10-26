@@ -277,6 +277,49 @@ export class ASTReturnType extends ASTNodeData implements ASTNode
 	}
 }
 
+export class ASTFunction extends ASTNodeData implements ASTNode
+{
+	private _name: ASTIdent
+	private _parameters: ASTParams
+	private _returnType: ASTReturnType
+	private _body: ASTNode
+
+	constructor(functionToken: Token, name: ASTIdent, params: ASTParams, returnType: ASTReturnType, body: ASTNode)
+	{
+		super(functionToken)
+		this._name = name
+		this._parameters = params
+		this._returnType = returnType
+		this._body = body
+	}
+
+	get type() { return ASTType.functionDef }
+	get semanticType() { return SemanticTokenTypes.keyword }
+	get name() { return this._name }
+	get parameters() { return this._parameters }
+	get returnType() { return this._returnType }
+	get body() { return this._body }
+	toString() { return `<Function: '${this.name.fullName}'>` }
+
+	get valid()
+	{
+		return this.token.valid &&
+			this.name.valid &&
+			this.parameters.valid &&
+			this.returnType.valid &&
+			this.body.valid
+	}
+
+	*semanticTokens(): Generator<SemanticToken, void, undefined>
+	{
+		yield this.buildSemanticToken(this.semanticType)
+		yield this.buildSemanticToken(SemanticTokenTypes.function, this._name.token)
+		yield *this._parameters.semanticTokens()
+		yield *this.returnType.semanticTokens()
+		yield *this.body.semanticTokens()
+	}
+}
+
 export class ASTClass extends ASTNodeData implements ASTNode
 {
 	private _name: ASTIdent
