@@ -51,7 +51,7 @@ class ASTUnaryOp extends ASTNodeData implements ASTNode
 	{
 		yield this.buildSemanticToken(this.semanticType)
 		yield *this.value.semanticTokens()
-		for (const child of this.children)
+		for (const child of this.comments)
 			yield *child.semanticTokens()
 	}
 }
@@ -82,7 +82,7 @@ class ASTBinaryOp extends ASTNodeData implements ASTNode
 		yield *this.lhs.semanticTokens()
 		yield this.buildSemanticToken(this.semanticType)
 		yield *this.rhs.semanticTokens()
-		for (const child of this.children)
+		for (const child of this.comments)
 			yield *child.semanticTokens()
 	}
 }
@@ -183,7 +183,7 @@ export class ASTBetween extends ASTNodeData implements ASTNode
 		yield *this._value.semanticTokens()
 		yield this.buildSemanticToken(this.semanticType, this._rop)
 		yield *this._rhs.semanticTokens()
-		for (const child of this.children)
+		for (const child of this.comments)
 			yield *child.semanticTokens()
 	}
 }
@@ -217,7 +217,7 @@ export class ASTAssign extends ASTNodeData implements ASTNode
 		yield *this._ident.semanticTokens()
 		yield this.buildSemanticToken(this.semanticType)
 		yield *this._value.semanticTokens()
-		for (const child of this.children)
+		for (const child of this.comments)
 			yield *child.semanticTokens()
 	}
 }

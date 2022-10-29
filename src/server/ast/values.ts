@@ -15,7 +15,7 @@ export class ASTInvalid extends ASTNodeData implements ASTValue
 
 	*semanticTokens(): Generator<SemanticToken, void, undefined>
 	{
-		for (const child of this.children)
+		for (const child of this.comments)
 			yield *child.semanticTokens()
 	}
 }
@@ -43,7 +43,7 @@ export class ASTIdent extends ASTNodeData implements ASTValue
 	*semanticTokens(): Generator<SemanticToken, void, undefined>
 	{
 		yield this.buildSemanticToken(this.semanticType)
-		for (const child of this.children)
+		for (const child of this.comments)
 			yield *child.semanticTokens()
 	}
 
@@ -86,7 +86,7 @@ export class ASTDottedIdent extends ASTIdent
 			const semanticType = symbol && symbol.isType ? SemanticTokenTypes.type : SemanticTokenTypes.variable
 			yield this.buildSemanticToken(semanticType, ident)
 		}
-		for (const child of this.children)
+		for (const child of this.comments)
 			yield *child.semanticTokens()
 	}
 }
@@ -141,7 +141,7 @@ export class ASTTypeDecl extends ASTIdent
 	constructor(type: ASTIdent, storageSpec?: ASTStorage)
 	{
 		super(type.token, type.symbol)
-		this.add(type.children)
+		this.add(type.comments)
 		this._storageSpec = storageSpec
 	}
 
@@ -158,7 +158,7 @@ export class ASTTypeDecl extends ASTIdent
 		if (this.storageSpec)
 			yield *this.storageSpec.semanticTokens()
 		yield this.buildSemanticToken(this.semanticType)
-		for (const child of this.children)
+		for (const child of this.comments)
 			yield *child.semanticTokens()
 	}
 }
@@ -170,7 +170,7 @@ export class ASTIdentDef extends ASTIdent
 	constructor(type: ASTIdent, ident: ASTIdent)
 	{
 		super(ident.token, ident.symbol)
-		this.add(ident.children)
+		this.add(ident.comments)
 		this._type = type
 	}
 
@@ -181,7 +181,7 @@ export class ASTIdentDef extends ASTIdent
 	{
 		yield *this.identType.semanticTokens()
 		yield this.buildSemanticToken(this.semanticType)
-		for (const child of this.children)
+		for (const child of this.comments)
 			yield *child.semanticTokens()
 	}
 }
@@ -211,7 +211,7 @@ export class ASTIndex extends ASTNodeData implements ASTNode
 	{
 		yield *this.target.semanticTokens()
 		yield *this.index.semanticTokens()
-		for (const child of this.children)
+		for (const child of this.comments)
 			yield *child.semanticTokens()
 	}
 }
@@ -243,7 +243,7 @@ export class ASTSlice extends ASTNodeData implements ASTNode
 		yield *this.target.semanticTokens()
 		if (this.begin)
 			yield *this.begin.semanticTokens()
-		for (const child of this.children)
+		for (const child of this.comments)
 			yield *child.semanticTokens()
 	}
 }
@@ -265,7 +265,7 @@ export class ASTCallArguments extends ASTNodeData implements ASTNode
 	{
 		for (const argument of this.arguments)
 			yield *argument.semanticTokens()
-		for (const child of this.children)
+		for (const child of this.comments)
 			yield *child.semanticTokens()
 	}
 

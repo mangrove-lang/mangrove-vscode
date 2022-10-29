@@ -24,7 +24,7 @@ export class ASTNew extends ASTNodeData implements ASTNode
 
 	*semanticTokens(): Generator<SemanticToken, void, undefined>
 	{
-		yield* generateSemanticTokens(this, this._ctorCall, ...this.children)
+		yield* generateSemanticTokens(this, this._ctorCall, ...this.comments)
 	}
 }
 
@@ -45,7 +45,7 @@ export class ASTDelete extends ASTNodeData implements ASTNode
 
 	*semanticTokens(): Generator<SemanticToken, void, undefined>
 	{
-		yield* generateSemanticTokens(this, this._ident, ...this.children)
+		yield* generateSemanticTokens(this, this._ident, ...this.comments)
 	}
 }
 
@@ -66,7 +66,7 @@ export class ASTReturn extends ASTNodeData implements ASTNode
 
 	*semanticTokens(): Generator<SemanticToken, void, undefined>
 	{
-		yield* generateSemanticTokens(this, this._expr, ...this.children)
+		yield* generateSemanticTokens(this, this._expr, ...this.comments)
 	}
 }
 
@@ -89,7 +89,7 @@ export class ASTIfExpr extends ASTNodeData implements ASTNode
 
 	*semanticTokens(): Generator<SemanticToken, void, undefined>
 	{
-		yield* generateSemanticTokens(this, this._cond, this._trueBlock, ...this.children)
+		yield* generateSemanticTokens(this, this._cond, this._trueBlock, ...this.comments)
 	}
 }
 
@@ -112,7 +112,7 @@ export class ASTElifExpr extends ASTNodeData implements ASTNode
 
 	*semanticTokens(): Generator<SemanticToken, void, undefined>
 	{
-		yield* generateSemanticTokens(this, this._cond, this._trueBlock, ...this.children)
+		yield* generateSemanticTokens(this, this._cond, this._trueBlock, ...this.comments)
 	}
 }
 
@@ -133,7 +133,7 @@ export class ASTElseExpr extends ASTNodeData implements ASTNode
 
 	*semanticTokens(): Generator<SemanticToken, void, undefined>
 	{
-		yield* generateSemanticTokens(this, this._block, ...this.children)
+		yield* generateSemanticTokens(this, this._block, ...this.comments)
 	}
 }
 
@@ -180,7 +180,7 @@ export class ASTVisibility extends ASTNodeData implements ASTNode
 
 	*semanticTokens(): Generator<SemanticToken, void, undefined>
 	{
-		yield* generateSemanticTokens(this, ...this.children)
+		yield* generateSemanticTokens(this, ...this.comments)
 	}
 
 	private stringToType(value: string)
@@ -213,7 +213,7 @@ export class ASTParams extends ASTNodeData implements ASTNode
 		// XXX: Need to get the semantic type for this node passed through to the name component of ASTTypeDecl.
 		for (const parameter of this.parameters)
 			yield *parameter.semanticTokens()
-		for (const child of this.children)
+		for (const child of this.comments)
 			yield *child.semanticTokens()
 	}
 
@@ -311,7 +311,7 @@ export class ASTClass extends ASTNodeData implements ASTNode
 
 	*semanticTokens(): Generator<SemanticToken, void, undefined>
 	{
-		yield* generateSemanticTokens(this, this._name, this.body, ...this.children)
+		yield* generateSemanticTokens(this, this._name, this.body, ...this.comments)
 	}
 }
 
@@ -336,7 +336,7 @@ export class ASTBlock extends ASTNodeData implements ASTNode
 
 	*semanticTokens(): Generator<SemanticToken, void, undefined>
 	{
-		yield* generateSemanticTokens(undefined, ...this.children)
+		yield* generateSemanticTokens(undefined, ...this.comments)
 	}
 
 	addStatement(stmt: ASTNode)

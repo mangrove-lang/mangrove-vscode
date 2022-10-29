@@ -79,14 +79,14 @@ export enum ASTVisibilityType
 export class ASTNodeData
 {
 	protected _token: Token
-	private _children: ASTNode[] = new Array<ASTNode>()
+	private _comments: ASTNode[] = new Array<ASTNode>()
 
 	constructor(token: Token) { this._token = token.clone() }
 
-	get children() { return this._children }
+	get comments() { return this._comments }
 	get token() { return this._token } // XXX: Needs removing when the parser is converted.
 
-	add(nodes: ASTNode[]) { this._children.push(...nodes) }
+	add(nodes: ASTNode[]) { this._comments.push(...nodes) }
 
 	buildSemanticToken(semanticType: SemanticTokenTypes, token?: Token)
 	{

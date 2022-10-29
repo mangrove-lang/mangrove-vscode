@@ -418,7 +418,7 @@ export class Parser
 	{
 		// Copy the index node's ident and comment data over
 		const node = new ASTSlice(index.target, begin)
-		node.add(index.children)
+		node.add(index.comments)
 		// Check if the next token is a colon (it's fatal if it is not)
 		const colon = this.match(TokenType.colon)
 		if (!colon)
