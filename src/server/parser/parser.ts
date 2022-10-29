@@ -535,6 +535,7 @@ export class Parser
 	{
 		const args = this.parseCallArgs()
 		if (!isResultValid(args))
+			// Assertion required because tsc can't work out that undefined isn't in the valid set after this.
 			return args as Result<undefined, ParsingErrors>
 		return Ok(new ASTFunctionCall(func, args.val))
 	}
@@ -1108,6 +1109,7 @@ export class Parser
 		{
 			const parameter = this.parseTypeDecl(false)
 			if (!isResultValid(parameter))
+				// Assertion required because tsc can't work out that undefined isn't in the valid set after this.
 				return parameter as Result<undefined, ParsingErrors>
 			node.addParameter(parameter.val)
 			if (!token.typeIsOneOf(TokenType.rightParen))
@@ -1154,12 +1156,9 @@ export class Parser
 		// If we have storage specifiers and do not have an identifier, that's a failure
 		if (storageSpec.val && !isResultDefined(typeIdent))
 			return Err('InvalidTokenSequence')
-		if (isResultInvalid(typeIdent) || isResultError(typeIdent))
-			return typeIdent
-		// This literally only exists to fix TS's type assertions as it can't figure out
-		// that `Ok<ASTIdent>` is the only possible type for typeIdent after the previous if.
-		if (!isResultDefined(typeIdent))
-			return Err('UnreachableState')
+		if (!isResultValid(typeIdent))
+			// Assertion required because tsc can't work out that undefined isn't in the valid set after this.
+			return typeIdent as Result<undefined, ParsingErrors>
 		const symbol = typeIdent.val.symbol
 		// Check if the identifier is a type ident
 		if (symbol?.isType)
