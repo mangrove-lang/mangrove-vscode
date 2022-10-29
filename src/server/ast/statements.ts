@@ -284,7 +284,7 @@ export class ASTFunction extends ASTNodeData implements ASTNode
 
 	*semanticTokens(): Generator<SemanticToken, void, undefined>
 	{
-		yield* generateSemanticTokens(this, this._parameters, this.returnType, this.body);
+		yield* generateSemanticTokens(this, this._parameters, this.returnType, this.body)
 		yield this.buildSemanticToken(SemanticTokenTypes.function, this._name.token)
 	}
 }
