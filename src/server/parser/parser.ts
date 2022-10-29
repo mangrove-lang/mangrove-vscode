@@ -193,6 +193,23 @@ export class Parser
 		return comments
 	}
 
+	lookupIdentSymbolFromChain(ident: string, symbols: (MangroveSymbol | undefined)[]): MangroveSymbol | undefined
+	{
+		if (symbols.length)
+		{
+			const lastSymbol = symbols[symbols.length - 1]
+			if (lastSymbol)
+			{
+				const struct = lastSymbol.structure
+				if (struct)
+					return struct.symbolTable.findLocal(ident)
+			}
+			return undefined
+		}
+		else
+			return this.symbolTable.find(ident)
+	}
+
 	parseDottedIdent(): Result<ASTIdent | undefined, ParsingErrors>
 	{
 		if (this.haveIdent)
@@ -213,22 +230,7 @@ export class Parser
 			if (token.typeIsOneOf(TokenType.ident))
 			{
 				this.lexer.next()
-				const symbol = ((ident: string) =>
-				{
-					if (symbols.length)
-					{
-						const lastSymbol = symbols[symbols.length - 1]
-						if (lastSymbol)
-						{
-							const struct = lastSymbol.structure
-							if (struct)
-								return struct.symbolTable.findLocal(ident)
-						}
-						return undefined
-					}
-					else
-						return this.symbolTable.find(ident)
-				})(ident.value)
+				const symbol = this.lookupIdentSymbolFromChain(ident.value, symbols)
 				symbols.push(symbol)
 				// Add the newly parsed identifier to the ident list
 				dottedIdent.push(ident)
