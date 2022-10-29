@@ -165,7 +165,7 @@ export class Parser
 	parseIdent(): Result<ASTIdent | undefined, ParsingErrors>
 	{
 		// If we have an identifier in look-aside storage, pick that rather than parsing a new one.
-		if (this._ident)
+		if (this.haveIdent)
 			return Ok(this.ident)
 		// Otherwise try and parse a new identifier
 		const match = this.parseIdentStr()
@@ -850,7 +850,7 @@ export class Parser
 		return Ok(node)
 	}
 
-	parseCVSpec(volatileValid: boolean = true): Result<ASTStorage | undefined, ParsingErrors>
+	parseCVSpec(volatileValid = true): Result<ASTStorage | undefined, ParsingErrors>
 	{
 		const spec = this.parseConstSpec()
 		if (!isResultValid(spec) || !volatileValid)
