@@ -1190,6 +1190,20 @@ export class Parser
 		return Ok(node)
 	}
 
+	/*
+	 * For templates, the following syntax is suggested to allow both declaration of new templates, and specialisations
+	 * (both partial and complete):
+	 * 
+	 * // Define A
+	 * class A<type T> { [...] }
+	 * // Fully specialise A in terms of type B
+	 * class A<T = B> { [...] }
+	 * // Partially specialise A in terms of type C and add extra template parameters
+	 * class A<T = C, type D> { [...] }
+	 * // Perform a shape match on the type T and decompose it to R and Args...
+	 * class A<T = R(Args...), type R, type... Args> { [...] }
+	 */
+
 	parseClassDef(): Result<ASTNode | undefined, ParsingErrors>
 	{
 		const token = this.lexer.token.clone()
