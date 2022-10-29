@@ -197,14 +197,8 @@ export class Parser
 	{
 		if (symbols.length)
 		{
-			const lastSymbol = symbols[symbols.length - 1]
-			if (lastSymbol)
-			{
-				const struct = lastSymbol.structure
-				if (struct)
-					return struct.symbolTable.findLocal(ident)
-			}
-			return undefined
+			const struct = symbols[symbols.length - 1]?.structure
+			return struct?.symbolTable.findLocal(ident)
 		}
 		else
 			return this.symbolTable.find(ident)
