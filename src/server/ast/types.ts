@@ -88,7 +88,7 @@ export class ASTNodeData
 
 	add(nodes: ASTNode[]) { this._children.push(...nodes) }
 
-	protected buildSemanticToken(semanticType: SemanticTokenTypes, token?: Token)
+	buildSemanticToken(semanticType: SemanticTokenTypes, token?: Token)
 	{
 		if (!token)
 			token = this._token
@@ -121,4 +121,16 @@ export class ASTComment extends ASTNodeData implements ASTNode
 	get semanticType() { return SemanticTokenTypes.comment }
 
 	*semanticTokens() { yield this.buildSemanticToken(this.semanticType) }
+}
+
+export function *generateSemanticTokens(node?: ASTNode, ...innerNodes: (ASTNode | undefined)[]): Generator<SemanticToken, void, undefined> 
+{
+	if (node && node.semanticType)
+		yield node.buildSemanticToken(node.semanticType)
+	
+	for (const node of innerNodes) 
+	{
+		if (node)
+			yield *node.semanticTokens()
+	}
 }
