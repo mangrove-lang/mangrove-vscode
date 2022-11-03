@@ -1013,8 +1013,6 @@ export class Parser
 	parseIfExpr(): Result<ASTIfExpr | undefined, ParsingErrors>
 	{
 		const token = this.lexer.token.clone()
-		if (!token.typeIsOneOf(TokenType.ifStmt))
-			return Ok(undefined)
 		const match = this.match(TokenType.ifStmt)
 		if (!match)
 			return Err('UnreachableState')
