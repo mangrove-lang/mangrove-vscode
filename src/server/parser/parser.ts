@@ -151,6 +151,7 @@ export class Parser
 		return comments
 	}
 
+	// XXX: This needs to not use .match() and needs to ensure that the next token directly after the ident isn't a `.`
 	parseIdentStr() : Result<IdentAndComments | undefined, ParsingErrors>
 	{
 		const token = this.lexer.token.clone()
@@ -1183,7 +1184,7 @@ export class Parser
 	/*
 	 * For templates, the following syntax is suggested to allow both declaration of new templates, and specialisations
 	 * (both partial and complete):
-	 * 
+	 *
 	 * // Define A
 	 * class A<type T> { [...] }
 	 * // Fully specialise A in terms of type B
