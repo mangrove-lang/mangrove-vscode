@@ -15,8 +15,10 @@ export enum SymbolTypes
 	string = character | list,
 	struct = 0x0040,
 	dict = struct | list,
-	bool = 0x0080,
-	function = 0x0100,
+	array = 0x0080,
+	set = struct | array,
+	bool = 0x0100,
+	function = 0x0200,
 	none = 0x4000,
 	type = 0x8000
 }
