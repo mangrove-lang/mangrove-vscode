@@ -1264,16 +1264,32 @@ export class Parser
 		return Ok(node)
 	}
 
-	parseOperator(): Result<Token, ParsingErrors>
+	parseOperator(): Result<Token | ASTIdent, ParsingErrors>
 	{
-		const token = this.lexer.token.clone()
+		const token = this.lexer.token
+		if (token.typeIsOneOf(TokenType.ident))
+		{
+			// Try and parse the identifier
+			const typeIdent = this.parseIdent()
+			// Make sure the result is defined and not an error
+			if (!isResultDefined(typeIdent))
+				return Err('InvalidTokenSequence')
+			if (isResultError(typeIdent))
+				return typeIdent
+			// Extract the identifier's symbol
+			const symbol = typeIdent.val.symbol
+			// Check if the identifier is a type ident
+			if (!symbol?.isType || symbol.type.isEqual(SymbolTypes.type))
+				return Err('InvalidTokenSequence')
+			return Ok(typeIdent.val)
+		}
+		const operatorToken = token.clone()
 		const match = this.match(TokenType.invert, TokenType.incOp, TokenType.mulOp, TokenType.addOp,
 			TokenType.shiftOp, TokenType.bitOp, TokenType.relOp, TokenType.equOp, TokenType.logicOp,
-			TokenType.assignOp)
+			TokenType.assignOp, TokenType.ident)
 		if (!match)
 			return Err('InvalidTokenSequence')
-		// If we got an ident, we have to check it's a type identifier, and also that it's not `type`.
-		return Ok(token)
+		return Ok(operatorToken)
 	}
 
 	parseOperatorDef(): Result<ASTNode | undefined, ParsingErrors>
