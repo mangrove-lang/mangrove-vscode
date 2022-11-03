@@ -82,7 +82,7 @@ function isInt(token: Token): boolean
 
 type ParsingErrors = 'UnreachableState' | 'IncorrectToken' | 'OperatorWithNoRHS' | 'InvalidTokenSequence' |
 	'MissingBlock' | 'MissingComma' | 'MissingValue' | 'MissingIndexOrSlice' | 'MissingRightBracket' |
-	'MissingParams' | 'MissingReturnType' | 'SymbolAlreadyDefined'
+	'MissingParams' | 'MissingReturnType' | 'InvalidAssignment' | 'SymbolAlreadyDefined'
 
 function isResultValid<T>(result: Result<T | undefined, ParsingErrors>): result is Ok<T>
 {
@@ -937,6 +937,9 @@ export class Parser
 			return Ok(undefined)
 		if (isResultError(type))
 			return type
+		const typeSymbol = type.val.symbol
+		if (!typeSymbol)
+			return Err('UnreachableState')
 		const ident = this.parseIdent()
 		if (!isResultDefined(ident))
 			return Err('InvalidTokenSequence')
@@ -945,7 +948,7 @@ export class Parser
 		const symbol = this.symbolTable.add(ident.val.value)
 		if (!symbol)
 			return Err('SymbolAlreadyDefined')
-		//symbol.type.append()
+		symbol.type = typeSymbol.type.forValue()
 		ident.val.symbol = symbol
 		return Ok({type: type.val, ident: ident.val})
 	}
@@ -994,6 +997,18 @@ export class Parser
 			return Err('OperatorWithNoRHS')
 		if (isResultError(value))
 			return value
+		// If we're assigning to something of the form `type T = `, ensure
+		// the value to assign is a type and copy its type over
+		if (target.symbol?.type.isEqual(SymbolTypes.type))
+		{
+			if (value.val.type !== ASTType.ident)
+				return Err('InvalidAssignment')
+			const typeIdent = value.val as ASTIdent
+			const symbol = typeIdent.symbol
+			if (!symbol)
+				return Err('UnreachableState')
+			target.symbol.type = symbol.type
+		}
 		const node = new ASTAssign(op, target, value.val)
 		node.add(match)
 		return Ok(node)
