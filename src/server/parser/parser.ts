@@ -164,16 +164,17 @@ export class Parser
 		return comments
 	}
 
-	// XXX: This needs to not use .match() and needs to ensure that the next token directly after the ident isn't a `.`
 	parseIdentStr() : Result<IdentAndComments | undefined, ParsingErrors>
 	{
 		const token = this.lexer.token.clone()
 		if (!token.typeIsOneOf(TokenType.ident))
 			return Ok(undefined)
-		const match = this.match(TokenType.ident)
-		if (!match)
-			return Err('UnreachableState')
-		return Ok({token: token, comments: match})
+		this.lexer.next()
+		const comments = this.parseComments()
+		if (token.typeIsOneOf(TokenType.dot))
+			return Err('InvalidTokenSequence')
+		comments.push(...this.skipWhite())
+		return Ok({token: token, comments: comments})
 	}
 
 	parseIdent(): Result<ASTIdent | undefined, ParsingErrors>
