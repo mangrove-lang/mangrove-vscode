@@ -2,7 +2,7 @@
 import {TextDocument} from 'vscode-languageserver-textdocument'
 import {SemanticToken, SemanticTokenTypes} from '../../providers/semanticTokens'
 import {Token} from '../parser/types'
-import {MangroveSymbol, SymbolType, SymbolTypes} from './symbolTable'
+import {MangroveSymbol, SymbolTypes} from './symbolTable'
 import {ASTNode, ASTNodeData, ASTType} from './types'
 
 export type ASTValue = ASTNode
