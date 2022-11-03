@@ -48,8 +48,10 @@ export function isTrue(str: string) { return str === 'true' }
 export function isFalse(str: string) { return str === 'false' }
 export function isNull(str: string) { return str === 'nullptr' }
 
-export function isEquals(c: string) { return c === '=' }
+export function isBeginTmpl(str: string) { return str === '<' }
+export function isEndTmpl(str: string) { return str === '>' }
 
+export function isEquals(c: string) { return c === '=' }
 
 export function isEquality(c: string) { return c === '<' || c === '<=' || c === '>' || c === '>=' }
 export function isRelation(c: string) { return isEquality(c) || c === '!=' || c === '==' }
