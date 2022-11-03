@@ -201,6 +201,7 @@ export class Parser
 			return Ok(undefined)
 		const {token: ident, comments} = value
 		const symbol = this.symbolTable.find(ident.value)
+		console.info(`Looked up ${ident}, found symbol ${symbol}`)
 		const node = new ASTIdent(ident, symbol)
 		node.add(comments)
 		return Ok(node)
@@ -238,6 +239,7 @@ export class Parser
 			{
 				this.lexer.next()
 				const symbol = this.lookupIdentSymbolFromChain(ident.value, symbols)
+				console.info(`Looked up ${ident}, found symbol ${symbol}`)
 				symbols.push(symbol)
 				// Add the newly parsed identifier to the ident list
 				dottedIdent.push(ident)
