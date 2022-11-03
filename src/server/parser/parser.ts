@@ -1210,6 +1210,44 @@ export class Parser
 		return Ok(node)
 	}
 
+	parseTmplTypeParam(): Result<ASTNode, ParsingErrors>
+	{
+		const identDef = this.parseIdentDef()
+		if (!isResultDefined(identDef))
+			return Err('UnreachableState')
+		if (isResultError(identDef))
+			return identDef
+		// XXX: Need to handle assignment still
+		const {type, ident} = identDef.val
+		if (!type)
+			return Err('UnreachableState')
+		return Ok(new ASTIdentDef(type, ident))
+	}
+
+	parseTmplValueParam(): Result<ASTNode, ParsingErrors>
+	{
+		const identDef = this.parseIdentDef()
+		if (isResultError(identDef))
+			return identDef
+		if (!isResultValid(identDef))
+			return Err('InvalidTokenSequence')
+		// XXX: Need to handle assignment still
+		const {type, ident} = identDef.val
+		if (!type)
+			return Err('UnreachableState')
+		return Ok(new ASTIdentDef(type, ident))
+	}
+
+	parseTmplParam(): Result<ASTNode, ParsingErrors>
+	{
+		const token = this.lexer.token
+		if (!token.typeIsOneOf(TokenType.ident))
+			return Err('InvalidTokenSequence')
+		if (token.value === 'type')
+			return this.parseTmplTypeParam()
+		return this.parseTmplValueParam()
+	}
+
 	parseTmplDef(): Result<ASTTemplate | undefined, ParsingErrors>
 	{
 		const token = this.lexer.token
@@ -1225,9 +1263,25 @@ export class Parser
 		// Begin a new template scope
 		const node = new ASTTemplate(beginToken, this)
 		node.add(leftBracket)
-		while (!token.typeIsOneOf(TokenType.relOp) && !isEndTmpl(token.value))
+		const endTmplToken = (token: Token) => token.typeIsOneOf(TokenType.relOp) && isEndTmpl(token.value)
+		while (!endTmplToken(token))
 		{
-			this.lexer.next() // Temporarily just skip stuff till we finish dealing with the template brackets.
+			const parameter = this.parseTmplParam()
+			if (!isResultValid(parameter))
+				return parameter
+
+			// If the next token after is not a '>'
+			if (!endTmplToken(token))
+			{
+				// Try and match for a ','
+				const comma = this.match(TokenType.comma)
+				if (!comma)
+					return Err('MissingComma')
+				// Check if we matched a ',' and immediately have a '>'
+				else if (endTmplToken(token))
+					return Err('MissingParams')
+				node.add(comma)
+			}
 		}
 		// We're now sat on a '>' token. Adjust the end of the template params block accordingly and consume it
 		node.adjustEnd(token, this.lexer.file)
