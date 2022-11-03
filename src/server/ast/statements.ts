@@ -249,6 +249,35 @@ export class ASTReturnType extends ASTNodeData implements ASTNode
 	}
 }
 
+export class ASTTemplate extends ASTNodeData implements ASTNode
+{
+	private _symbolTable: SymbolTable
+
+	constructor(token: Token, parser: Parser)
+	{
+		super(token)
+		this._symbolTable = new SymbolTable(parser)
+	}
+
+	get type() { return ASTType.templateDef }
+	get valid() { return this.token.valid }
+	get semanticType() { return undefined }
+	get empty() { return this.symbolTable.empty }
+	get symbolTable() { return this._symbolTable }
+	toString() { return `<Template: ${this.symbolTable.entryCount} template parameters>` }
+
+	*semanticTokens(): Generator<SemanticToken, void, undefined>
+	{
+		yield* generateSemanticTokens(undefined, ...this.comments)
+	}
+
+	adjustEnd(token: Token, file: TextDocument)
+	{
+		this._token.endsAt(token.location.end)
+		this._token.calcLength(file)
+	}
+}
+
 export class ASTFunction extends ASTNodeData implements ASTNode
 {
 	private _name: ASTIdent

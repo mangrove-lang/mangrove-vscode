@@ -49,6 +49,7 @@ export enum ASTType
 	storageSpec,
 	params,
 	returnType,
+	templateDef,
 	functionDef,
 	operatorDef,
 	visibility,
@@ -123,12 +124,13 @@ export class ASTComment extends ASTNodeData implements ASTNode
 	*semanticTokens() { yield this.buildSemanticToken(this.semanticType) }
 }
 
-export function *generateSemanticTokens(node?: ASTNode, ...innerNodes: (ASTNode | undefined)[]): Generator<SemanticToken, void, undefined> 
+export function *generateSemanticTokens(node?: ASTNode, ...innerNodes: (ASTNode | undefined)[]):
+	Generator<SemanticToken, void, undefined>
 {
 	if (node && node.semanticType)
 		yield node.buildSemanticToken(node.semanticType)
-	
-	for (const node of innerNodes) 
+
+	for (const node of innerNodes)
 	{
 		if (node)
 			yield *node.semanticTokens()
