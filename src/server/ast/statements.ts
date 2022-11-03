@@ -289,6 +289,46 @@ export class ASTFunction extends ASTNodeData implements ASTNode
 	}
 }
 
+export class ASTOperator extends ASTNodeData implements ASTNode
+{
+	private _operator: Token
+	private _parameters: ASTParams
+	private _returnType: ASTReturnType
+	private _body: ASTNode
+
+	constructor(operatorToken: Token, operator: Token, params: ASTParams, returnType: ASTReturnType, body: ASTNode)
+	{
+		super(operatorToken)
+		this._operator = operator
+		this._parameters = params
+		this._returnType = returnType
+		this._body = body
+	}
+
+	get type() { return ASTType.operatorDef }
+	get semanticType() { return SemanticTokenTypes.keyword }
+	get operator() { return this._operator }
+	get parameters() { return this._parameters }
+	get returnType() { return this._returnType }
+	get body() { return this._body }
+	toString() { return `<Operator: '${this.operator.value}'>` }
+
+	get valid()
+	{
+		return this.token.valid &&
+			this.operator.valid &&
+			this.parameters.valid &&
+			this.returnType.valid &&
+			this.body.valid
+	}
+
+	*semanticTokens(): Generator<SemanticToken, void, undefined>
+	{
+		yield* generateSemanticTokens(this, this._parameters, this.returnType, this.body)
+		yield this.buildSemanticToken(SemanticTokenTypes.operator, this.operator)
+	}
+}
+
 export class ASTClass extends ASTNodeData implements ASTNode
 {
 	private _name: ASTIdent
