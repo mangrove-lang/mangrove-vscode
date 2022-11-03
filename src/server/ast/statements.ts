@@ -291,12 +291,13 @@ export class ASTFunction extends ASTNodeData implements ASTNode
 
 export class ASTOperator extends ASTNodeData implements ASTNode
 {
-	private _operator: Token
+	private _operator: Token | ASTIdent
 	private _parameters: ASTParams
 	private _returnType: ASTReturnType
 	private _body: ASTNode
 
-	constructor(operatorToken: Token, operator: Token, params: ASTParams, returnType: ASTReturnType, body: ASTNode)
+	constructor(operatorToken: Token, operator: Token | ASTIdent, params: ASTParams, returnType: ASTReturnType,
+		body: ASTNode)
 	{
 		super(operatorToken)
 		this._operator = operator
@@ -325,7 +326,10 @@ export class ASTOperator extends ASTNodeData implements ASTNode
 	*semanticTokens(): Generator<SemanticToken, void, undefined>
 	{
 		yield* generateSemanticTokens(this, this._parameters, this.returnType, this.body)
-		yield this.buildSemanticToken(SemanticTokenTypes.operator, this.operator)
+		if (this.operator instanceof Token)
+			yield this.buildSemanticToken(SemanticTokenTypes.operator, this.operator)
+		else
+			yield* this.operator.semanticTokens()
 	}
 }
 
