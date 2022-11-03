@@ -88,6 +88,9 @@ export class SymbolTable
 		parser.symbolTable = this
 	}
 
+	get empty() { return this.table.size == 0 }
+	get entryCount() { return this.table.size }
+
 	add(ident: string)
 	{
 		if (this.table.has(ident))
