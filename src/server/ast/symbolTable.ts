@@ -35,7 +35,13 @@ export class SymbolType
 	combine(type: SymbolTypes) { return this.type | type }
 	append(type: SymbolTypes) { this.type |= type }
 	mask(type: SymbolTypes) : SymbolTypes { return this.type & type }
-	isEqual(symbolType: SymbolType) { return this.type === symbolType.type }
+
+	isEqual(symbolType: SymbolType | SymbolTypes)
+	{
+		if (symbolType instanceof SymbolType)
+			return this.type === symbolType.type
+		return this.type === symbolType
+	}
 
 	get isInvalid() { return this.type === SymbolTypes.invalid }
 }
