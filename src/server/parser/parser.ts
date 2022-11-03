@@ -41,7 +41,16 @@ import
 } from '../ast/operations'
 import {Tokeniser} from './tokeniser'
 import {Token, TokenType} from './types'
-import {isConst, isEquality, isEquals, isStatic, isVolatile} from './recogniser'
+import
+{
+	isConst,
+	isEquality,
+	isEquals,
+	isStatic,
+	isVolatile,
+	isBeginTmpl,
+	isEndTmpl
+} from './recogniser'
 import
 {
 	ASTNew,
@@ -54,6 +63,7 @@ import
 	ASTVisibility,
 	ASTParams,
 	ASTReturnType,
+	ASTTemplate,
 	ASTFunction,
 	ASTOperator,
 	ASTClass,
@@ -1183,6 +1193,34 @@ export class Parser
 		return Ok(node)
 	}
 
+	parseTmplDef(): Result<ASTTemplate | undefined, ParsingErrors>
+	{
+		const token = this.lexer.token
+		if (!token.typeIsOneOf(TokenType.relOp))
+			return Ok(undefined)
+		if (!isBeginTmpl(token.value))
+			return Err('IncorrectToken')
+		// Capture the opening '<' and fastforward to the next important token
+		const beginToken = token.clone()
+		const leftBracket = this.match(TokenType.relOp)
+		if (!leftBracket)
+			return Err('UnreachableState')
+		// Begin a new template scope
+		const node = new ASTTemplate(beginToken, this)
+		node.add(leftBracket)
+		while (!token.typeIsOneOf(TokenType.relOp) && !isEndTmpl(token.value))
+		{
+			this.lexer.next() // Temporarily just skip stuff till we finish dealing with the template brackets.
+		}
+		// We're now sat on a '>' token. Adjust the end of the template params block accordingly and consume it
+		node.adjustEnd(token, this.lexer.file)
+		const rightBracket = this.match(TokenType.relOp)
+		if (!rightBracket)
+			return Err('UnreachableState')
+		node.add(rightBracket)
+		return Ok(node)
+	}
+
 	/*
 	 * For templates, the following syntax is suggested to allow both declaration of new templates, and specialisations
 	 * (both partial and complete):
@@ -1241,6 +1279,10 @@ export class Parser
 			return Err('SymbolAlreadyDefined')
 		functionName.symbol = new MangroveSymbol(functionName.value, new SymbolType(SymbolTypes.function))
 
+		const templateParams = this.parseTmplDef()
+		if (isResultError(templateParams))
+			return templateParams
+
 		const params = this.parseParams()
 		if (!isResultDefined(params))
 			return Err('InvalidTokenSequence')
@@ -1258,6 +1300,10 @@ export class Parser
 			return Err('MissingBlock')
 		if (isResultError(block))
 			return block
+
+		// If we are in a template context, pop the template symbol table too.
+		if (templateParams.val)
+			this.symbolTable.pop(this)
 
 		const node = new ASTFunction(functionToken, functionName, params.val, returnType.val, block.val)
 		node.add(match)
