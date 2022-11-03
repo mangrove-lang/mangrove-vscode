@@ -152,6 +152,18 @@ export class Parser
 		return comments
 	}
 
+	parseComments()
+	{
+		const comments: ASTNode[] = []
+		const token = this.lexer.token
+		while (token.typeIsOneOf(TokenType.comment))
+		{
+			comments.push(new ASTComment(token))
+			this.lexer.next()
+		}
+		return comments
+	}
+
 	// XXX: This needs to not use .match() and needs to ensure that the next token directly after the ident isn't a `.`
 	parseIdentStr() : Result<IdentAndComments | undefined, ParsingErrors>
 	{
@@ -181,18 +193,6 @@ export class Parser
 		const node = new ASTIdent(ident, symbol)
 		node.add(comments)
 		return Ok(node)
-	}
-
-	parseComments()
-	{
-		const comments: ASTNode[] = []
-		const token = this.lexer.token
-		while (token.typeIsOneOf(TokenType.comment))
-		{
-			comments.push(new ASTComment(token))
-			this.lexer.next()
-		}
-		return comments
 	}
 
 	lookupIdentSymbolFromChain(ident: string, symbols: (MangroveSymbol | undefined)[]): MangroveSymbol | undefined
