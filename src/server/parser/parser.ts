@@ -55,6 +55,7 @@ import
 	ASTParams,
 	ASTReturnType,
 	ASTFunction,
+	ASTOperator,
 	ASTClass,
 	ASTBlock
 } from '../ast/statements'
@@ -1262,6 +1263,52 @@ export class Parser
 		return Ok(node)
 	}
 
+	parseOperator(): Result<Token, ParsingErrors>
+	{
+		const token = this.lexer.token.clone()
+		const match = this.match(TokenType.invert, TokenType.incOp, TokenType.mulOp, TokenType.addOp,
+			TokenType.shiftOp, TokenType.bitOp, TokenType.relOp, TokenType.equOp, TokenType.logicOp,
+			TokenType.assignOp)
+		if (!match)
+			return Err('InvalidTokenSequence')
+		// If we got an ident, we have to check it's a type identifier, and also that it's not `type`.
+		return Ok(token)
+	}
+
+	parseOperatorDef(): Result<ASTNode | undefined, ParsingErrors>
+	{
+		const operatorToken = this.lexer.token.clone()
+		const match = this.match(TokenType.operatorDef)
+		if (!match)
+			return Err('UnreachableState')
+
+		const operator = this.parseOperator()
+		if (isResultError(operator))
+			return operator
+
+		const params = this.parseParams()
+		if (!isResultDefined(params))
+			return Err('InvalidTokenSequence')
+		if (isResultError(params))
+			return params
+
+		const returnType = this.parseReturnType()
+		if (!isResultDefined(returnType))
+			return Err('MissingReturnType')
+		if (isResultError(returnType))
+			return returnType
+
+		const block = this.parseBlock()
+		if (!isResultDefined(block))
+			return Err('MissingBlock')
+		if (isResultError(block))
+			return block
+
+		const node = new ASTOperator(operatorToken, operator.val, params.val, returnType.val, block.val)
+		node.add(match)
+		return Ok(node)
+	}
+
 	parseDefine(): Result<ASTNode | undefined, ParsingErrors>
 	{
 		const token = this.lexer.token
@@ -1269,6 +1316,8 @@ export class Parser
 			return this.parseClassDef()
 		if (token.typeIsOneOf(TokenType.functionDef))
 			return this.parseFunctionDef()
+		if (token.typeIsOneOf(TokenType.operatorDef))
+			return this.parseOperatorDef()
 		return Ok(undefined)
 	}
 
