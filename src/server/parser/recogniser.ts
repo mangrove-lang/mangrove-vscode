@@ -48,8 +48,6 @@ export function isTrue(str: string) { return str === 'true' }
 export function isFalse(str: string) { return str === 'false' }
 export function isNull(str: string) { return str === 'nullptr' }
 
-export function isFunctionDef(str: string) { return str === 'function' }
-
 export function isEquals(c: string) { return c === '=' }
 
 
@@ -72,6 +70,8 @@ export function isWhileStmt(str: string) { return str === 'while' }
 export function isDoStmt(str: string) { return str === 'do' }
 
 export function isClass(str: string) { return str === 'class' }
+export function isEnum(str: string) { return str === 'enum' }
+export function isFunctionDef(str: string) { return str === 'function' }
 export function isOperatorDef(str: string) { return str === 'operator' }
 
 export function isConst(str: string) { return str === 'const' }

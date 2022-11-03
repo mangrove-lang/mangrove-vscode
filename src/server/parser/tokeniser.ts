@@ -33,6 +33,7 @@ import
 	isLocationSpec,
 	isNone,
 	isClass,
+	isEnum,
 	isFunctionDef,
 	isOperatorDef,
 	isVisibility
@@ -257,6 +258,8 @@ export class Tokeniser
 				this._token.set(TokenType.noneType)
 			else if (isClass(token))
 				this._token.set(TokenType.classDef)
+			else if (isEnum(token))
+				this._token.set(TokenType.enumDef)
 			else if (isFunctionDef(token))
 				this._token.set(TokenType.functionDef)
 			else if (isOperatorDef(token))

@@ -55,6 +55,7 @@ export enum TokenType
 	noneType,
 	arrow,
 	classDef,
+	enumDef,
 	functionDef,
 	operatorDef,
 	decorator,
