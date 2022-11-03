@@ -43,6 +43,13 @@ export class SymbolType
 		return this.type === symbolType
 	}
 
+	toString()
+	{
+		if (this.type !== SymbolTypes.type && this.type & SymbolTypes.type)
+			return `type '${SymbolTypes[this.type & ~SymbolTypes.type]}'`
+		return SymbolTypes[this.type]
+	}
+
 	get isInvalid() { return this.type === SymbolTypes.invalid }
 }
 
@@ -71,7 +78,7 @@ export class MangroveSymbol
 	set type(type: SymbolType) { this._type = type }
 	get type() { return this._type }
 	get structure() { return this._struct }
-	toString() { return `<Symbol: '${this.value}' (${this.type})>` }
+	toString() { return `<Symbol '${this.value}' -> ${this.type}>` }
 
 	get isType() { return this.type.mask(SymbolTypes.type) === SymbolTypes.type }
 	get isStruct() { return this.type.mask(SymbolTypes.struct) === SymbolTypes.struct }
