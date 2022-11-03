@@ -1251,11 +1251,21 @@ export class Parser
 			return Err('SymbolAlreadyDefined')
 		className.symbol = new MangroveSymbol(className.value, new SymbolType(SymbolTypes.struct | SymbolTypes.type))
 		//ident.val.symbol.allocStruct(this)
+
+		const templateParams = this.parseTmplDef()
+		if (isResultError(templateParams))
+			return templateParams
+
 		const block = this.parseBlock()
 		if (!isResultDefined(block))
 			return Err('MissingBlock')
 		if (isResultError(block))
 			return block
+
+			// If we are in a template context, pop the template symbol table too.
+		if (templateParams.val)
+			this.symbolTable.pop(this)
+
 		const node = new ASTClass(token, className, block.val)
 		node.add(match)
 		return Ok(node)
