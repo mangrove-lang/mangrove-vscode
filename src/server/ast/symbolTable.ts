@@ -36,6 +36,15 @@ export class SymbolType
 	append(type: SymbolTypes) { this.type |= type }
 	mask(type: SymbolTypes) : SymbolTypes { return this.type & type }
 
+	forValue() : SymbolType
+	{
+		// `type` is a special type and becomes the type of the target value
+		if (this.type === SymbolTypes.type)
+			return this
+		// To construct a value type otherwise, mask off SymbolTypes.type
+		return new SymbolType(this.type & ~SymbolTypes.type)
+	}
+
 	isEqual(symbolType: SymbolType | SymbolTypes)
 	{
 		if (symbolType instanceof SymbolType)
