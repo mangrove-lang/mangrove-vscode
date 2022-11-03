@@ -2,7 +2,7 @@
 import {TextDocument} from 'vscode-languageserver-textdocument'
 import {SemanticToken, SemanticTokenTypes} from '../../providers/semanticTokens'
 import {Token} from '../parser/types'
-import {MangroveSymbol} from './symbolTable'
+import {MangroveSymbol, SymbolType, SymbolTypes} from './symbolTable'
 import {ASTNode, ASTNodeData, ASTType} from './types'
 
 export type ASTValue = ASTNode
@@ -34,7 +34,7 @@ export class ASTIdent extends ASTNodeData implements ASTValue
 
 	get type() { return ASTType.ident }
 	get valid() { return !!this._symbol && !!this._symbol.value }
-	get semanticType() { return this.isType ? SemanticTokenTypes.type : SemanticTokenTypes.variable }
+	get semanticType() { return this.symbolSemanticType(this.symbol) }
 	//get value() { return this._symbol && this._symbol.value }
 	get value() { return this.token.value }
 	get fullName() { return this.token.value }
@@ -55,6 +55,18 @@ export class ASTIdent extends ASTNodeData implements ASTValue
 		if (this._symbol)
 			throw Error('Cannot replace an existing symbol on an identifier')
 		this._symbol = symbol
+	}
+
+	protected symbolSemanticType(symbol?: MangroveSymbol)
+	{
+		if (symbol?.isType)
+		{
+			if (symbol.type.isEqual(SymbolTypes.type)/* ||
+				symbol.type.isEqual(SymbolTypes.auto)*/)
+				return SemanticTokenTypes.keyword
+			return SemanticTokenTypes.type
+		}
+		return SemanticTokenTypes.variable
 	}
 }
 
@@ -83,7 +95,7 @@ export class ASTDottedIdent extends ASTIdent
 		for (const [i, ident] of this._idents.entries())
 		{
 			const symbol = this._symbolSeq[i]
-			const semanticType = symbol && symbol.isType ? SemanticTokenTypes.type : SemanticTokenTypes.variable
+			const semanticType = this.symbolSemanticType(symbol)
 			yield this.buildSemanticToken(semanticType, ident)
 		}
 		for (const child of this.comments)
