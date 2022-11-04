@@ -1306,7 +1306,7 @@ export class Parser
 	 * class A<T = R(Args...), type R, type... Args> { [...] }
 	 */
 
-	parseClassDef(): Result<ASTNode | undefined, ParsingErrors>
+	parseClassDef(): Result<ASTNode, ParsingErrors>
 	{
 		const token = this.lexer.token.clone()
 		const match = this.match(TokenType.classDef)
@@ -1324,22 +1324,28 @@ export class Parser
 		//ident.val.symbol.allocStruct(this)
 
 		const templateParams = this.parseTmplDef()
-		if (isResultError(templateParams))
-			return templateParams
+		const result = ((): Result<ASTNode, ParsingErrors> =>
+		{
+			if (isResultError(templateParams))
+				return templateParams
 
-		const block = this.parseBlock()
-		if (!isResultDefined(block))
-			return Err('MissingBlock')
-		if (isResultError(block))
-			return block
+			const block = this.parseBlock()
+			if (!isResultDefined(block))
+				return Err('MissingBlock')
+			if (isResultError(block))
+				return block
 
 			// If we are in a template context, pop the template symbol table too.
-		if (templateParams.val)
-			this.symbolTable.pop(this)
+			if (templateParams.val)
+				this.symbolTable.pop(this)
 
-		const node = new ASTClass(token, className, block.val)
-		node.add(match)
-		return Ok(node)
+			const node = new ASTClass(token, className, block.val)
+			node.add(match)
+			return Ok(node)
+		})()
+		if (templateParams.val && !isResultValid(result))
+			this.symbolTable.pop(this)
+		return result
 	}
 
 	parseFunctionDef(): Result<ASTNode | undefined, ParsingErrors>
