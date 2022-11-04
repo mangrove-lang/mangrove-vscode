@@ -1138,7 +1138,7 @@ export class Parser
 				if (!comma)
 					return Err('MissingComma')
 				else if (token.typeIsOneOf(TokenType.rightParen))
-					return Err('MissingValue')
+					return Err('MissingParams')
 				node.add(comma)
 			}
 		}
