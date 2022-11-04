@@ -1348,7 +1348,7 @@ export class Parser
 		return result
 	}
 
-	parseFunctionDef(): Result<ASTNode | undefined, ParsingErrors>
+	parseFunctionDef(): Result<ASTNode, ParsingErrors>
 	{
 		const functionToken = this.lexer.token.clone()
 		const match = this.match(TokenType.functionDef)
@@ -1367,34 +1367,40 @@ export class Parser
 		functionName.symbol = new MangroveSymbol(functionName.value, new SymbolType(SymbolTypes.function))
 
 		const templateParams = this.parseTmplDef()
-		if (isResultError(templateParams))
-			return templateParams
+		const result = ((): Result<ASTNode, ParsingErrors> =>
+		{
+			if (isResultError(templateParams))
+				return templateParams
 
-		const params = this.parseParams()
-		if (!isResultDefined(params))
-			return Err('InvalidTokenSequence')
-		if (isResultError(params))
-			return params
+			const params = this.parseParams()
+			if (!isResultDefined(params))
+				return Err('InvalidTokenSequence')
+			if (isResultError(params))
+				return params
 
-		const returnType = this.parseReturnType()
-		if (!isResultDefined(returnType))
-			return Err('MissingReturnType')
-		if (isResultError(returnType))
-			return returnType
+			const returnType = this.parseReturnType()
+			if (!isResultDefined(returnType))
+				return Err('MissingReturnType')
+			if (isResultError(returnType))
+				return returnType
 
-		const block = this.parseBlock()
-		if (!isResultDefined(block))
-			return Err('MissingBlock')
-		if (isResultError(block))
-			return block
+			const block = this.parseBlock()
+			if (!isResultDefined(block))
+				return Err('MissingBlock')
+			if (isResultError(block))
+				return block
 
-		// If we are in a template context, pop the template symbol table too.
-		if (templateParams.val)
+			// If we are in a template context, pop the template symbol table too.
+			if (templateParams.val)
+				this.symbolTable.pop(this)
+
+			const node = new ASTFunction(functionToken, functionName, params.val, returnType.val, block.val)
+			node.add(match)
+			return Ok(node)
+		})()
+		if (templateParams.val && !isResultValid(result))
 			this.symbolTable.pop(this)
-
-		const node = new ASTFunction(functionToken, functionName, params.val, returnType.val, block.val)
-		node.add(match)
-		return Ok(node)
+		return result
 	}
 
 	parseOperator(): Result<Token | ASTIdent, ParsingErrors>
