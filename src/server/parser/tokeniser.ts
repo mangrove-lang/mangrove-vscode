@@ -36,7 +36,8 @@ import
 	isEnum,
 	isFunctionDef,
 	isOperatorDef,
-	isVisibility
+	isVisibility,
+	isUnsafe
 } from './recogniser'
 
 export class Tokeniser
@@ -266,6 +267,8 @@ export class Tokeniser
 				this._token.set(TokenType.operatorDef)
 			else if (isVisibility(token))
 				this._token.set(TokenType.visibility)
+			else if (isUnsafe(token))
+				this._token.set(TokenType.unsafe)
 			// If we get down to here, it's a plain identifier
 			// Make sure the token's value is set to the identifier string now we've classified the type
 			if (this._token.value === '')

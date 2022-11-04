@@ -60,6 +60,7 @@ export enum TokenType
 	operatorDef,
 	decorator,
 	visibility,
+	unsafe,
 
 	// XXX: These only exist because of the current parser structure and aren't real tokens.
 	float32Lit,

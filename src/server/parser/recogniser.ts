@@ -85,3 +85,5 @@ export function isStorageSpec(str: string) { return isConst(str) || isVolatile(s
 export function isNone(str: string) { return str === 'none' }
 export function isArrow(str: string) { return str === '->' }
 export function isVisibility(str: string) { return str === 'public' || str === 'private' || str === 'protected' }
+
+export function isUnsafe(str: string) { return str === 'unsafe' }
