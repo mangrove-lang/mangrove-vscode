@@ -53,7 +53,7 @@ export class ASTIdent extends ASTNodeData implements ASTValue
 		if (!symbol)
 			return
 		if (this._symbol)
-			throw Error('Cannot replace an existing symbol on an identifier')
+			console.info(`Ident ${this.fullName} shadows existing identifier`)
 		this._symbol = symbol
 	}
 
