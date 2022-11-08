@@ -924,6 +924,15 @@ export class Parser
 		if (!isResultDefined(typeIdent))
 			return Err('UnreachableState')
 		const symbol = typeIdent.val.symbol
+		// So far we've parsed `<storageSpec> <locationSpec> <type>`, now see if we have a ref or pointer.
+		const token = this.lexer.token
+		if (token.typeIsOneOf(TokenType.bitOp) && token.value == '&')
+		{
+			const match = this.match(TokenType.bitOp)
+			if (!match)
+				return Err('UnreachableState')
+			symbol?.type.append(SymbolTypes.reference)
+		}
 		// Check if the identifier is a type ident
 		if (symbol?.isType)
 			return Ok(new ASTTypeDecl(typeIdent.val, storageSpec.val))
