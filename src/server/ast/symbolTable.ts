@@ -19,6 +19,9 @@ export enum SymbolTypes
 	set = struct | array,
 	bool = 0x0100,
 	function = 0x0200,
+	reference = 0x0400,
+	pointer = 0x0800,
+	// 0x1000 and 0x2000 are still to be used.
 	none = 0x4000,
 	type = 0x8000
 }
@@ -56,9 +59,14 @@ export class SymbolType
 
 	toString()
 	{
-		if (this.type !== SymbolTypes.type && this.type & SymbolTypes.type)
-			return `type '${SymbolTypes[this.type & ~SymbolTypes.type]}'`
-		return SymbolTypes[this.type]
+		let type = this.type
+		const reference = type & SymbolTypes.reference ? 'reference ' : undefined
+		const pointer = type & SymbolTypes.pointer ? 'pointer ' : undefined
+		const kind = reference ?? pointer ?? ''
+		type &= ~(SymbolTypes.reference | SymbolTypes.pointer)
+		if (type !== SymbolTypes.type && this.type & SymbolTypes.type)
+			return `type ${kind}'${SymbolTypes[this.type & ~SymbolTypes.type]}'`
+		return `${kind}${SymbolTypes[type]}`
 	}
 
 	get isInvalid() { return this.type === SymbolTypes.invalid }
