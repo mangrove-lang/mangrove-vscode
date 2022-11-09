@@ -5,7 +5,7 @@ export enum SymbolTypes
 	invalid = 0x0000,
 	integer = 0x0001,
 	signed = integer | 0x0000,
-	unsigned = integer | 0x0002,
+	unsigned = 0x0002,
 	int8Bit = integer | 0x0000,
 	int16Bit = integer | 0x0004,
 	int32Bit = integer | 0x0008,
@@ -64,9 +64,10 @@ export class SymbolType
 		const pointer = type & SymbolTypes.pointer ? 'pointer ' : undefined
 		const kind = reference ?? pointer ?? ''
 		const signedness = type & SymbolTypes.unsigned ? 'u' : ''
-		type &= ~(SymbolTypes.reference | SymbolTypes.pointer | SymbolTypes.unsigned)
-		if (type !== SymbolTypes.type && type & SymbolTypes.type)
-			return `type ${kind}'${signedness}${SymbolTypes[type & ~SymbolTypes.type]}'`
+		const isType = type !== SymbolTypes.type && type & SymbolTypes.type
+		type &= ~(SymbolTypes.reference | SymbolTypes.pointer | SymbolTypes.unsigned | SymbolTypes.type)
+		if (isType)
+			return `type ${kind}'${signedness}${SymbolTypes[type]}'`
 		return `${kind}${signedness}${SymbolTypes[type]}`
 	}
 
