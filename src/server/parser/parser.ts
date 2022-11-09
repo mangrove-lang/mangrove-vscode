@@ -1454,7 +1454,7 @@ export class Parser
 		return Ok(operatorToken)
 	}
 
-	parseOperatorDef(): Result<ASTNode | undefined, ParsingErrors>
+	parseOperatorDef(): Result<ASTNode, ParsingErrors>
 	{
 		const operatorToken = this.lexer.token.clone()
 		const match = this.match(TokenType.operatorDef)
