@@ -1160,7 +1160,7 @@ export class Parser
 		return Ok(node)
 	}
 
-	parseNoneType(): Result<ASTTypeDecl | undefined, ParsingErrors>
+	parseNoneType(): Result<ASTTypeDecl, ParsingErrors>
 	{
 		const noneToken = this.lexer.token.clone()
 		const match = this.match(TokenType.noneType)
@@ -1176,7 +1176,8 @@ export class Parser
 
 	parseReturnTypeDecl(): Result<ASTTypeDecl | undefined, ParsingErrors>
 	{
-		if (this.lexer.token.typeIsOneOf(TokenType.noneType))
+		const token = this.lexer.token
+		if (token.typeIsOneOf(TokenType.noneType))
 			return this.parseNoneType()
 		// First try to get any storage specification modifiers
 		const storageSpec = this.parseCVSpec()
@@ -1190,7 +1191,18 @@ export class Parser
 		if (!isResultValid(typeIdent))
 			// Assertion required because tsc can't work out that undefined isn't in the valid set after this.
 			return typeIdent as Result<undefined, ParsingErrors>
-		const symbol = typeIdent.val.symbol
+		const symbol = typeIdent.val.symbol?.clone()
+		// So far we've parsed `<cvSpec> <type>`, now see if we have a ref or pointer.
+		if (token.typeIsOneOf(TokenType.bitOp) && token.value == '&')
+		{
+			//const ref = new ASTReference(token)
+			const match = this.match(TokenType.bitOp)
+			if (!match)
+				return Err('UnreachableState')
+			typeIdent.val.add(match)
+			symbol?.type.append(SymbolTypes.reference)
+		}
+		typeIdent.val.symbol = symbol
 		// Check if the identifier is a type ident
 		if (symbol?.isType)
 			return Ok(new ASTTypeDecl(typeIdent.val, storageSpec.val))
@@ -1199,7 +1211,7 @@ export class Parser
 		return Ok(undefined)
 	}
 
-	parseReturnType(): Result<ASTReturnType | undefined, ParsingErrors>
+	parseReturnType(): Result<ASTReturnType, ParsingErrors>
 	{
 		const functionTypeSpec = this.parseStorageSpec(false)
 		if (isResultError(functionTypeSpec))
