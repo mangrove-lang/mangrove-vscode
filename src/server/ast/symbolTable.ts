@@ -63,10 +63,11 @@ export class SymbolType
 		const reference = type & SymbolTypes.reference ? 'reference ' : undefined
 		const pointer = type & SymbolTypes.pointer ? 'pointer ' : undefined
 		const kind = reference ?? pointer ?? ''
-		type &= ~(SymbolTypes.reference | SymbolTypes.pointer)
+		const signedness = type & SymbolTypes.unsigned ? 'u' : ''
+		type &= ~(SymbolTypes.reference | SymbolTypes.pointer | SymbolTypes.unsigned)
 		if (type !== SymbolTypes.type && this.type & SymbolTypes.type)
-			return `type ${kind}'${SymbolTypes[this.type & ~SymbolTypes.type]}'`
-		return `${kind}${SymbolTypes[type]}`
+			return `type ${kind}'${signedness}${SymbolTypes[this.type & ~SymbolTypes.type]}'`
+		return `${kind}${signedness}${SymbolTypes[type]}`
 	}
 
 	get isInvalid() { return this.type === SymbolTypes.invalid }
