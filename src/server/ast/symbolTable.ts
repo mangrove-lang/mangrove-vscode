@@ -70,6 +70,8 @@ export class SymbolType
 	}
 
 	get isInvalid() { return this.type === SymbolTypes.invalid }
+
+	clone() { return new SymbolType(this.type) }
 }
 
 export class MangroveSymbol
@@ -101,6 +103,13 @@ export class MangroveSymbol
 
 	get isType() { return this.type.mask(SymbolTypes.type) === SymbolTypes.type }
 	get isStruct() { return this.type.mask(SymbolTypes.struct) === SymbolTypes.struct }
+
+	clone()
+	{
+		const result = new MangroveSymbol(this._ident, this._type.clone())
+		result._struct = this._struct
+		return result
+	}
 }
 
 export class SymbolTable
