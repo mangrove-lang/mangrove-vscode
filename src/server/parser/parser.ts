@@ -1109,10 +1109,12 @@ export class Parser
 		return Ok(node)
 	}
 
-	parseIfStmt(): Result<ASTNode | undefined, ParsingErrors>
+	parseIfStmt(): Result<ASTNode, ParsingErrors>
 	{
 		const ifExpr = this.parseIfExpr()
-		if (!isResultValid(ifExpr))
+		if (!isResultDefined(ifExpr))
+			return Err('InvalidTokenSequence')
+		if (isResultError(ifExpr))
 			return ifExpr
 		const elifExprs: ASTElifExpr[] = []
 		for (let elifExpr = this.parseElifExpr(); isResultDefined(elifExpr); elifExpr = this.parseElifExpr())
