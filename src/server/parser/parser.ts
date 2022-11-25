@@ -82,7 +82,7 @@ function isInt(token: Token): boolean
 
 type ParsingErrors = 'UnreachableState' | 'IncorrectToken' | 'OperatorWithNoRHS' | 'InvalidTokenSequence' |
 	'MissingBlock' | 'MissingComma' | 'MissingValue' | 'MissingIndexOrSlice' | 'MissingRightBracket' |
-	'MissingParams' | 'MissingReturnType' | 'InvalidAssignment' | 'SymbolAlreadyDefined'
+	'MissingParams' | 'MissingType' | 'MissingReturnType' | 'InvalidAssignment' | 'SymbolAlreadyDefined'
 
 function isResultValid<T>(result: Result<T | undefined, ParsingErrors>): result is Ok<T>
 {
@@ -1176,24 +1176,21 @@ export class Parser
 		return Ok(node)
 	}
 
-	parseReturnTypeDecl(): Result<ASTTypeDecl | undefined, ParsingErrors>
+	parseCVType() : Result<ASTTypeDecl | undefined, ParsingErrors>
 	{
-		const token = this.lexer.token
-		if (token.typeIsOneOf(TokenType.noneType))
-			return this.parseNoneType()
 		// First try to get any storage specification modifiers
 		const storageSpec = this.parseCVSpec()
 		if (isResultError(storageSpec))
 			return storageSpec
 		// If we didn't error, now try and get a type
 		const typeIdent = this.parseIdent()
-		// If we have storage specifiers and do not have an identifier, that's a failure
-		if (storageSpec.val && !isResultDefined(typeIdent))
-			return Err('InvalidTokenSequence')
-		if (!isResultValid(typeIdent))
-			// Assertion required because tsc can't work out that undefined isn't in the valid set after this.
-			return typeIdent as Result<undefined, ParsingErrors>
+		// If we do not have an identifier, that's a failure
+		if (!isResultDefined(typeIdent))
+			return Err('MissingType')
+		if (isResultError(typeIdent))
+			return typeIdent
 		const symbol = typeIdent.val.symbol?.clone()
+		const token = this.lexer.token
 		// So far we've parsed `<cvSpec> <type>`, now see if we have a ref or pointer.
 		// TODO: dedupe this into 'parsePointerOrRef()`
 		if (token.typeIsOneOf(TokenType.bitOp) && token.value == '&')
@@ -1209,9 +1206,15 @@ export class Parser
 		// Check if the identifier is a type ident
 		if (symbol?.isType)
 			return Ok(new ASTTypeDecl(typeIdent.val, storageSpec.val))
-		// If it is not or we can't tell, push it over to the look-aside storage and gracefully fail
-		this._ident = typeIdent.val
 		return Ok(undefined)
+	}
+
+	parseReturnTypeDecl(): Result<ASTTypeDecl | undefined, ParsingErrors>
+	{
+		const token = this.lexer.token
+		if (token.typeIsOneOf(TokenType.noneType))
+			return this.parseNoneType()
+		return this.parseCVType()
 	}
 
 	parseReturnType(): Result<ASTReturnType, ParsingErrors>
@@ -1227,7 +1230,7 @@ export class Parser
 		if (!match)
 			return Err('UnreachableState')
 		const returnType = this.parseReturnTypeDecl()
-		if (!isResultValid(returnType))
+		if (!isResultDefined(returnType))
 			return Err('MissingReturnType')
 		if (isResultError(returnType))
 			return returnType
