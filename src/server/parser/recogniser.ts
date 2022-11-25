@@ -68,6 +68,7 @@ export function isIfStmt(str: string) { return str === 'if' }
 export function isElifStmt(str: string) { return str === 'elif' }
 export function isElseStmt(str: string) { return str === 'else' }
 
+export function isForStmt(str: string) { return str === 'for' }
 export function isWhileStmt(str: string) { return str === 'while' }
 export function isDoStmt(str: string) { return str === 'do' }
 

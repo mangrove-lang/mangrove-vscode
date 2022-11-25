@@ -27,6 +27,7 @@ import
 	isIfStmt,
 	isElifStmt,
 	isElseStmt,
+	isForStmt,
 	isWhileStmt,
 	isDoStmt,
 	isStorageSpec,
@@ -250,6 +251,8 @@ export class Tokeniser
 				this._token.set(TokenType.elifStmt)
 			else if (isElseStmt(token))
 				this._token.set(TokenType.elseStmt)
+			else if (isForStmt(token))
+				this._token.set(TokenType.forStmt)
 			else if (isWhileStmt(token))
 				this._token.set(TokenType.whileStmt)
 			else if (isDoStmt(token))

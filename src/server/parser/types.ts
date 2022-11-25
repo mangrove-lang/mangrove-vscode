@@ -49,6 +49,7 @@ export enum TokenType
 	ifStmt,
 	elifStmt,
 	elseStmt,
+	forStmt,
 	whileStmt,
 	doStmt,
 
