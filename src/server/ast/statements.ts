@@ -162,6 +162,29 @@ export class ASTIfStmt extends ASTNodeData implements ASTNode
 	}
 }
 
+export class ASTForStmt extends ASTNodeData implements ASTNode
+{
+	private _container : ASTNode
+	private _block: ASTNode
+
+	constructor(forToken: Token, container : ASTNode, block: ASTNode)
+	{
+		super(forToken)
+		this._container = container
+		this._block = block
+	}
+
+	get type() { return ASTType.forStmt }
+	get valid() { return this.token.valid && this._block.valid }
+	get semanticType() { return SemanticTokenTypes.keyword }
+	toString() { return '<For statement>' }
+
+	*semanticTokens(): Generator<SemanticToken, void, undefined>
+	{
+		yield* generateSemanticTokens(this, this._container, this._block, ...this.comments)
+	}
+}
+
 export class ASTVisibility extends ASTNodeData implements ASTNode
 {
 	private _visibility: ASTVisibilityType

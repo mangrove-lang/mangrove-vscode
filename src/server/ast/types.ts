@@ -42,6 +42,7 @@ export enum ASTType
 	elifExpr,
 	elseExpr,
 	ifStmt,
+	forStmt,
 	whileStmt,
 	doStmt,
 	classDef,
