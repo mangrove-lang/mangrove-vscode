@@ -1287,7 +1287,9 @@ export class Parser
 		// Begin a new template scope
 		const node = new ASTTemplate(beginToken, this)
 		node.add(leftBracket)
-		const endTmplToken = (token: Token) => token.typeIsOneOf(TokenType.relOp) && isEndTmpl(token.value)
+
+		const endTmplToken = (token: Token) =>
+			token.typeIsOneOf(TokenType.relOp) && isEndTmpl(token.value)
 		while (!endTmplToken(token))
 		{
 			const parameter = this.parseTmplParam()
@@ -1447,9 +1449,11 @@ export class Parser
 			return Ok(typeIdent.val)
 		}
 		const operatorToken = token.clone()
-		const match = this.match(TokenType.invert, TokenType.incOp, TokenType.mulOp, TokenType.addOp,
-			TokenType.shiftOp, TokenType.bitOp, TokenType.relOp, TokenType.equOp, TokenType.logicOp,
-			TokenType.assignOp, TokenType.ident)
+		const match = this.match(
+			TokenType.invert, TokenType.incOp, TokenType.mulOp, TokenType.addOp,
+			TokenType.shiftOp, TokenType.bitOp, TokenType.relOp, TokenType.equOp, 
+			TokenType.logicOp, TokenType.assignOp, TokenType.ident
+		)
 		if (!match)
 			return Err('InvalidTokenSequence')
 		return Ok(operatorToken)
