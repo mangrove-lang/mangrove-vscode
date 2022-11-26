@@ -60,6 +60,7 @@ import
 	ASTElifExpr,
 	ASTElseExpr,
 	ASTIfStmt,
+	ASTForStmt,
 	ASTVisibility,
 	ASTParams,
 	ASTReturnType,
@@ -82,7 +83,8 @@ function isInt(token: Token): boolean
 
 type ParsingErrors = 'UnreachableState' | 'IncorrectToken' | 'OperatorWithNoRHS' | 'InvalidTokenSequence' |
 	'MissingBlock' | 'MissingComma' | 'MissingValue' | 'MissingIndexOrSlice' | 'MissingRightBracket' |
-	'MissingParams' | 'MissingType' | 'MissingReturnType' | 'InvalidAssignment' | 'SymbolAlreadyDefined'
+	'MissingParams' | 'MissingType' | 'MissingReturnType' | 'MissingIdent' | 'InvalidAssignment' |
+	'SymbolAlreadyDefined'
 
 function isResultValid<T>(result: Result<T | undefined, ParsingErrors>): result is Ok<T>
 {
@@ -1129,6 +1131,61 @@ export class Parser
 		return Ok(new ASTIfStmt(ifExpr.val, elifExprs, elseExpr.val))
 	}
 
+	parseForStmt(): Result<ASTNode, ParsingErrors>
+	{
+		const forToken = this.lexer.token.clone()
+		const match = this.match(TokenType.forStmt)
+		if (!match)
+			return Err('UnreachableState')
+		// We have now matched a `for` token, match the opening `(` that's required.
+		const leftParen = this.match(TokenType.leftParen)
+		if (!leftParen)
+			return Err('MissingParams')
+
+		const typeIdent = this.parseCVType()
+		if (!isResultDefined(typeIdent))
+			return Err('MissingType')
+		if (isResultError(typeIdent))
+			return typeIdent
+
+		// We've now got a type, so parse an identifier for the type.
+		const value = this.parseIdent()
+		if (!isResultDefined(value))
+			return Err('MissingIdent')
+		if (isResultError(value))
+			return value
+
+		// Now we've got the name of the variable that will contain the data for each iteration,
+		// we need to parse the ':' delimeter and what to iterate over
+		const colon = this.match(TokenType.colon)
+		if (!colon)
+			return Err('InvalidTokenSequence')
+		const container = this.parseValue()
+		if (!isResultDefined(container))
+			return Err('MissingValue')
+		if (isResultError(container))
+			return container
+
+		// We've now matched the control block, so match the closing `)` that's required.
+		const rightParen = this.match(TokenType.rightParen)
+		if (!rightParen)
+			return Err('MissingRightBracket')
+
+		// Now match the loop body
+		const block = this.parseBlock()
+		if (!isResultDefined(block))
+			return Err('MissingBlock')
+		else if (isResultError(block))
+			return block
+
+		const node = new ASTForStmt(forToken, container.val, block.val)
+		node.add(match)
+		node.add(leftParen)
+		node.add(colon)
+		node.add(rightParen)
+		return Ok(node)
+	}
+
 	parseParams(): Result<ASTParams | undefined, ParsingErrors>
 	{
 		const token = this.lexer.token
@@ -1515,6 +1572,8 @@ export class Parser
 		const token = this.lexer.token
 		if (token.typeIsOneOf(TokenType.ifStmt))
 			return this.parseIfStmt()
+		if (token.typeIsOneOf(TokenType.forStmt))
+			return this.parseForStmt()
 
 		const stmt = this.parseDefine()
 		if (isResultInvalid(stmt))
