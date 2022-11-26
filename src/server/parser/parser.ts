@@ -1193,6 +1193,7 @@ export class Parser
 			return typeIdent as Result<undefined, ParsingErrors>
 		const symbol = typeIdent.val.symbol?.clone()
 		// So far we've parsed `<cvSpec> <type>`, now see if we have a ref or pointer.
+		// TODO: dedupe this into 'parsePointerOrRef()`
 		if (token.typeIsOneOf(TokenType.bitOp) && token.value == '&')
 		{
 			//const ref = new ASTReference(token)
