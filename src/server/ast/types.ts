@@ -37,6 +37,7 @@ export enum ASTType
 	deleteExpr,
 	newExpr,
 	importStmt,
+	importIdent,
 	returnStmt,
 	ifExpr,
 	elifExpr,

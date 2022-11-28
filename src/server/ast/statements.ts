@@ -70,6 +70,41 @@ export class ASTReturn extends ASTNodeData implements ASTNode
 	}
 }
 
+export class ASTImportIdent extends ASTNodeData implements ASTNode
+{
+	private _name: ASTIdent
+	private _alias: ASTIdent | undefined
+
+	constructor(name: ASTIdent, asToken?: Token, alias?: ASTIdent)
+	{
+		super(asToken ?? new Token())
+		this._name = name
+		this._alias = alias
+	}
+
+	get type() { return ASTType.importIdent }
+	get valid() { return this._name.valid && (!this.token.valid || (this.alias?.valid ?? false)) }
+	get semanticType() { return undefined }
+	get alias() { return this._alias }
+	get underlyingName() { return this._name.fullName }
+	toString() { return `<Import identifier ${this.underlyingName} (${this.name})>` }
+
+	get name()
+	{
+		if (this.alias)
+			return this.alias.fullName
+		return this._name.fullName
+	}
+
+	*semanticTokens(): Generator<SemanticToken, void, undefined>
+	{
+		if (this.alias)
+			yield* generateSemanticTokens(this, this._name, this._alias, ...this.comments)
+		else
+			yield* generateSemanticTokens(undefined, this._name, ...this.comments)
+	}
+}
+
 export class ASTImport extends ASTNodeData implements ASTNode
 {
 	private _importToken: Token
