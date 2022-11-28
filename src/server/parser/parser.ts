@@ -56,6 +56,8 @@ import
 	ASTNew,
 	ASTDelete,
 	ASTReturn,
+	ASTImportIdent,
+	ASTImport,
 	ASTIfExpr,
 	ASTElifExpr,
 	ASTElseExpr,
@@ -1053,6 +1055,73 @@ export class Parser
 		return expr
 	}
 
+	parseImportIdent(): Result<ASTImportIdent, ParsingErrors>
+	{
+		const name = this.parseIdent()
+		if (!isResultDefined(name))
+			return Err('MissingIdent')
+		if (isResultError(name))
+			return name
+
+		const asToken = this.lexer.token.clone()
+		if (!asToken.typeIsOneOf(TokenType.asStmt))
+			return Ok(new ASTImportIdent(name.val))
+
+		const match = this.match(TokenType.asStmt)
+		if (!match)
+			return Err('UnreachableState')
+
+		const alias = this.parseIdent()
+		if (!isResultDefined(alias))
+			return Err('MissingIdent')
+		if (isResultError(alias))
+			return alias
+
+		const node = new ASTImportIdent(name.val, asToken, alias.val)
+		node.add(match)
+		return Ok(node)
+	}
+
+	parseImportStmt(): Result<ASTNode, ParsingErrors>
+	{
+		const token = this.lexer.token
+		const fromToken = token.clone()
+		const fromMatch = this.match(TokenType.fromStmt)
+		if (!fromMatch)
+			return Err('UnreachableState')
+
+		const libraryName = this.parseDottedIdent()
+		if (!isResultDefined(libraryName))
+			return Err('MissingIdent')
+		if (isResultError(libraryName))
+			return libraryName
+
+		const importToken = token.clone()
+		const importMatch = this.match(TokenType.importStmt)
+		if (!importMatch)
+			return Err('InvalidTokenSequence')
+
+		const node = new ASTImport(fromToken, importToken, libraryName.val)
+		node.add(fromMatch)
+		node.add(importMatch)
+
+		while (true)
+		{
+			const ident = this.parseImportIdent()
+			if (isResultError(ident))
+				return ident
+			node.addIdent(ident.val)
+
+			if (!token.typeIsOneOf(TokenType.comma))
+				break
+			const comma = this.match(TokenType.comma)
+			if (!comma)
+				return Err('UnreachableState')
+			node.add(comma)
+		}
+		return Ok(node)
+	}
+
 	parseIfExpr(): Result<ASTIfExpr | undefined, ParsingErrors>
 	{
 		const token = this.lexer.token.clone()
@@ -1570,6 +1639,8 @@ export class Parser
 	parseStatement(): Result<ASTNode | undefined, ParsingErrors>
 	{
 		const token = this.lexer.token
+		if (token.typeIsOneOf(TokenType.fromStmt))
+			return this.parseImportStmt()
 		if (token.typeIsOneOf(TokenType.ifStmt))
 			return this.parseIfStmt()
 		if (token.typeIsOneOf(TokenType.forStmt))
