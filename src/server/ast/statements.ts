@@ -109,6 +109,7 @@ export class ASTImport extends ASTNodeData implements ASTNode
 {
 	private _importToken: Token
 	private _libraryName: ASTIdent
+	private _importedIdents: ASTImportIdent[] = []
 
 	constructor(fromToken: Token, importToken: Token, libraryName: ASTIdent)
 	{
@@ -121,13 +122,16 @@ export class ASTImport extends ASTNodeData implements ASTNode
 	get valid() { return this.token.valid && this._importToken.valid && this._libraryName.valid }
 	get semanticType() { return SemanticTokenTypes.keyword }
 	get libraryName() { return this._libraryName.fullName }
+	get importedIdents() { return this._importedIdents }
 	toString() { return `<Import statement from ${this.libraryName}>` }
 
 	*semanticTokens(): Generator<SemanticToken, void, undefined>
 	{
 		yield this.buildSemanticToken(this.semanticType, this._importToken)
-		yield* generateSemanticTokens(this, this._libraryName, ...this.comments)
+		yield* generateSemanticTokens(this, this._libraryName, ...this.importedIdents, ...this.comments)
 	}
+
+	addIdent(ident: ASTImportIdent) { this._importedIdents.push(ident) }
 }
 
 export class ASTIfExpr extends ASTNodeData implements ASTNode
