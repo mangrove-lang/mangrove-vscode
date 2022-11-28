@@ -225,7 +225,7 @@ export class Parser
 	parseDottedIdent(): Result<ASTIdent | undefined, ParsingErrors>
 	{
 		if (this.haveIdent)
-			return Ok(this.ident)
+			return Ok(this.ident as ASTIdent)
 		const token = this.lexer.token
 		const comments: ASTNode[] = []
 		const dottedIdent: Token[] = []
@@ -235,19 +235,17 @@ export class Parser
 		{
 			// Grab the next identifier in the expression
 			const ident = token.clone()
-			// And ensure that it is an identifier token or dot
-			if (!token.typeIsOneOf(TokenType.ident, TokenType.dot))
-				return Ok(undefined)//Err('IncorrectToken')
-			// If it's an ident
-			if (token.typeIsOneOf(TokenType.ident))
-			{
-				this.lexer.next()
-				const symbol = this.lookupIdentSymbolFromChain(ident.value, symbols)
-				console.info(`Looked up ${ident}, found symbol ${symbol}`)
-				symbols.push(symbol)
-				// Add the newly parsed identifier to the ident list
-				dottedIdent.push(ident)
-			}
+			// And ensure that it is an identifier token
+			if (!token.typeIsOneOf(TokenType.ident))
+				return Ok(undefined) // Err('IncorrectToken')
+
+			this.lexer.next()
+			const symbol = this.lookupIdentSymbolFromChain(ident.value, symbols)
+			console.info(`Looked up ${ident}, found symbol ${symbol}`)
+			symbols.push(symbol)
+			// Add the newly parsed identifier to the ident list
+			dottedIdent.push(ident)
+
 			// Accumulate any comment nodes
 			comments.push(...this.parseComments())
 			// If there is no dot following the identifier, we're done
