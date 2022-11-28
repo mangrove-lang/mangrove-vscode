@@ -61,6 +61,7 @@ export function isDelete(str: string) { return str === 'delete' }
 
 export function isFrom(str: string) { return str === 'from' }
 export function isImport(str: string) { return str === 'import' }
+export function isAs(str: string) { return str === 'as' }
 
 export function isReturn(str: string) { return str === 'return' }
 

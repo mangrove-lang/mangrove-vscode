@@ -23,6 +23,7 @@ import
 	isDelete,
 	isFrom,
 	isImport,
+	isAs,
 	isReturn,
 	isIfStmt,
 	isElifStmt,
@@ -243,6 +244,8 @@ export class Tokeniser
 				this._token.set(TokenType.fromStmt)
 			else if (isImport(token))
 				this._token.set(TokenType.importStmt)
+			else if (isAs(token))
+				this._token.set(TokenType.asStmt)
 			else if (isReturn(token))
 				this._token.set(TokenType.returnStmt)
 			else if (isIfStmt(token))
