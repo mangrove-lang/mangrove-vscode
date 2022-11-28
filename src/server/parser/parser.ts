@@ -1053,6 +1053,19 @@ export class Parser
 		return expr
 	}
 
+	parseImportTarget(): Result<ASTIdent, ParsingErrors>
+	{
+		const token = this.lexer.token
+		// TODO: actually make use of this information and store it on the AST node
+		while (token.typeIsOneOf(TokenType.dot, TokenType.ellipsis))
+			this.match(TokenType.dot, TokenType.ellipsis)
+
+		const libraryName = this.parseDottedIdent()
+		if (!isResultDefined(libraryName))
+			return Err('MissingIdent')
+		return libraryName
+	}
+
 	parseImportIdent(): Result<ASTImportIdent, ParsingErrors>
 	{
 		const name = this.parseIdent()
@@ -1088,9 +1101,7 @@ export class Parser
 		if (!fromMatch)
 			return Err('UnreachableState')
 
-		const libraryName = this.parseDottedIdent()
-		if (!isResultDefined(libraryName))
-			return Err('MissingIdent')
+		const libraryName = this.parseImportTarget()
 		if (isResultError(libraryName))
 			return libraryName
 
