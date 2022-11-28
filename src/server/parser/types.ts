@@ -8,6 +8,7 @@ export enum TokenType
 	comment,
 	newline,
 	dot,
+	ellipsis,
 	semi,
 	ident,
 	leftParen,

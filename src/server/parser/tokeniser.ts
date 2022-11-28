@@ -142,7 +142,7 @@ export class Tokeniser
 			this._token.set(TokenType.whitespace)
 			break
 		case '.':
-			this._token.set(TokenType.dot)
+			this.readEllipsisToken()
 			break
 		case ';':
 			this._token.set(TokenType.semi)
@@ -321,6 +321,17 @@ export class Tokeniser
 		while (!this.eof && !isNewLine(this.currentChar))
 			comment += this.nextChar()
 		this.finaliseToken(TokenType.comment, comment)
+	}
+
+	readEllipsisToken()
+	{
+		this._token.set(TokenType.dot)
+		const currentPosition = this.position
+		this.nextChar()
+		if (this.nextChar() === '.' && this.currentChar === '.')
+			this._token.set(TokenType.ellipsis)
+		else
+			this.position = currentPosition
 	}
 
 	readBinToken()
