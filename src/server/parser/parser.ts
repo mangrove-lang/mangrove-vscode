@@ -904,6 +904,23 @@ export class Parser
 		return Ok(node)
 	}
 
+	parseRefOrPtr(typeIdent: ASTIdent): Result<MangroveSymbol | undefined, ParsingErrors>
+	{
+		const symbol = typeIdent.symbol?.clone()
+		const token = this.lexer.token
+		if (token.typeIsOneOf(TokenType.bitOp) && token.value == '&')
+		{
+			//const ref = new ASTReference(token)
+			const match = this.match(TokenType.bitOp)
+			if (!match)
+				return Err('UnreachableState')
+			typeIdent.add(match)
+			symbol?.type.append(SymbolTypes.reference)
+		}
+		typeIdent.symbol = symbol
+		return Ok(symbol)
+	}
+
 	parseTypeDecl(locationValid = true): Result<ASTTypeDecl | undefined, ParsingErrors>
 	{
 		// First try to get any storage specification modifiers
@@ -925,23 +942,15 @@ export class Parser
 		// that `Ok<ASTIdent>` is the only possible type for typeIdent after the previous if.
 		if (!isResultDefined(typeIdent))
 			return Err('UnreachableState')
-		const symbol = typeIdent.val.symbol?.clone()
 		// So far we've parsed `<storageSpec> <locationSpec> <type>`, now see if we have a ref or pointer.
-		const token = this.lexer.token
-		if (token.typeIsOneOf(TokenType.bitOp) && token.value == '&')
-		{
-			const match = this.match(TokenType.bitOp)
-			if (!match)
-				return Err('UnreachableState')
-			typeIdent.val.add(match)
-			symbol?.type.append(SymbolTypes.reference)
-		}
-		typeIdent.val.symbol = symbol
+		const symbol = this.parseRefOrPtr(typeIdent.val)
+		if (isResultError(symbol))
+			return symbol
 		// Check if the identifier is a type ident
-		if (symbol?.isType)
+		if (symbol.val?.isType)
 			return Ok(new ASTTypeDecl(typeIdent.val, storageSpec.val))
 		// If it is not or we can't tell, push it over to the look-aside storage and gracefully fail
-		this._ident = typeIdent.val
+		this.ident = typeIdent.val
 		return Ok(undefined)
 	}
 
@@ -1324,22 +1333,12 @@ export class Parser
 			return Err('MissingType')
 		if (isResultError(typeIdent))
 			return typeIdent
-		const symbol = typeIdent.val.symbol?.clone()
-		const token = this.lexer.token
 		// So far we've parsed `<cvSpec> <type>`, now see if we have a ref or pointer.
-		// TODO: dedupe this into 'parsePointerOrRef()`
-		if (token.typeIsOneOf(TokenType.bitOp) && token.value == '&')
-		{
-			//const ref = new ASTReference(token)
-			const match = this.match(TokenType.bitOp)
-			if (!match)
-				return Err('UnreachableState')
-			typeIdent.val.add(match)
-			symbol?.type.append(SymbolTypes.reference)
-		}
-		typeIdent.val.symbol = symbol
+		const symbol = this.parseRefOrPtr(typeIdent.val)
+		if (isResultError(symbol))
+			return symbol
 		// Check if the identifier is a type ident
-		if (symbol?.isType)
+		if (symbol.val?.isType)
 			return Ok(new ASTTypeDecl(typeIdent.val, storageSpec.val))
 		return Ok(undefined)
 	}
