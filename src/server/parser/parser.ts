@@ -1242,11 +1242,24 @@ export class Parser
 		if (isResultError(value))
 			return value
 
+		const typeSymbol = typeIdent.val.symbol
+		if (typeSymbol)
+		{
+			// TODO: Handle settings up the loop-local scope.
+			// XXX: This is actually in the wrong scope right now, but is required for the loop body to work.
+			const symbol = this.symbolTable.add(value.val.value)
+			if (!symbol)
+				return Err('SymbolAlreadyDefined')
+			symbol.type = typeSymbol.type.forValue()
+			value.val.symbol = symbol
+		}
+
 		// Now we've got the name of the variable that will contain the data for each iteration,
 		// we need to parse the ':' delimeter and what to iterate over
 		const colon = this.match(TokenType.colon)
 		if (!colon)
 			return Err('InvalidTokenSequence')
+
 		const container = this.parseValue()
 		if (!isResultDefined(container))
 			return Err('MissingValue')
