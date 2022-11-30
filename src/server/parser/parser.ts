@@ -72,7 +72,7 @@ import
 	ASTClass,
 	ASTBlock
 } from '../ast/statements'
-import {ParsingErrors} from './error'
+import {ParsingErrors, ErrorKind, SyntaxError, toErrorKind} from './error'
 
 function isInt(token: Token): boolean
 {
@@ -117,7 +117,7 @@ export class Parser
 	private lexer: Tokeniser
 	private _ident?: ASTIdent
 	private _symbolTable: SymbolTable
-	//private _syntaxErrors: SyntaxError[] = []
+	private _syntaxErrors: SyntaxError[] = []
 
 	constructor(file: TextDocument)
 	{
@@ -412,7 +412,8 @@ export class Parser
 		const token = this.lexer.token
 		if (token.typeIsOneOf(TokenType.invalid))
 		{
-			console.error('Contant expected, got invalid token instead')
+			this._syntaxErrors.push(new SyntaxError(token, ErrorKind.constantExpected))
+			this.lexer.next()
 			return Err('IncorrectToken')
 		}
 		else if (isInt(token))
@@ -1696,13 +1697,18 @@ export class Parser
 		node.add(leftBrace)
 		while (!token.typeIsOneOf(TokenType.rightBrace))
 		{
-			const stmt = this.parseStatement()
-			if (!isResultValid(stmt))
-			{
-				this.symbolTable.pop(this)
-				return stmt
-			}
-			node.addStatement(stmt.val)
+			this.parseStatement()
+				.map(stmt =>
+				{
+					if (stmt)
+						node.addStatement(stmt)
+					else
+					{
+						this._syntaxErrors.push(new SyntaxError(token, ErrorKind.parsingFailed))
+						this.lexer.next()
+					}
+				})
+				.mapErr(err => this._syntaxErrors.push(new SyntaxError(token, toErrorKind(err))))
 		}
 		node.adjustEnd(token, this.lexer.file)
 		this.symbolTable.pop(this)
@@ -1754,6 +1760,13 @@ export class Parser
 				const start = token.location.start
 				console.error(`Error during parsing: ${stmt.val} at ${start.line + 1}:${start.character + 1}`)
 			}
+		}
+
+		if (this._syntaxErrors.length !== 0)
+		{
+			console.warn(`Encountered ${this._syntaxErrors.length} errors while parsing:`)
+			for (const error of this._syntaxErrors)
+				console.error(error.toString())
 		}
 		return nodes
 	}
