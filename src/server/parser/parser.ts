@@ -1686,7 +1686,7 @@ export class Parser
 		return Ok(node)
 	}
 
-	parseBraceBlock(): Result<ASTNode | undefined, ParsingErrors>
+	parseBraceBlock(config: BlockConfig): Result<ASTNode | undefined, ParsingErrors>
 	{
 		const token = this.lexer.token
 		const beginToken = token.clone()
@@ -1697,7 +1697,7 @@ export class Parser
 		node.add(leftBrace)
 		while (!token.typeIsOneOf(TokenType.rightBrace))
 		{
-			this.parseStatement({allowExtStmt: false})
+			this.parseStatement(config)
 				.map(stmt =>
 				{
 					if (stmt)
@@ -1730,7 +1730,7 @@ export class Parser
 	{
 		const token = this.lexer.token
 		if (token.typeIsOneOf(TokenType.leftBrace))
-			return this.parseBraceBlock()
+			return this.parseBraceBlock({allowExtStmt: false})
 		return this.parseStatement({allowExtStmt: false})
 	}
 
