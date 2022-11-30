@@ -53,40 +53,40 @@ export class SyntaxError
 	{
 		switch (this._kind)
 		{
-			case ErrorKind.constantExpected:
-				return 'Constant expected, got invalid token instead'
-			case ErrorKind.parsingFailed:
-				return 'Parsing failure'
-			case ErrorKind.incorrectToken:
-				return 'Incorrect token at location'
-			case ErrorKind.operatorWithNoRHS:
-				return 'Operator given but has no right-hand side'
-			case ErrorKind.invalidTokenSequence:
-				return 'Encountered an invalid token sequence'
-			case ErrorKind.missingBlock:
-				return 'Missing block for'
-			case ErrorKind.missingComma:
-				return 'Missing comma in expression'
-			case ErrorKind.missingValue:
-				return 'Missing value for expression'
-			case ErrorKind.missingIndexOrSlice:
-				return 'Missing index or slice expression after opening "["'
-			case ErrorKind.missingRightBracket:
-				return 'Missing right bracket ("]") after expression'
-			case ErrorKind.missingRightParen:
-				return 'Missing right parenthesis (")") after expression'
-			case ErrorKind.missingParams:
-				return 'Missing parameters for parameter list or missing ")"'
-			case ErrorKind.missingType:
-				return 'Missing type for expression'
-			case ErrorKind.missingReturnType:
-				return 'Missing return type for function/operator definition'
-			case ErrorKind.missingIdent:
-				return 'Missing identifier in expression'
-			case ErrorKind.invalidAssignment:
-				return 'Expression constitutes an invalid assignment'
-			case ErrorKind.symbolAlreadyDefined:
-				return 'The symbol defined by the expression is already defined in the current scope'
+		case ErrorKind.constantExpected:
+			return 'Constant expected, got invalid token instead'
+		case ErrorKind.parsingFailed:
+			return 'Parsing failure'
+		case ErrorKind.incorrectToken:
+			return 'Incorrect token at location'
+		case ErrorKind.operatorWithNoRHS:
+			return 'Operator given but has no right-hand side'
+		case ErrorKind.invalidTokenSequence:
+			return 'Encountered an invalid token sequence'
+		case ErrorKind.missingBlock:
+			return 'Missing block for'
+		case ErrorKind.missingComma:
+			return 'Missing comma in expression'
+		case ErrorKind.missingValue:
+			return 'Missing value for expression'
+		case ErrorKind.missingIndexOrSlice:
+			return 'Missing index or slice expression after opening "["'
+		case ErrorKind.missingRightBracket:
+			return 'Missing right bracket ("]") after expression'
+		case ErrorKind.missingRightParen:
+			return 'Missing right parenthesis (")") after expression'
+		case ErrorKind.missingParams:
+			return 'Missing parameters for parameter list or missing ")"'
+		case ErrorKind.missingType:
+			return 'Missing type for expression'
+		case ErrorKind.missingReturnType:
+			return 'Missing return type for function/operator definition'
+		case ErrorKind.missingIdent:
+			return 'Missing identifier in expression'
+		case ErrorKind.invalidAssignment:
+			return 'Expression constitutes an invalid assignment'
+		case ErrorKind.symbolAlreadyDefined:
+			return 'The symbol defined by the expression is already defined in the current scope'
 		}
 	}
 }
