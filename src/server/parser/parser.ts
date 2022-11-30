@@ -111,6 +111,7 @@ function isNodeRelation(node: ASTNode | ASTRel): node is ASTRel
 
 type IdentAndComments = {token: Token, comments: ASTNode[]}
 type IdentDef = {type?: ASTIdent, ident: ASTIdent}
+type BlockConfig = {allowExtStmt: boolean}
 
 export class Parser
 {
@@ -1600,7 +1601,7 @@ export class Parser
 		const operatorToken = token.clone()
 		const match = this.match(
 			TokenType.invert, TokenType.incOp, TokenType.mulOp, TokenType.addOp,
-			TokenType.shiftOp, TokenType.bitOp, TokenType.relOp, TokenType.equOp, 
+			TokenType.shiftOp, TokenType.bitOp, TokenType.relOp, TokenType.equOp,
 			TokenType.logicOp, TokenType.assignOp, TokenType.ident
 		)
 		if (!match)
@@ -1654,9 +1655,11 @@ export class Parser
 		return Ok(undefined)
 	}
 
-	parseStatement(): Result<ASTNode | undefined, ParsingErrors>
+	parseStatement(config: BlockConfig): Result<ASTNode | undefined, ParsingErrors>
 	{
 		const token = this.lexer.token
+		if (config.allowExtStmt && token.typeIsOneOf(TokenType.visibility))
+			return this.parseVisibility()
 		if (token.typeIsOneOf(TokenType.fromStmt))
 			return this.parseImportStmt()
 		if (token.typeIsOneOf(TokenType.ifStmt))
@@ -1670,12 +1673,9 @@ export class Parser
 		return stmt
 	}
 
-	parseVisibility(): Result<ASTNode | undefined, ParsingErrors>
+	parseVisibility(): Result<ASTNode, ParsingErrors>
 	{
-		const token = this.lexer.token
-		if (!token.typeIsOneOf(TokenType.visibility))
-			return Ok(undefined)
-		const node = new ASTVisibility(token)
+		const node = new ASTVisibility(this.lexer.token)
 		const match = this.match(TokenType.visibility)
 		if (!match)
 			return Err('UnreachableState')
@@ -1697,7 +1697,7 @@ export class Parser
 		node.add(leftBrace)
 		while (!token.typeIsOneOf(TokenType.rightBrace))
 		{
-			this.parseStatement()
+			this.parseStatement({allowExtStmt: false})
 				.map(stmt =>
 				{
 					if (stmt)
@@ -1731,15 +1731,7 @@ export class Parser
 		const token = this.lexer.token
 		if (token.typeIsOneOf(TokenType.leftBrace))
 			return this.parseBraceBlock()
-		return this.parseStatement()
-	}
-
-	parseExtStatement(): Result<ASTNode | undefined, ParsingErrors>
-	{
-		const stmt = this.parseVisibility()
-		if (isResultDefined(stmt))
-			return stmt
-		return this.parseStatement()
+		return this.parseStatement({allowExtStmt: false})
 	}
 
 	public parse(): ASTNode[]
@@ -1748,7 +1740,7 @@ export class Parser
 		const nodes = this.skipWhite()
 		while (!token.typeIsOneOf(TokenType.eof))
 		{
-			const stmt = this.parseExtStatement()
+			const stmt = this.parseStatement({allowExtStmt: true})
 			if (!isResultValid(stmt) && this.haveIdent)
 			{
 				const ident = this.ident as ASTIdent
