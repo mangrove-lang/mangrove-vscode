@@ -1147,7 +1147,7 @@ export class Parser
 		const cond = this.parseLogicExpr()
 		if (!isResultValid(cond))
 			return cond as Result<undefined, ParsingErrors>
-		const block = this.parseBlock()
+		const block = this.parseBlock({allowExtStmt: false})
 		if (!isResultDefined(block))
 			return Err('MissingBlock')
 		else if (isResultError(block))
@@ -1168,7 +1168,7 @@ export class Parser
 		const cond = this.parseLogicExpr()
 		if (!isResultValid(cond))
 			return cond as Result<undefined, ParsingErrors>
-		const block = this.parseBlock()
+		const block = this.parseBlock({allowExtStmt: false})
 		if (!isResultDefined(block))
 			return Err('MissingBlock')
 		else if (isResultError(block))
@@ -1186,7 +1186,7 @@ export class Parser
 		const match = this.match(TokenType.elseStmt)
 		if (!match)
 			return Err('UnreachableState')
-		const block = this.parseBlock()
+		const block = this.parseBlock({allowExtStmt: false})
 		if (!isResultDefined(block))
 			return Err('MissingBlock')
 		else if (isResultError(block))
@@ -1270,7 +1270,7 @@ export class Parser
 			return Err('MissingRightBracket')
 
 		// Now match the loop body
-		const block = this.parseBlock()
+		const block = this.parseBlock({allowExtStmt: false})
 		if (!isResultDefined(block))
 			return Err('MissingBlock')
 		else if (isResultError(block))
@@ -1505,7 +1505,7 @@ export class Parser
 			if (isResultError(templateParams))
 				return templateParams
 
-			const block = this.parseBlock()
+			const block = this.parseBlock({allowExtStmt: true})
 			if (!isResultDefined(block))
 				return Err('MissingBlock')
 			if (isResultError(block))
@@ -1560,7 +1560,7 @@ export class Parser
 			if (isResultError(returnType))
 				return returnType
 
-			const block = this.parseBlock()
+			const block = this.parseBlock({allowExtStmt: false})
 			if (!isResultDefined(block))
 				return Err('MissingBlock')
 			if (isResultError(block))
@@ -1632,7 +1632,7 @@ export class Parser
 		if (isResultError(returnType))
 			return returnType
 
-		const block = this.parseBlock()
+		const block = this.parseBlock({allowExtStmt: false})
 		if (!isResultDefined(block))
 			return Err('MissingBlock')
 		if (isResultError(block))
@@ -1726,12 +1726,12 @@ export class Parser
 		return Ok(node)
 	}
 
-	parseBlock(): Result<ASTNode | undefined, ParsingErrors>
+	parseBlock(config: BlockConfig): Result<ASTNode | undefined, ParsingErrors>
 	{
 		const token = this.lexer.token
 		if (token.typeIsOneOf(TokenType.leftBrace))
-			return this.parseBraceBlock({allowExtStmt: false})
-		return this.parseStatement({allowExtStmt: false})
+			return this.parseBraceBlock(config)
+		return this.parseStatement(config)
 	}
 
 	public parse(): ASTNode[]
