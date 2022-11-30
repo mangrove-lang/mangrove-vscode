@@ -1705,7 +1705,14 @@ export class Parser
 					else
 					{
 						this._syntaxErrors.push(new SyntaxError(token, ErrorKind.parsingFailed))
-						this.lexer.next()
+						if (this.haveIdent)
+						{
+							const ident = this.ident as ASTIdent
+							console.error(`Spurious left-over ident: ${ident}`)
+							node.addStatement(ident)
+						}
+						else
+							this.lexer.next()
 					}
 				})
 				.mapErr(err => this._syntaxErrors.push(new SyntaxError(token, toErrorKind(err))))

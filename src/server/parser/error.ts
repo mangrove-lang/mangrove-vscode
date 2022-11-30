@@ -41,7 +41,13 @@ export class SyntaxError
 
 	get token() { return this._errorToken }
 	get reason() { return this._reason ?? '' }
-	toString() { return `Error while parsing ${this.token}: ${this.kind} ${this.reason}` }
+
+	toString()
+	{
+		const start = this.token.location.start
+		const location = `${start.line + 1}:${start.character + 1}`
+		return `Error while parsing ${this.token} at ${location}: ${this.kind} ${this.reason}`
+	}
 
 	get kind(): string
 	{
