@@ -134,7 +134,7 @@ export class Parser
 		return ident
 	}
 
-	private get haveIdent() { return this._ident && this._ident.valid }
+	private get haveIdent() { return !!this._ident }
 	get symbolTable() { return this._symbolTable }
 	set symbolTable(table: SymbolTable) { this._symbolTable = table }
 
@@ -198,7 +198,7 @@ export class Parser
 		if (!match.ok)
 			return match
 		const value = match.val
-		if (value == undefined)
+		if (!value)
 			return Ok(undefined)
 		const {token: ident, comments} = value
 		const symbol = this.symbolTable.find(ident.value)
