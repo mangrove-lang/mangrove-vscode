@@ -72,6 +72,7 @@ import
 	ASTClass,
 	ASTBlock
 } from '../ast/statements'
+import {ParsingErrors} from './error'
 
 function isInt(token: Token): boolean
 {
@@ -82,11 +83,6 @@ function isInt(token: Token): boolean
 		TokenType.intLit
 	)
 }
-
-type ParsingErrors = 'UnreachableState' | 'IncorrectToken' | 'OperatorWithNoRHS' | 'InvalidTokenSequence' |
-	'MissingBlock' | 'MissingComma' | 'MissingValue' | 'MissingIndexOrSlice' | 'MissingRightBracket' |
-	'MissingParams' | 'MissingType' | 'MissingReturnType' | 'MissingIdent' | 'InvalidAssignment' |
-	'SymbolAlreadyDefined'
 
 function isResultValid<T>(result: Result<T | undefined, ParsingErrors>): result is Ok<T>
 {
