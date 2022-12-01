@@ -1001,7 +1001,10 @@ export class Parser
 		if (!token.typeIsOneOf(TokenType.assignOp))
 		{
 			if (!type)
-				return Ok(ident)
+			{
+				this.ident = ident
+				return Ok(undefined)
+			}
 			return Ok(new ASTIdentDef(type, ident))
 		}
 		if (!isEquals(token.value))
