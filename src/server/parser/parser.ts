@@ -134,6 +134,12 @@ export class Parser
 		return ident
 	}
 
+	private set ident(ident: ASTIdent | undefined)
+	{
+		console.warn(`Updating ident look-aside from ${this._ident} to ${ident}`)
+		this._ident = ident
+	}
+
 	private get haveIdent() { return !!this._ident }
 	get symbolTable() { return this._symbolTable }
 	set symbolTable(table: SymbolTable) { this._symbolTable = table }
