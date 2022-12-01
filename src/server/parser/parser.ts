@@ -494,11 +494,12 @@ export class Parser
 	parseValue(): Result<ASTNode | undefined, ParsingErrors>
 	{
 		const token = this.lexer.token
-		if (this.haveIdent)
-			return Ok(this.ident)
-		const const_ = this.parseConst()
-		if (isResultDefined(const_))
-			return const_
+		if (!this.haveIdent)
+		{
+			const const_ = this.parseConst()
+			if (isResultDefined(const_))
+				return const_
+		}
 		const ident = this.parseDottedIdent()
 		if (isResultValid(ident))
 		{
