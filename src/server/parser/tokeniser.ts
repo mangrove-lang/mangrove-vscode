@@ -8,6 +8,7 @@ import
 	isAlphaNum,
 	isUnderscore,
 	isBeginBin,
+	isBeginOct,
 	isBeginHex,
 	isBin,
 	isOct,
@@ -373,10 +374,10 @@ export class Tokeniser
 			str += this.nextChar()
 			if (isBeginBin(this.currentChar))
 				return this.readBinToken()
+			else if (isBeginOct(this.currentChar))
+				return this.readOctToken()
 			else if (isBeginHex(this.currentChar))
 				return this.readHexToken()
-			else if (isOct(this.currentChar))
-				return this.readOctToken()
 		}
 
 		while (isDigit(this.currentChar))
