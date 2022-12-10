@@ -558,11 +558,14 @@ export class Tokeniser
 		{
 			token += this.currentChar
 			this.finaliseToken(TokenType.shiftOp, token)
+			this.nextChar();
 			if (isEquals(this.currentChar))
 			{
 				token += this.currentChar
 				this.finaliseToken(TokenType.assignOp, token)
 			}
+			else
+				return
 		}
 		else
 			return
