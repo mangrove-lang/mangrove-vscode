@@ -467,12 +467,13 @@ export class Tokeniser
 
 	readDivToken()
 	{
-		this._token.set(TokenType.mulOp)
+		this.finaliseToken(TokenType.mulOp, this.currentChar)
 		let token = this.nextChar()
 		if (isEquals(this.currentChar))
 		{
-			token += this.nextChar()
+			token += this.currentChar
 			this.finaliseToken(TokenType.assignOp, token)
+			this.nextChar()
 		}
 		else if (this.currentChar === '*')
 		{
@@ -484,8 +485,6 @@ export class Tokeniser
 			this.nextChar()
 			this.readLineComment()
 		}
-		else
-			this.finaliseToken(TokenType.mulOp, token)
 	}
 
 	readMulToken()
