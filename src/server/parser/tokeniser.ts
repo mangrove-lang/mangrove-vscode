@@ -139,7 +139,7 @@ export class Tokeniser
 			return
 		case '\r':
 		case '\n':
-			this._token.set(TokenType.whitespace)
+			this._token.set(TokenType.newline)
 			break
 		case '.':
 			this.readEllipsisToken()
