@@ -342,7 +342,10 @@ export class Tokeniser
 		this.nextChar()
 		while (isBin(this.currentChar))
 			str += this.nextChar()
-		this._token.set(TokenType.binLit, str)
+		if (str === '')
+			this._token.set(TokenType.invalid)
+		else
+			this._token.set(TokenType.binLit, str)
 	}
 
 	readOctToken()
@@ -352,7 +355,10 @@ export class Tokeniser
 		this.nextChar()
 		while (isOct(this.currentChar))
 			str += this.nextChar()
-		this._token.set(TokenType.octLit, str)
+		if (str === '')
+			this._token.set(TokenType.invalid)
+		else
+			this._token.set(TokenType.octLit, str)
 	}
 
 	readHexToken()
@@ -362,7 +368,10 @@ export class Tokeniser
 		this.nextChar()
 		while (isHex(this.currentChar))
 			str += this.nextChar()
-		this._token.set(TokenType.hexLit, str)
+		if (str === '')
+			this._token.set(TokenType.invalid)
+		else
+			this._token.set(TokenType.hexLit, str)
 	}
 
 	readIntToken()
