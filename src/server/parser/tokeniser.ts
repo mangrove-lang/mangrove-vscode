@@ -136,6 +136,7 @@ export class Tokeniser
 			this._token.set(TokenType.whitespace)
 			break
 		case '#':
+			this.nextChar()
 			this.readLineComment()
 			return
 		case '\r':
