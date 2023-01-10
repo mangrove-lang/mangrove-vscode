@@ -3,7 +3,7 @@ import {SemanticToken, SemanticTokenTypes} from '../../providers/semanticTokens'
 import {Token} from '../parser/types'
 import {Parser} from '../parser/parser'
 import {ASTNode, ASTNodeData, ASTType, ASTVisibilityType, generateSemanticTokens} from './types'
-import {ASTIdent, ASTStorage, ASTTypeDecl} from './values'
+import {ASTIdent, ASTIdentDef, ASTStorage, ASTTypeDecl} from './values'
 import {ASTFunctionCall} from './operations'
 import {SymbolTable} from './symbolTable'
 
@@ -282,9 +282,11 @@ export class ASTVisibility extends ASTNodeData implements ASTNode
 	}
 }
 
+type ASTParameter = ASTTypeDecl | ASTIdentDef
+
 export class ASTParams extends ASTNodeData implements ASTNode
 {
-	private _params: ASTTypeDecl[] = []
+	private _params: ASTParameter[] = []
 
 	get type() { return ASTType.params }
 	get valid() { return this.parameters.every(arg => arg.valid) }
@@ -293,7 +295,7 @@ export class ASTParams extends ASTNodeData implements ASTNode
 	get parameters() { return this._params }
 	toString() { return `<Parameters: ${this.parameters.length} parameters>` }
 
-	addParameter(parameter: ASTTypeDecl) { this.parameters.push(parameter) }
+	addParameter(parameter: ASTParameter) { this.parameters.push(parameter) }
 
 	*semanticTokens(): Generator<SemanticToken, void, undefined>
 	{
