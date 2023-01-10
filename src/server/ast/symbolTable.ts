@@ -65,9 +65,12 @@ export class SymbolType
 		const kind = reference ?? pointer ?? ''
 		const signedness = type & SymbolTypes.unsigned ? 'u' : ''
 		const isType = type !== SymbolTypes.type && (type & SymbolTypes.type) === SymbolTypes.type
-		type &= ~(SymbolTypes.reference | SymbolTypes.pointer | SymbolTypes.unsigned | SymbolTypes.type)
+		type &= ~(SymbolTypes.reference | SymbolTypes.pointer | SymbolTypes.unsigned)
 		if (isType)
+		{
+			type &= ~SymbolTypes.type
 			return `type ${kind}'${signedness}${SymbolTypes[type]}'`
+		}
 		return `${kind}${signedness}${SymbolTypes[type]}`
 	}
 
