@@ -1305,11 +1305,35 @@ export class Parser
 		node.add(leftParen)
 		while (!token.typeIsOneOf(TokenType.rightParen))
 		{
-			const parameter = this.parseTypeDecl(false)
-			if (!isResultValid(parameter))
+			const type = this.parseTypeDecl(false)
+			if (!isResultValid(type))
 				// Assertion required because tsc can't work out that undefined isn't in the valid set after this.
-				return parameter as Result<undefined, ParsingErrors>
-			node.addParameter(parameter.val)
+				return type as Result<undefined, ParsingErrors>
+			const typeSymbol = type.val.symbol
+			if (!typeSymbol)
+				return Err('UnreachableState')
+
+			// If the type declaration is followed by an identifier, this is a named parameter
+			if (token.typeIsOneOf(TokenType.ident))
+			{
+				const ident = this.parseIdent()
+				if (!isResultDefined(ident))
+					return Err('UnreachableState')
+				if (isResultError(ident))
+					return ident
+				// Construct a suitable type for this parameter
+				const symbol = this.symbolTable.add(ident.val.value)
+				if (!symbol)
+					return Err('SymbolAlreadyDefined')
+				symbol.type = typeSymbol.type.forValue()
+				ident.val.symbol = symbol
+				// And store the parameter. It is already in the symbol table at this stage
+				node.addParameter(new ASTIdentDef(type.val, ident.val))
+			}
+			else
+				// For parameters that are not named, store the type for later checking
+				node.addParameter(type.val)
+
 			if (!token.typeIsOneOf(TokenType.rightParen))
 			{
 				const comma = this.match(TokenType.comma)
