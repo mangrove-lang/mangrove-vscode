@@ -1026,7 +1026,29 @@ export class Parser
 		const match = this.match(TokenType.assignOp)
 		if (!match)
 			return Err('UnreachableState')
-		const value = this.parseValueExpr()
+		const value = ((): Result<ASTNode | undefined, ParsingErrors> =>
+		{
+			// If the assignment expression is an assignment to a type ident
+			// then try and parse a type (including ref/ptr information)
+			if (target.symbol?.type.isEqual(SymbolTypes.auto | SymbolTypes.type))
+			{
+				const typeIdent = this.parseIdent()
+				if (!isResultDefined(typeIdent) || isResultError(typeIdent))
+					return typeIdent
+				// If we got a valid identifier (we're assuming represents a type, for now), try parsing any extra info
+				const symbol = this.parseRefOrPtr(typeIdent.val)
+				if (isResultError(symbol))
+					return symbol
+				// Check if the identifier is a type ident
+				if (symbol.val?.isType)
+					return Ok(new ASTTypeDecl(typeIdent.val, undefined))
+				// Otherwise, if it's not or we can't tell, that's an error in this context.
+				return Err('MissingType')
+			}
+			// Otherwise parse a value expression
+			else
+				return this.parseValueExpr()
+		})()
 		if (!isResultDefined(value))
 			return Err('OperatorWithNoRHS')
 		if (isResultError(value))
