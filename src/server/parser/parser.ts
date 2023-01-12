@@ -1418,7 +1418,7 @@ export class Parser
 		return Ok(node)
 	}
 
-	parseTmplTypeParam(): Result<ASTNode, ParsingErrors>
+	parseTmplTypeParam(): Result<ASTIdentDef, ParsingErrors>
 	{
 		const identDef = this.parseIdentDef()
 		if (!isResultDefined(identDef))
@@ -1432,7 +1432,7 @@ export class Parser
 		return Ok(new ASTIdentDef(type, ident))
 	}
 
-	parseTmplValueParam(): Result<ASTNode, ParsingErrors>
+	parseTmplValueParam(): Result<ASTIdentDef, ParsingErrors>
 	{
 		const identDef = this.parseIdentDef()
 		if (isResultError(identDef))
@@ -1446,7 +1446,7 @@ export class Parser
 		return Ok(new ASTIdentDef(type, ident))
 	}
 
-	parseTmplParam(): Result<ASTNode, ParsingErrors>
+	parseTmplParam(): Result<ASTIdentDef, ParsingErrors>
 	{
 		const token = this.lexer.token
 		if (!token.typeIsOneOf(TokenType.ident))
@@ -1479,6 +1479,7 @@ export class Parser
 			const parameter = this.parseTmplParam()
 			if (!isResultValid(parameter))
 				return parameter
+			node.addParameter(parameter.val)
 
 			// If the next token after is not a '>'
 			if (!endTmplToken(token))

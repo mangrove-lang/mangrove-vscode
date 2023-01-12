@@ -341,6 +341,7 @@ export class ASTReturnType extends ASTNodeData implements ASTNode
 export class ASTTemplate extends ASTNodeData implements ASTNode
 {
 	private _symbolTable: SymbolTable
+	private _params: ASTIdentDef[] = []
 
 	constructor(token: Token, parser: Parser)
 	{
@@ -353,11 +354,14 @@ export class ASTTemplate extends ASTNodeData implements ASTNode
 	get semanticType() { return undefined }
 	get empty() { return this.symbolTable.empty }
 	get symbolTable() { return this._symbolTable }
+	get parameters() { return this._params }
 	toString() { return `<Template: ${this.symbolTable.entryCount} template parameters>` }
+
+	addParameter(parameter: ASTIdentDef) { this.parameters.push(parameter) }
 
 	*semanticTokens(): Generator<SemanticToken, void, undefined>
 	{
-		yield* generateSemanticTokens(undefined, ...this.comments)
+		yield* generateSemanticTokens(undefined, ...this.parameters, ...this.comments)
 	}
 
 	adjustEnd(token: Token, file: TextDocument)
