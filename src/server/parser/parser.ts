@@ -951,8 +951,9 @@ export class Parser
 		const symbol = this.parseRefOrPtr(typeIdent.val)
 		if (isResultError(symbol))
 			return symbol
-		// Check if the identifier is a type ident
-		if (symbol.val?.isType)
+		// Check if the identifier is a type ident (or, if parsing a parameter,
+		// if it refers to a presently undefined symbol)
+		if (symbol.val?.isType || (!locationValid && !symbol.val))
 			return Ok(new ASTTypeDecl(typeIdent.val, storageSpec.val))
 		// If it is not or we can't tell, push it over to the look-aside storage and gracefully fail
 		this.ident = typeIdent.val
@@ -1310,8 +1311,6 @@ export class Parser
 				// Assertion required because tsc can't work out that undefined isn't in the valid set after this.
 				return type as Result<undefined, ParsingErrors>
 			const typeSymbol = type.val.symbol
-			if (!typeSymbol)
-				return Err('UnreachableState')
 
 			// If the type declaration is followed by an identifier, this is a named parameter
 			if (token.typeIsOneOf(TokenType.ident))
@@ -1325,7 +1324,8 @@ export class Parser
 				const symbol = this.symbolTable.add(ident.val.value)
 				if (!symbol)
 					return Err('SymbolAlreadyDefined')
-				symbol.type = typeSymbol.type.forValue()
+				if (typeSymbol)
+					symbol.type = typeSymbol.type.forValue()
 				ident.val.symbol = symbol
 				// And store the parameter. It is already in the symbol table at this stage
 				node.addParameter(new ASTIdentDef(type.val, ident.val))
