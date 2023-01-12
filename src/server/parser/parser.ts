@@ -1030,9 +1030,11 @@ export class Parser
 			return Err('OperatorWithNoRHS')
 		if (isResultError(value))
 			return value
-		// If we're assigning to something of the form `type T = `, ensure
-		// the value to assign is a type and copy its type over
-		if (target.symbol?.type.isEqual(SymbolTypes.type))
+		// If we're assigning to something of the form `type T = ` (internally translated to type+auto),
+		// ensure the value to assign is a type and copy its type over
+		// Likewise, if assigning to `auto value = ` (internally just auto), decay the value type to
+		// give the expression a type
+		if (target.symbol?.isAuto)
 		{
 			if (value.val.type !== ASTType.ident)
 				return Err('InvalidAssignment')
@@ -1040,7 +1042,10 @@ export class Parser
 			const symbol = typeIdent.symbol
 			if (!symbol)
 				return Err('UnreachableState')
-			target.symbol.type = symbol.type
+			if (target.symbol.isType)
+				target.symbol.type = symbol.type
+			else
+				target.symbol.type = symbol.type.forValue()
 		}
 		const node = new ASTAssign(op, target, value.val)
 		node.add(match)

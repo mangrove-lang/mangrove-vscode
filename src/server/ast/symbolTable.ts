@@ -44,9 +44,9 @@ export class SymbolType
 
 	forValue() : SymbolType
 	{
-		// `type` is a special type and becomes the type of the target value
+		// `type` is a special type and decays into auto+type
 		if (this.type === SymbolTypes.type)
-			return this
+			return new SymbolType(this.type | SymbolTypes.auto)
 		// To construct a value type otherwise, mask off SymbolTypes.type
 		return new SymbolType(this.type & ~SymbolTypes.type)
 	}
@@ -107,6 +107,7 @@ export class MangroveSymbol
 	get structure() { return this._struct }
 	toString() { return `<Symbol '${this.value}' -> ${this.type}>` }
 
+	get isAuto() { return this.type.mask(SymbolTypes.auto) === SymbolTypes.auto }
 	get isType() { return this.type.mask(SymbolTypes.type) === SymbolTypes.type }
 	get isStruct() { return this.type.mask(SymbolTypes.struct) === SymbolTypes.struct }
 
