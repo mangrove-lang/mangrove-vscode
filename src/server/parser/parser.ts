@@ -1605,7 +1605,9 @@ export class Parser
 			if (templateParams.val)
 				this.symbolTable.pop(this)
 
-			const node = new ASTFunction(functionToken, functionName, params.val, returnType.val, block.val)
+			const node = new ASTFunction(
+				functionToken, functionName, templateParams.val, params.val, returnType.val, block.val
+			)
 			node.add(match)
 			return Ok(node)
 		})()
