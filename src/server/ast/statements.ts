@@ -471,26 +471,44 @@ export class ASTOperator extends ASTNodeData implements ASTNode
 export class ASTClass extends ASTNodeData implements ASTNode
 {
 	private _name: ASTIdent
+	private _templateParams: ASTTemplate | undefined
 	private _body: ASTNode
 
-	constructor(classToken: Token, name: ASTIdent, body: ASTNode)
+	constructor(classToken: Token, name: ASTIdent, templateParams: ASTTemplate | undefined, body: ASTNode)
 	{
 		super(classToken)
 		this._name = name
+		this._templateParams = templateParams
 		this._body = body
 	}
 
 	get type() { return ASTType.classDef }
-	get valid() { return this.token.valid && this._name.valid && this.body.valid }
 	get semanticType() { return SemanticTokenTypes.keyword }
 	get name() { return this._name.fullName }
+	get templateParams() { return this._templateParams }
 	get symbolTable() { return this._name.symbol?.structure?.symbolTable }
 	get body() { return this._body }
-	toString() { return `<Class: ${this.name}>` }
+	get isTemplate() { return this._templateParams !== undefined }
+
+	toString()
+	{
+		const tmpl = this.isTemplate ? ' template' : ''
+		return `<Class${tmpl}: ${this.name}>`
+	}
+
+	get valid()
+	{
+		return this.token.valid &&
+			this._name.valid &&
+			(this.templateParams?.valid ?? true) &&
+			this.body.valid
+	}
 
 	*semanticTokens(): Generator<SemanticToken, void, undefined>
 	{
 		yield* generateSemanticTokens(this, this._name, this.body, ...this.comments)
+		if (this.templateParams)
+			yield* this.templateParams.semanticTokens()
 	}
 }
 

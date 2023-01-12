@@ -1554,7 +1554,7 @@ export class Parser
 			if (templateParams.val)
 				this.symbolTable.pop(this)
 
-			const node = new ASTClass(token, className, block.val)
+			const node = new ASTClass(token, className, templateParams.val, block.val)
 			node.add(match)
 			return Ok(node)
 		})()
