@@ -569,7 +569,7 @@ export class Tokeniser
 		{
 			token += this.currentChar
 			this.finaliseToken(TokenType.shiftOp, token)
-			this.nextChar();
+			this.nextChar()
 			if (isEquals(this.currentChar))
 			{
 				token += this.currentChar
