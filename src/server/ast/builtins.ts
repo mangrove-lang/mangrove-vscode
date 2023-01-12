@@ -4,6 +4,7 @@ const builtinTypes =
 [
 	new MangroveSymbol('type', new SymbolType(SymbolTypes.type)),
 	new MangroveSymbol('none', new SymbolType(SymbolTypes.type | SymbolTypes.none)),
+	new MangroveSymbol('auto', new SymbolType(SymbolTypes.type | SymbolTypes.auto)),
 	new MangroveSymbol('Bool', new SymbolType(SymbolTypes.type | SymbolTypes.bool)),
 	new MangroveSymbol('Int8', new SymbolType(SymbolTypes.type | SymbolTypes.signed | SymbolTypes.int8Bit)),
 	new MangroveSymbol('Int16', new SymbolType(SymbolTypes.type | SymbolTypes.signed | SymbolTypes.int16Bit)),

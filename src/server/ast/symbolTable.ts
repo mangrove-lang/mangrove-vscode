@@ -21,7 +21,8 @@ export enum SymbolTypes
 	function = 0x0200,
 	reference = 0x0400,
 	pointer = 0x0800,
-	// 0x1000 and 0x2000 are still to be used.
+	pack = 0x1000, // This is for template type/value packs
+	auto = 0x2000,
 	none = 0x4000,
 	type = 0x8000
 }
