@@ -1,6 +1,7 @@
 import {Ok, Err, Result} from 'ts-results'
 import {Position, TextDocument} from 'vscode-languageserver-textdocument'
 import {MangroveSymbol, SymbolTable, SymbolType, SymbolTypes} from '../ast/symbolTable'
+import {TypeResolver} from '../ast/typeResolver'
 import {addBuiltinTypesTo} from '../ast/builtins'
 import
 {
@@ -1036,16 +1037,14 @@ export class Parser
 		// give the expression a type
 		if (target.symbol?.isAuto)
 		{
-			if (value.val.type !== ASTType.ident)
-				return Err('InvalidAssignment')
-			const typeIdent = value.val as ASTIdent
-			const symbol = typeIdent.symbol
-			if (!symbol)
-				return Err('UnreachableState')
-			if (target.symbol.isType)
-				target.symbol.type = symbol.type
-			else
-				target.symbol.type = symbol.type.forValue()
+			const type = new TypeResolver().resolve(value.val)
+			if (type)
+			{
+				if (target.symbol.isType)
+					target.symbol.type = type
+				else
+					target.symbol.type = type.forValue()
+			}
 		}
 		const node = new ASTAssign(op, target, value.val)
 		node.add(match)
