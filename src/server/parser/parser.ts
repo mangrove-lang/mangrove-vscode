@@ -498,6 +498,20 @@ export class Parser
 		return Ok(node)
 	}
 
+	parsePack(ident: ASTIdent): Result<ASTNode | undefined, ParsingErrors>
+	{
+		//const token = this.lexer.token.clone()
+		const elipsis = this.match(TokenType.ellipsis)
+		if (!elipsis)
+			return Err('UnreachableState')
+		// If the identifier is a dottedIdent rather than a plain ident, turn this into a parsing error.
+		if (ident.type != ASTType.ident)
+			return Err('InvalidTokenSequence')
+		// XXX: Need to validate that the identifier's type is that of a pack, and turn this into a SyntaxError if not.
+		ident.add(elipsis)
+		return Ok(ident)
+	}
+
 	parseValue(): Result<ASTNode | undefined, ParsingErrors>
 	{
 		const token = this.lexer.token
@@ -514,6 +528,8 @@ export class Parser
 				return this.parseFunctionCall(ident.val)
 			else if (token.typeIsOneOf(TokenType.leftSquare))
 				return this.parseIndex(ident.val)
+			else if (token.typeIsOneOf(TokenType.ellipsis))
+				return this.parsePack(ident.val)
 		}
 		return ident
 	}
