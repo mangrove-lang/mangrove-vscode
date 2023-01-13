@@ -1616,7 +1616,8 @@ export class Parser
 			return ident
 
 		const functionName = ident.val
-		if (functionName.symbol)
+		// If the symbol's already in the table but is not a function symbol, that's an error
+		if (functionName.symbol && !functionName.symbol.type.mask(SymbolTypes.function))
 			return Err('SymbolAlreadyDefined')
 		functionName.symbol = new MangroveSymbol(functionName.value, new SymbolType(SymbolTypes.function))
 		this.symbolTable.insert(functionName.symbol)
