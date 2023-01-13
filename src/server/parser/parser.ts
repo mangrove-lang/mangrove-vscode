@@ -948,10 +948,23 @@ export class Parser
 		// that `Ok<ASTIdent>` is the only possible type for typeIdent after the previous if.
 		if (!isResultDefined(typeIdent))
 			return Err('UnreachableState')
-		// So far we've parsed `<storageSpec> <locationSpec> <type>`, now see if we have a ref or pointer.
+		// So far we've parsed `<storageSpec> [<locationSpec>] <type>`, now see if we have a ref or pointer.
 		const symbol = this.parseRefOrPtr(typeIdent.val)
 		if (isResultError(symbol))
 			return symbol
+		// Finally, if a location spec is not valid (we're parsing a parameter), try to parse
+		// a `...` expression (pack expression) before concluding the type decl
+		const token = this.lexer.token
+		if (token.typeIsOneOf(TokenType.ellipsis))
+		{
+			// const pack = new ASTPack(token)
+			const match = this.match(TokenType.ellipsis)
+			if (!match)
+				return Err('UnreachableState')
+			typeIdent.val.add(match)
+			const symbol = typeIdent.val.symbol
+			symbol?.type.append(SymbolTypes.pack)
+		}
 		// Check if the identifier is a type ident (or, if parsing a parameter,
 		// if it refers to a presently undefined symbol)
 		if (symbol.val?.isType || (!locationValid && !symbol.val))
@@ -1030,7 +1043,7 @@ export class Parser
 		{
 			// If the assignment expression is an assignment to a type ident
 			// then try and parse a type (including ref/ptr information)
-			if (target.symbol?.type.isEqual(SymbolTypes.auto | SymbolTypes.type))
+			if (target.symbol?.isAuto && target.symbol?.isType)
 			{
 				const typeIdent = this.parseIdent()
 				if (!isResultDefined(typeIdent) || isResultError(typeIdent))
