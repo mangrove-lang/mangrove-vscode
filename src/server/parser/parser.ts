@@ -1158,19 +1158,22 @@ export class Parser
 		node.add(fromMatch)
 		node.add(importMatch)
 
-		while (true)
+		let haveComma = true
+		while (haveComma)
 		{
 			const ident = this.parseImportIdent()
 			if (isResultError(ident))
 				return ident
 			node.addIdent(ident.val)
 
-			if (!token.typeIsOneOf(TokenType.comma))
-				break
-			const comma = this.match(TokenType.comma)
-			if (!comma)
-				return Err('UnreachableState')
-			node.add(comma)
+			haveComma = token.typeIsOneOf(TokenType.comma)
+			if (haveComma)
+			{
+				const comma = this.match(TokenType.comma)
+				if (!comma)
+					return Err('UnreachableState')
+				node.add(comma)
+			}
 		}
 		return Ok(node)
 	}
