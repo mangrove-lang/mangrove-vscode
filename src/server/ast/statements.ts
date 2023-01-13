@@ -380,7 +380,7 @@ export class ASTFunction extends ASTNodeData implements ASTNode
 	private _body: ASTNode
 
 	constructor(functionToken: Token, name: ASTIdent, templateParams: ASTTemplate | undefined, params: ASTParams,
-			returnType: ASTReturnType, body: ASTNode)
+		returnType: ASTReturnType, body: ASTNode)
 	{
 		super(functionToken)
 		this._name = name
