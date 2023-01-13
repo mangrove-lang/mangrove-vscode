@@ -1575,6 +1575,7 @@ export class Parser
 			return Err('SymbolAlreadyDefined')
 		className.symbol = new MangroveSymbol(className.value, new SymbolType(SymbolTypes.struct | SymbolTypes.type))
 		//ident.val.symbol.allocStruct(this)
+		this.symbolTable.insert(className.symbol)
 
 		const templateParams = this.parseTmplDef()
 		const result = ((): Result<ASTNode, ParsingErrors> =>
@@ -1618,6 +1619,7 @@ export class Parser
 		if (functionName.symbol)
 			return Err('SymbolAlreadyDefined')
 		functionName.symbol = new MangroveSymbol(functionName.value, new SymbolType(SymbolTypes.function))
+		this.symbolTable.insert(functionName.symbol)
 
 		const templateParams = this.parseTmplDef()
 		const result = ((): Result<ASTNode, ParsingErrors> =>
