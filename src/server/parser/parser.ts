@@ -974,9 +974,9 @@ export class Parser
 		return Ok(undefined)
 	}
 
-	parseIdentDef(): Result<IdentDef | undefined, ParsingErrors>
+	parseIdentDef(locationValid = true): Result<IdentDef | undefined, ParsingErrors>
 	{
-		const type = this.parseTypeDecl()
+		const type = this.parseTypeDecl(locationValid)
 		if (!isResultDefined(type))
 			return Ok(undefined)
 		if (isResultError(type))
@@ -1462,7 +1462,7 @@ export class Parser
 
 	parseTmplTypeParam(): Result<ASTIdentDef, ParsingErrors>
 	{
-		const identDef = this.parseIdentDef()
+		const identDef = this.parseIdentDef(false)
 		if (!isResultDefined(identDef))
 			return Err('UnreachableState')
 		if (isResultError(identDef))
@@ -1476,7 +1476,7 @@ export class Parser
 
 	parseTmplValueParam(): Result<ASTIdentDef, ParsingErrors>
 	{
-		const identDef = this.parseIdentDef()
+		const identDef = this.parseIdentDef(false)
 		if (isResultError(identDef))
 			return identDef
 		if (!isResultValid(identDef))
