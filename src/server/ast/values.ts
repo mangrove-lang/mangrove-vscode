@@ -62,8 +62,8 @@ export class ASTIdent extends ASTNodeData implements ASTValue
 	{
 		if (symbol?.isType)
 		{
-			if (symbol.type.isEqual(SymbolTypes.type) ||
-				symbol.type.isEqual(SymbolTypes.auto))
+			const type = symbol.type.without(SymbolTypes.pack)
+			if (type == SymbolTypes.type || type == SymbolTypes.auto)
 				return SemanticTokenTypes.keyword
 			return SemanticTokenTypes.type
 		}

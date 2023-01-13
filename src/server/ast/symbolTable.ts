@@ -41,11 +41,14 @@ export class SymbolType
 	combine(type: SymbolTypes) { return this.type | type }
 	append(type: SymbolTypes) { this.type |= type }
 	mask(type: SymbolTypes) : SymbolTypes { return this.type & type }
+	without(type: SymbolTypes) : SymbolTypes { return this.mask(~type) }
 
 	forValue() : SymbolType
 	{
+		// Strip `pack` temporarily as it doesn't change the below logic.
+		const type = this.without(SymbolTypes.pack)
 		// `type` is a special type and decays into auto+type
-		if (this.type === SymbolTypes.type)
+		if (type === SymbolTypes.type)
 			return new SymbolType(this.type | SymbolTypes.auto)
 		// To construct a value type otherwise, mask off SymbolTypes.type
 		return new SymbolType(this.type & ~SymbolTypes.type)
@@ -63,10 +66,11 @@ export class SymbolType
 		let type = this.type
 		const reference = type & SymbolTypes.reference ? 'reference ' : undefined
 		const pointer = type & SymbolTypes.pointer ? 'pointer ' : undefined
-		const kind = reference ?? pointer ?? ''
+		const pack = type & SymbolTypes.pack ? 'pack ' : undefined
+		const kind = reference ?? pointer ?? pack ?? ''
 		const signedness = type & SymbolTypes.unsigned ? 'u' : ''
 		const isType = type !== SymbolTypes.type && (type & SymbolTypes.type) === SymbolTypes.type
-		type &= ~(SymbolTypes.reference | SymbolTypes.pointer | SymbolTypes.unsigned)
+		type &= ~(SymbolTypes.reference | SymbolTypes.pointer | SymbolTypes.pack | SymbolTypes.unsigned)
 		if (isType)
 		{
 			type &= ~SymbolTypes.type
