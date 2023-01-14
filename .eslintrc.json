@@ -33,6 +33,10 @@
 		"semi": [
 			"error",
 			"never"
+		],
+		"eqeqeq": [
+			"error",
+			"always"
 		]
 	}
 }

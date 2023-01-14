@@ -139,7 +139,7 @@ export class Token
 
 	get valid()
 	{
-		return this._type != TokenType.invalid
+		return this._type !== TokenType.invalid
 	}
 
 	public set(type: TokenType, value?: string)

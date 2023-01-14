@@ -94,35 +94,35 @@ export class SyntaxError
 export function toErrorKind(error: ParsingErrors): ErrorKind
 {
 	// TODO: handle UnreachableState better
-	if (error == 'UnreachableState')
+	if (error === 'UnreachableState')
 		return ErrorKind.parsingFailed
-	if (error == 'IncorrectToken')
+	if (error === 'IncorrectToken')
 		return ErrorKind.incorrectToken
-	if (error == 'OperatorWithNoRHS')
+	if (error === 'OperatorWithNoRHS')
 		return ErrorKind.operatorWithNoRHS
-	if (error == 'InvalidTokenSequence')
+	if (error === 'InvalidTokenSequence')
 		return ErrorKind.invalidTokenSequence
-	if (error == 'MissingBlock')
+	if (error === 'MissingBlock')
 		return ErrorKind.missingBlock
-	if (error == 'MissingComma')
+	if (error === 'MissingComma')
 		return ErrorKind.missingComma
-	if (error == 'MissingValue')
+	if (error === 'MissingValue')
 		return ErrorKind.missingValue
-	if (error == 'MissingIndexOrSlice')
+	if (error === 'MissingIndexOrSlice')
 		return ErrorKind.missingIndexOrSlice
-	if (error == 'MissingRightBracket')
+	if (error === 'MissingRightBracket')
 		return ErrorKind.missingRightBracket
-	if (error == 'MissingParams')
+	if (error === 'MissingParams')
 		return ErrorKind.missingParams
-	if (error == 'MissingType')
+	if (error === 'MissingType')
 		return ErrorKind.missingType
-	if (error == 'MissingReturnType')
+	if (error === 'MissingReturnType')
 		return ErrorKind.missingReturnType
-	if (error == 'MissingIdent')
+	if (error === 'MissingIdent')
 		return ErrorKind.missingIdent
-	if (error == 'InvalidAssignment')
+	if (error === 'InvalidAssignment')
 		return ErrorKind.invalidAssignment
-	if (error == 'SymbolAlreadyDefined')
+	if (error === 'SymbolAlreadyDefined')
 		return ErrorKind.symbolAlreadyDefined
 	return ErrorKind.parsingFailed
 }

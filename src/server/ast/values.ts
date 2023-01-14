@@ -63,7 +63,7 @@ export class ASTIdent extends ASTNodeData implements ASTValue
 		if (symbol?.isType)
 		{
 			const type = symbol.type.without(SymbolTypes.pack)
-			if (type == SymbolTypes.type || type == SymbolTypes.auto)
+			if (type === SymbolTypes.type || type === SymbolTypes.auto)
 				return SemanticTokenTypes.keyword
 			return SemanticTokenTypes.type
 		}
@@ -78,7 +78,7 @@ export class ASTDottedIdent extends ASTIdent
 
 	constructor(identTokens: Token[], symbolSeq: (MangroveSymbol | undefined)[])
 	{
-		//assert(identTokens.length != symbolSeq.length, "Must have one symbol entry per ident in dotted ident")
+		//assert(identTokens.length !== symbolSeq.length, "Must have one symbol entry per ident in dotted ident")
 		const token = identTokens[identTokens.length - 1]
 		const symbol = symbolSeq.length ? symbolSeq[symbolSeq.length - 1] : undefined
 
@@ -268,7 +268,7 @@ export class ASTCallArguments extends ASTNodeData implements ASTNode
 	get type() { return ASTType.callArguments }
 	get valid() { return this.arguments.every(arg => arg.valid) }
 	get semanticType() { return undefined }
-	get empty() { return this.arguments.length == 0 }
+	get empty() { return this.arguments.length === 0 }
 	get arguments() { return this._arguments }
 	toString() { return `<CallArguments: ${this.arguments.length} parameters>` }
 

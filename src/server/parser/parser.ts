@@ -107,7 +107,7 @@ function isResultError<T>(result: Result<T, ParsingErrors>): result is Err<Parsi
 
 function isNodeRelation(node: ASTNode | ASTRel): node is ASTRel
 {
-	return node.type == ASTType.rel
+	return node.type === ASTType.rel
 }
 
 type IdentAndComments = {token: Token, comments: ASTNode[]}
@@ -752,7 +752,7 @@ export class Parser
 			return Err('IncorrectToken')
 		const rhsOp = this.lexer.token.clone()
 		const lhsOp = relation.op
-		if (rhsOp.value[0] != lhsOp[0])
+		if (rhsOp.value[0] !== lhsOp[0])
 			return Err('IncorrectToken')
 		const match = this.match(TokenType.relOp)
 		if (!match)
@@ -774,7 +774,7 @@ export class Parser
 			return lhs
 		if (!isNodeRelation(lhs.val))
 			return lhs
-		if (lhs.val.rhs.type == ASTType.ident)
+		if (lhs.val.rhs.type === ASTType.ident)
 		{
 			const token = this.lexer.token
 			if (token.typeIsOneOf(TokenType.relOp))
@@ -930,7 +930,7 @@ export class Parser
 	{
 		const symbol = typeIdent.symbol?.clone()
 		const token = this.lexer.token
-		if (token.typeIsOneOf(TokenType.bitOp) && token.value == '&')
+		if (token.typeIsOneOf(TokenType.bitOp) && token.value === '&')
 		{
 			//const ref = new ASTReference(token)
 			const match = this.match(TokenType.bitOp)

@@ -291,7 +291,7 @@ export class ASTParams extends ASTNodeData implements ASTNode
 	get type() { return ASTType.params }
 	get valid() { return this.parameters.every(arg => arg.valid) }
 	get semanticType() { return SemanticTokenTypes.parameter }
-	get empty() { return this.parameters.length == 0 }
+	get empty() { return this.parameters.length === 0 }
 	get parameters() { return this._params }
 	toString() { return `<Parameters: ${this.parameters.length} parameters>` }
 
@@ -526,7 +526,7 @@ export class ASTBlock extends ASTNodeData implements ASTNode
 	get type() { return ASTType.block }
 	get valid() { return this._statements.every(stmt => stmt.valid) }
 	get semanticType() { return undefined }
-	get empty() { return this._statements.length == 0 }
+	get empty() { return this._statements.length === 0 }
 	get statements() { return this._statements }
 	get symbolTable() { return this._symbolTable }
 	toString() { return `<Block: ${this.statements.length} statements>` }
