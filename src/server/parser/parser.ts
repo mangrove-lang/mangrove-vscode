@@ -505,7 +505,7 @@ export class Parser
 		if (!elipsis)
 			return Err('UnreachableState')
 		// If the identifier is a dottedIdent rather than a plain ident, turn this into a parsing error.
-		if (ident.type != ASTType.ident)
+		if (ident.type !== ASTType.ident)
 			return Err('InvalidTokenSequence')
 		// XXX: Need to validate that the identifier's type is that of a pack, and turn this into a SyntaxError if not.
 		ident.add(elipsis)
