@@ -1793,7 +1793,7 @@ export class Parser
 			return Err('UnreachableState')
 		const node = new ASTBlock(beginToken, this)
 		node.add(leftBrace)
-		while (!token.typeIsOneOf(TokenType.rightBrace))
+		while (!token.typeIsOneOf(TokenType.rightBrace, TokenType.eof))
 		{
 			this.parseStatement(config)
 				.map(stmt =>
@@ -1813,7 +1813,11 @@ export class Parser
 							this.lexer.next()
 					}
 				})
-				.mapErr(err => this._syntaxErrors.push(new SyntaxError(token, toErrorKind(err))))
+				.mapErr(err =>
+				{
+					this._syntaxErrors.push(new SyntaxError(token, toErrorKind(err)))
+					this.lexer.next()
+				})
 		}
 		node.adjustEnd(token, this.lexer.file)
 		this.symbolTable.pop(this)
@@ -1856,6 +1860,7 @@ export class Parser
 			{
 				const start = token.location.start
 				console.error(`Error during parsing: ${stmt.val} at ${start.line + 1}:${start.character + 1}`)
+				this.lexer.next()
 			}
 		}
 
