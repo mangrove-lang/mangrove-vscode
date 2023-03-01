@@ -228,30 +228,42 @@ export class Parser
 
 	parseDottedIdent(): Result<ASTIdent | undefined, ParsingErrors>
 	{
-		if (this.haveIdent)
-			return Ok(this.ident as ASTIdent)
 		const token = this.lexer.token
+		// If we have lookaside but the next token is not a dot, we can short-circuit return that
+		if (this.haveIdent && (this._ident?.type === ASTType.dottedIdent || !token.typeIsOneOf(TokenType.dot)))
+			return Ok(this.ident as ASTIdent)
 		const comments: ASTNode[] = []
 		const dottedIdent: Token[] = []
 		const symbols: (MangroveSymbol | undefined)[] = []
 		let haveDot = true
 		while (haveDot)
 		{
-			// Grab the next identifier in the expression
-			const ident = token.clone()
-			// And ensure that it is an identifier token
-			if (!token.typeIsOneOf(TokenType.ident))
-				return Ok(undefined) // Err('IncorrectToken')
+			// If we're in the first loop and we have lookaside, handle it, otherwise parse normally
+			if (dottedIdent.length == 0 && this.haveIdent)
+			{
+				const ident = this.ident as ASTIdent
+				symbols.push(ident.symbol)
+				dottedIdent.push(ident.token)
+				comments.push(...ident.comments)
+			}
+			else
+			{
+				// Grab the next identifier in the expression
+				const ident = token.clone()
+				// And ensure that it is an identifier token
+				if (!token.typeIsOneOf(TokenType.ident))
+					return Ok(undefined) // Err('IncorrectToken')
 
-			this.lexer.next()
-			const symbol = this.lookupIdentSymbolFromChain(ident.value, symbols)
-			console.info(`Looked up ${ident}, found symbol ${symbol}`)
-			symbols.push(symbol)
-			// Add the newly parsed identifier to the ident list
-			dottedIdent.push(ident)
+				this.lexer.next()
+				const symbol = this.lookupIdentSymbolFromChain(ident.value, symbols)
+				console.info(`Looked up ${ident}, found symbol ${symbol}`)
+				symbols.push(symbol)
+				// Add the newly parsed identifier to the ident list
+				dottedIdent.push(ident)
 
-			// Accumulate any comment nodes
-			comments.push(...this.parseComments())
+				// Accumulate any comment nodes
+				comments.push(...this.parseComments())
+			}
 			// If there is no dot following the identifier, we're done
 			haveDot = token.typeIsOneOf(TokenType.dot)
 			if (haveDot)
