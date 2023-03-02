@@ -64,6 +64,7 @@ import
 	ASTElseExpr,
 	ASTIfStmt,
 	ASTForStmt,
+	ASTWhileStmt,
 	ASTVisibility,
 	ASTParams,
 	ASTReturnType,
@@ -1365,6 +1366,30 @@ export class Parser
 		return Ok(node)
 	}
 
+	parseWhileStmt(): Result<ASTNode, ParsingErrors>
+	{
+		const whileToken = this.lexer.token.clone()
+		const match = this.match(TokenType.whileStmt)
+		if (!match)
+			return Err('UnreachableState')
+		// We have now matched a `while` token, look for the condition expression that must follow
+		const cond = this.parseLogicExpr()
+		if (!isResultDefined(cond))
+			return Err('MissingCond')
+		if (isResultError(cond))
+			return cond
+		// Now parse the body of the loop
+		const block = this.parseBlock({allowExtStmt: false})
+		if (!isResultDefined(block))
+			return Err('MissingBlock')
+		else if (isResultError(block))
+			return block
+		// And create a suitable AST node from the results
+		const node = new ASTWhileStmt(whileToken, cond.val, block.val)
+		node.add(match)
+		return Ok(node)
+	}
+
 	parseParams(): Result<ASTParams | undefined, ParsingErrors>
 	{
 		const token = this.lexer.token
@@ -1776,6 +1801,8 @@ export class Parser
 			return this.parseIfStmt()
 		if (token.typeIsOneOf(TokenType.forStmt))
 			return this.parseForStmt()
+		if (token.typeIsOneOf(TokenType.whileStmt))
+			return this.parseWhileStmt()
 
 		const stmt = this.parseDefine()
 		if (isResultInvalid(stmt))
