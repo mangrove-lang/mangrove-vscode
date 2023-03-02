@@ -1,12 +1,13 @@
 import {SemanticToken, SemanticTokenTypes} from '../../providers/semanticTokens'
 import {Token} from '../parser/types'
 import {ASTNode, ASTNodeData, ASTType} from './types'
-import {ASTIdent, ASTCallArguments} from './values'
+import {ASTIdent, ASTCallArguments, ASTTemplateArguments} from './values'
 
 export class ASTFunctionCall extends ASTNodeData implements ASTNode
 {
 	private _functionName: ASTIdent
 	private _args: ASTCallArguments
+	private _templateArgs?: ASTTemplateArguments
 
 	constructor(func: ASTIdent, args: ASTCallArguments)
 	{
@@ -17,14 +18,17 @@ export class ASTFunctionCall extends ASTNodeData implements ASTNode
 	}
 
 	get type() { return ASTType.functionCall }
-	get valid() { return this._functionName.valid && this._args.valid }
+	get valid() { return this._functionName.valid && this._args.valid && (this._templateArgs?.valid ?? true) }
 	get semanticType() { return SemanticTokenTypes.function }
 	get functionName() { return this._functionName.fullName }
 	toString() { return `<FunctionCall: '${this.functionName}'>` }
+	addTemplateArgs(args: ASTTemplateArguments) { this._templateArgs = args}
 
 	*semanticTokens(): Generator<SemanticToken, void, undefined>
 	{
 		yield this.buildSemanticToken(this.semanticType)
+		if (this._templateArgs)
+			yield *this._templateArgs.semanticTokens()
 		yield *this._args.semanticTokens()
 	}
 }
