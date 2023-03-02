@@ -12,7 +12,8 @@ import
 	ASTIdentDef,
 	ASTIndex,
 	ASTSlice,
-	ASTCallArguments
+	ASTCallArguments,
+	ASTTemplateArguments
 } from '../ast/values'
 import
 {
@@ -535,16 +536,91 @@ export class Parser
 				return const_
 		}
 		const ident = this.parseDottedIdent()
+		const startTmplToken = (token: Token) =>
+			token.typeIsOneOf(TokenType.relOp) && isBeginTmpl(token.value)
 		if (isResultValid(ident))
 		{
-			if (token.typeIsOneOf(TokenType.leftParen))
-				return this.parseFunctionCall(ident.val)
+			// Save the current lexer state so we can revert back to it
+			// if there's a problem with template parsing since comparison using '<'
+			// looks like a templated function
+			const lexer = this.lexer.clone()
+			// Handle function calls and things that look like templated function calls
+			if (token.typeIsOneOf(TokenType.leftParen) || startTmplToken(token))
+			{
+				// Check both template args and funciton call.
+				// Even if the template args are invalid, we might still be able to parse the function call.
+				const templateArgs = this.parseTemplateArgs()
+				if (isResultError(templateArgs))
+					this._syntaxErrors.push(new SyntaxError(token, ErrorKind.invalidTokenSequence))
+
+				const func = this.parseFunctionCall(ident.val)
+				if (isResultValid(func))
+				{
+					if (isResultValid(templateArgs))
+						func.val.addTemplateArgs(templateArgs.val)
+					return func
+				}
+
+				this.lexer.update(lexer)
+			}
 			else if (token.typeIsOneOf(TokenType.leftSquare))
 				return this.parseIndex(ident.val)
 			else if (token.typeIsOneOf(TokenType.ellipsis))
 				return this.parsePack(ident.val)
 		}
 		return ident
+	}
+
+	parseTemplateArgs(): Result<ASTTemplateArguments | undefined, ParsingErrors>
+	{
+		const token = this.lexer.token
+		// If there's is not relOp, there's no template arguments
+		if (!token.typeIsOneOf(TokenType.relOp))
+			return Ok(undefined)
+		if (!isBeginTmpl(token.value))
+			return Err('IncorrectToken')
+
+		const node = new ASTTemplateArguments(token)
+		const beginTmpl = this.match(TokenType.relOp)
+		if (!beginTmpl)
+			return Err('UnreachableState')
+
+		node.add(beginTmpl)
+		const endTmplToken = (token: Token) =>
+			token.typeIsOneOf(TokenType.relOp) && isEndTmpl(token.value)
+		while (!endTmplToken(token))
+		{
+			const value = this.parseValue()
+			if (isResultError(value))
+				return value as Result<undefined, ParsingErrors>
+			if (!isResultValid(value))
+				return Err('InvalidTokenSequence')
+			node.addArgument(value.val)
+			if (!endTmplToken(token))
+			{
+				const comma = this.match(TokenType.comma)
+				if (!comma)
+					return Err('MissingComma')
+				else if (endTmplToken(token))
+				{
+					// If we find a closing '>', consume it and return an error.
+					// That way we can continue parsing without the whole expression failing
+					this.lexer.next()
+					this.skipWhite()
+					return Err('MissingValue')
+				}
+				node.add(comma)
+			}
+		}
+
+		node.adjustEnd(token, this.lexer.file)
+		const endToken = token.clone()
+		const endTmpl  = this.match(TokenType.relOp)
+		if (!endTmpl || !isEndTmpl(endToken.value))
+			return Err('UnreachableState')
+
+		node.add(endTmpl)
+		return Ok(node)
 	}
 
 	parseCallArgs(): Result<ASTCallArguments | undefined, ParsingErrors>
