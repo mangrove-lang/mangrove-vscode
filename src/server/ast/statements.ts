@@ -249,6 +249,29 @@ export class ASTForStmt extends ASTNodeData implements ASTNode
 	}
 }
 
+export class ASTWhileStmt extends ASTNodeData implements ASTNode
+{
+	private _cond : ASTNode
+	private _block : ASTNode
+
+	constructor(whileToken: Token, cond: ASTNode, block: ASTNode)
+	{
+		super(whileToken)
+		this._cond = cond
+		this._block = block
+	}
+
+	get type() { return ASTType.whileStmt }
+	get valid() { return this.token.valid && this._cond.valid && this._block.valid }
+	get semanticType() { return SemanticTokenTypes.keyword }
+	toString() { return '<While statement>' }
+
+	*semanticTokens(): Generator<SemanticToken, void, undefined>
+	{
+		yield* generateSemanticTokens(this, this._cond, this._block, ...this.comments)
+	}
+}
+
 export class ASTVisibility extends ASTNodeData implements ASTNode
 {
 	private _visibility: ASTVisibilityType
