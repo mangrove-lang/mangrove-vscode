@@ -2,7 +2,7 @@ import {Token} from './types'
 
 export type ParsingErrors = 'UnreachableState' | 'IncorrectToken' | 'OperatorWithNoRHS' | 'InvalidTokenSequence' |
 	'MissingBlock' | 'MissingComma' | 'MissingValue' | 'MissingIndexOrSlice' | 'MissingRightBracket' |
-	'MissingParams' | 'MissingType' | 'MissingReturnType' | 'MissingIdent' | 'InvalidAssignment' |
+	'MissingParams' | 'MissingType' | 'MissingReturnType' | 'MissingIdent' | 'MissingCond' | 'InvalidAssignment' |
 	'SymbolAlreadyDefined'
 
 export enum ErrorKind
@@ -22,6 +22,7 @@ export enum ErrorKind
 	missingType,
 	missingReturnType,
 	missingIdent,
+	missingCond,
 	invalidAssignment,
 	symbolAlreadyDefined,
 }
@@ -83,6 +84,8 @@ export class SyntaxError
 			return 'Missing return type for function/operator definition'
 		case ErrorKind.missingIdent:
 			return 'Missing identifier in expression'
+		case ErrorKind.missingCond:
+			return 'Missing condition expression'
 		case ErrorKind.invalidAssignment:
 			return 'Expression constitutes an invalid assignment'
 		case ErrorKind.symbolAlreadyDefined:
@@ -120,6 +123,8 @@ export function toErrorKind(error: ParsingErrors): ErrorKind
 		return ErrorKind.missingReturnType
 	if (error === 'MissingIdent')
 		return ErrorKind.missingIdent
+	if (error === 'MissingCond')
+		return ErrorKind.missingCond
 	if (error === 'InvalidAssignment')
 		return ErrorKind.invalidAssignment
 	if (error === 'SymbolAlreadyDefined')
