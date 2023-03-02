@@ -288,3 +288,31 @@ export class ASTCallArguments extends ASTNodeData implements ASTNode
 		this._token.calcLength(file)
 	}
 }
+
+export class ASTTemplateArguments extends ASTNodeData implements ASTNode
+{
+	private _arguments: ASTNode[] = []
+
+	get type() { return ASTType.templateArguments }
+	get valid() { return this.arguments.every(arg => arg.valid) }
+	get semanticType() { return undefined }
+	get empty() { return this.arguments.length === 0 }
+	get arguments() { return this._arguments }
+	toString() { return `<TemplateArguments: ${this.arguments.length} parameters>` }
+
+	addArgument(argument: ASTNode) { this.arguments.push(argument) }
+
+	*semanticTokens(): Generator<SemanticToken, void, undefined>
+	{
+		for (const argument of this.arguments)
+			yield *argument.semanticTokens()
+		for (const child of this.comments)
+			yield *child.semanticTokens()
+	}
+
+	adjustEnd(token: Token, file: TextDocument)
+	{
+		this._token.endsAt(token.location.end)
+		this._token.calcLength(file)
+	}
+}

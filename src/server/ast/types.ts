@@ -19,6 +19,7 @@ export enum ASTType
 	slice,
 	index,
 	callArguments,
+	templateArguments,
 	functionCall,
 	lambdaExpr,
 	lambdaCall,
