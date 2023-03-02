@@ -92,24 +92,7 @@ export class Token
 	constructor(token?: Token)
 	{
 		if (token)
-		{
-			this._type = token._type
-			this._value = token._value
-			this._location =
-			{
-				start:
-				{
-					line: token._location.start.line,
-					character: token._location.start.character
-				},
-				end:
-				{
-					line: token._location.end.line,
-					character: token._location.end.character
-				}
-			}
-			this._length = token._length
-		}
+			this.update(token)
 	}
 
 	get type()
@@ -179,6 +162,27 @@ export class Token
 	}
 
 	public clone() { return new Token(this) }
+
+	/* Update the object without invaliding reference to the existing object */
+	public update(token: Token)
+	{
+		this._type = token._type
+		this._value = token._value
+		this._location =
+		{
+			start:
+			{
+				line: token._location.start.line,
+				character: token._location.start.character
+			},
+			end:
+			{
+				line: token._location.end.line,
+				character: token._location.end.character
+			}
+		}
+		this._length = token._length
+	}
 
 	public toString()
 	{
