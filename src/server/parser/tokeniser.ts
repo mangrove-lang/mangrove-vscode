@@ -73,6 +73,29 @@ export class Tokeniser
 		return this._file
 	}
 
+	/* Clone everything else except the TextDocument refence */
+	clone(): Tokeniser
+	{
+		const tokeniser = new Tokeniser(this._file)
+		tokeniser._token =  this._token.clone(),
+		tokeniser.position =  {character: this.position.character, line: this.position.line},
+		tokeniser.eof =  this.eof,
+		// force copy of the char
+		tokeniser.currentChar = `${this.currentChar}`
+
+		return tokeniser
+	}
+
+	/* Update the object without invaliding reference to the existing object */
+	public update(state: Tokeniser)
+	{
+		this._token.update(state.token)
+		this.position = {character: state.position.character, line: state.position.line}
+		this.eof = state.eof
+		// force copy of the char
+		this.currentChar = `${state.currentChar}`
+	}
+
 	public next()
 	{
 		if (this.eof)
