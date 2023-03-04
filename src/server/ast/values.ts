@@ -3,7 +3,7 @@ import {TextDocument} from 'vscode-languageserver-textdocument'
 import {SemanticToken, SemanticTokenTypes} from '../../providers/semanticTokens'
 import {Token} from '../parser/types'
 import {MangroveSymbol, SymbolTypes} from './symbolTable'
-import {ASTNode, ASTNodeData, ASTType} from './types'
+import {ASTNode, ASTNodeData, ASTType, generateSemanticTokens} from './types'
 
 export type ASTValue = ASTNode
 
@@ -304,10 +304,7 @@ export class ASTTemplateArguments extends ASTNodeData implements ASTNode
 
 	*semanticTokens(): Generator<SemanticToken, void, undefined>
 	{
-		for (const argument of this.arguments)
-			yield *argument.semanticTokens()
-		for (const child of this.comments)
-			yield *child.semanticTokens()
+		yield *generateSemanticTokens(undefined, ...this._arguments, ...this.comments)
 	}
 
 	adjustEnd(token: Token, file: TextDocument)
