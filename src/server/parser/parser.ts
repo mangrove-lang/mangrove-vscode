@@ -592,7 +592,7 @@ export class Parser
 		{
 			const value = this.parseValue()
 			if (isResultError(value))
-				return value as Result<undefined, ParsingErrors>
+				return value
 			if (!isResultValid(value))
 				return Err('InvalidTokenSequence')
 			node.addArgument(value.val)
