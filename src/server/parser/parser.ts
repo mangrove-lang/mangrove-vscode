@@ -578,7 +578,7 @@ export class Parser
 		if (!token.typeIsOneOf(TokenType.relOp))
 			return Ok(undefined)
 		if (!isBeginTmpl(token.value))
-			return Err('IncorrectToken')
+			return Err('UnreachableState')
 
 		const node = new ASTTemplateArguments(token)
 		const beginTmpl = this.match(TokenType.relOp)
