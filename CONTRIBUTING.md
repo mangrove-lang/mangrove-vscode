@@ -2,14 +2,14 @@
 
 ## Contributing
 
-Contributions to this project are done under the BSD-3-Clause. Please use this license for any new
-files and mark that file with a SPDX license notice at the top of the file as in:
+Contributions to this project are done under the [BSD 3-Clause license](https://github.com/mangrove-lang/mangrove-vscode/blob/main/LICENSE).
+Please use this license for any new files and mark that file with a SPDX license notice at the top of the file as in:
 
 ```ts
 // SPDX-License-Identifier: BSD-3-Clause
 ```
 
-Where this is missing from the top of a file please add it in its own commit.
+Whenever this is missing from the file header (at the top of the file), please add the line in its own commit.
 
 ## Development and Testing
 
@@ -60,7 +60,7 @@ if necessary, expand on the summary using description lines.
 "server/ast: Implemented an AST type for template scopes" is an example of a better commit message.
 
 When writing commit messages, please prefix the component being modified by taking the path to the component
-relative to the directory of your working copy, and chopping off the `src/` component, then appending a ":" after.
+relative to the directory of your working copy, chopping off the `src/` component, then appending a ":" after.
 
 Examples of this are:
 
@@ -71,22 +71,22 @@ Examples of this are:
 If the file is not in the src/ directory then either supply a purpose (eg "linting: ", "github: "),
 or use the tag "misc: " for the commit
 
-We would like to be able to look back throguh the commit history and tell what happened, when, and why without having
-to dip into the commit descriptions as this improves the general Git experience and improves everyone's lives.
+We would like to be able to look back through the commit history and tell what happened, when, and why without having
+to dig into the commit descriptions as this improves the general Git experience and everyone's lives.
 
-Try to keep commits focused on a single small and atomic change to ease review, and aid the process if we end up having
+Try to keep commits focused on a single, small, atomic change to ease review, and aid the process if we end up having
 to `git bisect` through your changes, or `git revert` in the extreme case something seriously broke.
 
 We use rebasing to merge pull requests, so please keep this in mind.
 
 ## Licensing
 
-As mentioned at the top of this file, contributions made to this code base must be made under the terms of the BSD-3-Clause.
+As mentioned at the top of this file, contributions made to this code base must be made under the terms of the BSD 3-Clause license.
 
 When contributing to existing code, we ask that you update the copyright and authorship notice at the top of the files touched
-with any authorship information you wish to provide in SPDX format. This is so you get proper attribution.
+with any authorship information you wish to provide in SPDX format. This is so that you get proper attribution.
 
-When making an original contribution, copyright by default falls to you however if you wish to hand over copyright then
+When making an original contribution, copyright by default falls to you. However, if you wish to hand copyright over, then
 please use the SPDX line `SPDX-FileCopyrightText: [year] The Mangrove Language`, replacing [year] with the current year.
 
 If you wrote the file and wish to be attributed as having done so, regardless of copyright, please add the SPDX line
