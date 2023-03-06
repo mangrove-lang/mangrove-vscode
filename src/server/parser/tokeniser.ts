@@ -49,7 +49,7 @@ export class Tokeniser
 	private currentChar: string
 	private position: Position
 	private eof: boolean
-	private _token : Token
+	private _token: Token
 
 	constructor(file: TextDocument)
 	{
@@ -77,9 +77,9 @@ export class Tokeniser
 	clone(): Tokeniser
 	{
 		const tokeniser = new Tokeniser(this._file)
-		tokeniser._token =  this._token.clone(),
-		tokeniser.position =  {character: this.position.character, line: this.position.line},
-		tokeniser.eof =  this.eof,
+		tokeniser._token = this._token.clone()
+		tokeniser.position = {character: this.position.character, line: this.position.line}
+		tokeniser.eof = this.eof
 		// force copy of the char
 		tokeniser.currentChar = `${this.currentChar}`
 
@@ -456,6 +456,10 @@ export class Tokeniser
 			case 'U':
 				this.readHexToken()
 				return String.fromCodePoint(Number.parseInt(this._token.value, 16))
+			default:
+				// TODO: return Result
+				console.warn(`Unknown unicode character: ${this.currentChar}`)
+				return ''
 			}
 			if (this.currentChar === esc)
 			{
@@ -616,13 +620,10 @@ export class Tokeniser
 			this.finaliseToken(TokenType.equOp, token)
 			this.nextChar()
 		}
+		else if (isEquals(token))
+			this._token.set(TokenType.assignOp, token)
 		else
-		{
-			if (isEquals(token))
-				this._token.set(TokenType.assignOp, token)
-			else
-				this._token.set(TokenType.invert, token)
-		}
+			this._token.set(TokenType.invert, token)
 	}
 
 	readAlphaNumToken()

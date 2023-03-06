@@ -184,7 +184,7 @@ export class Parser
 		return comments
 	}
 
-	parseIdentStr() : Result<IdentAndComments | undefined, ParsingErrors>
+	parseIdentStr(): Result<IdentAndComments | undefined, ParsingErrors>
 	{
 		const token = this.lexer.token.clone()
 		if (!token.typeIsOneOf(TokenType.ident))
@@ -194,7 +194,7 @@ export class Parser
 		if (token.typeIsOneOf(TokenType.dot))
 			return Err('InvalidTokenSequence')
 		comments.push(...this.skipWhite())
-		return Ok({token: token, comments: comments})
+		return Ok({token, comments})
 	}
 
 	parseIdent(): Result<ASTIdent | undefined, ParsingErrors>
@@ -224,8 +224,7 @@ export class Parser
 			const struct = symbols[symbols.length - 1]?.structure
 			return struct?.symbolTable.findLocal(ident)
 		}
-		else
-			return this.symbolTable.find(ident)
+		return this.symbolTable.find(ident)
 	}
 
 	parseDottedIdent(): Result<ASTIdent | undefined, ParsingErrors>
@@ -615,7 +614,7 @@ export class Parser
 
 		node.adjustEnd(token, this.lexer.file)
 		const endToken = token.clone()
-		const endTmpl  = this.match(TokenType.relOp)
+		const endTmpl = this.match(TokenType.relOp)
 		if (!endTmpl || !isEndTmpl(endToken.value))
 			return Err('UnreachableState')
 
@@ -1164,8 +1163,7 @@ export class Parser
 				return Err('MissingType')
 			}
 			// Otherwise parse a value expression
-			else
-				return this.parseValueExpr()
+			return this.parseValueExpr()
 		})()
 		if (!isResultDefined(value))
 			return Err('OperatorWithNoRHS')
@@ -1536,7 +1534,7 @@ export class Parser
 		return Ok(node)
 	}
 
-	parseCVType() : Result<ASTTypeDecl | undefined, ParsingErrors>
+	parseCVType(): Result<ASTTypeDecl | undefined, ParsingErrors>
 	{
 		// First try to get any storage specification modifiers
 		const storageSpec = this.parseCVSpec()

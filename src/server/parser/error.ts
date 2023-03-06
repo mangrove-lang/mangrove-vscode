@@ -52,6 +52,8 @@ export class SyntaxError
 
 	get kind(): string
 	{
+		// We want the compiler to complain if we don't match every `ErroKind` so we cannot have default case
+		// eslint-disable-next-line default-case
 		switch (this._kind)
 		{
 		case ErrorKind.constantExpected:
