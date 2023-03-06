@@ -135,6 +135,6 @@ export function *generateSemanticTokens(node?: ASTNode, ...innerNodes: (ASTNode 
 	for (const node of innerNodes)
 	{
 		if (node)
-			yield *node.semanticTokens()
+			yield* node.semanticTokens()
 	}
 }

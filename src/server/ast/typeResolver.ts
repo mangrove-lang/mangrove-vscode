@@ -4,10 +4,9 @@ import {ASTIdent} from './values'
 
 export class TypeResolver
 {
-	private resolveExpression(value: ASTNode): SymbolType | undefined
+	private resolveExpression(/* value: ASTNode */): SymbolType | undefined
 	{
-		value
-		return
+		return undefined
 	}
 
 	resolve(value: ASTNode): SymbolType | undefined
@@ -18,6 +17,6 @@ export class TypeResolver
 			const symbol = (value as ASTIdent).symbol
 			return symbol?.type
 		}
-		return this.resolveExpression(value)
+		return this.resolveExpression(/* value */)
 	}
 }

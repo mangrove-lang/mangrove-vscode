@@ -22,7 +22,7 @@ export class ASTInt extends ASTNodeData implements ASTValue
 	{
 		yield this.buildSemanticToken(this.semanticType)
 		for (const child of this.comments)
-			yield *child.semanticTokens()
+			yield* child.semanticTokens()
 	}
 }
 
@@ -45,7 +45,7 @@ export class ASTFloat extends ASTNodeData implements ASTValue
 	{
 		yield this.buildSemanticToken(this.semanticType)
 		for (const child of this.comments)
-			yield *child.semanticTokens()
+			yield* child.semanticTokens()
 	}
 }
 
@@ -76,7 +76,7 @@ export class ASTStringLit extends ASTNodeData implements ASTValue
 		for (const segment of this.segments)
 			yield this.buildSemanticToken(this.semanticType, segment)
 		for (const child of this.comments)
-			yield *child.semanticTokens()
+			yield* child.semanticTokens()
 	}
 
 	addSegment(token: Token)
@@ -97,7 +97,7 @@ export class ASTCharLit extends ASTNodeData implements ASTValue
 	{
 		yield this.buildSemanticToken(this.semanticType)
 		for (const child of this.comments)
-			yield *child.semanticTokens()
+			yield* child.semanticTokens()
 	}
 }
 
@@ -120,7 +120,7 @@ export class ASTBool extends ASTNodeData implements ASTValue
 	{
 		yield this.buildSemanticToken(this.semanticType)
 		for (const child of this.comments)
-			yield *child.semanticTokens()
+			yield* child.semanticTokens()
 	}
 }
 
@@ -135,6 +135,6 @@ export class ASTNull extends ASTNodeData implements ASTValue
 	{
 		yield this.buildSemanticToken(this.semanticType)
 		for (const child of this.comments)
-			yield *child.semanticTokens()
+			yield* child.semanticTokens()
 	}
 }

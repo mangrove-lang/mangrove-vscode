@@ -19,7 +19,7 @@ const builtinTypes =
 	new MangroveSymbol('List', new SymbolType(SymbolTypes.type | SymbolTypes.list)),
 	new MangroveSymbol('Array', new SymbolType(SymbolTypes.type | SymbolTypes.array)),
 	new MangroveSymbol('Dict', new SymbolType(SymbolTypes.type | SymbolTypes.dict)),
-	new MangroveSymbol('Set', new SymbolType(SymbolTypes.type | SymbolTypes.set)),
+	new MangroveSymbol('Set', new SymbolType(SymbolTypes.type | SymbolTypes.set))
 ] as const
 
 export function addBuiltinTypesTo(symbolTable: SymbolTable)

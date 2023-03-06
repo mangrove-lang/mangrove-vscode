@@ -16,7 +16,7 @@ export class ASTInvalid extends ASTNodeData implements ASTValue
 	*semanticTokens(): Generator<SemanticToken, void, undefined>
 	{
 		for (const child of this.comments)
-			yield *child.semanticTokens()
+			yield* child.semanticTokens()
 	}
 }
 
@@ -44,7 +44,7 @@ export class ASTIdent extends ASTNodeData implements ASTValue
 	{
 		yield this.buildSemanticToken(this.semanticType)
 		for (const child of this.comments)
-			yield *child.semanticTokens()
+			yield* child.semanticTokens()
 	}
 
 	get symbol() { return this._symbol }
@@ -100,7 +100,7 @@ export class ASTDottedIdent extends ASTIdent
 			yield this.buildSemanticToken(semanticType, ident)
 		}
 		for (const child of this.comments)
-			yield *child.semanticTokens()
+			yield* child.semanticTokens()
 	}
 }
 
@@ -169,10 +169,10 @@ export class ASTTypeDecl extends ASTIdent
 	*semanticTokens(): Generator<SemanticToken, void, undefined>
 	{
 		if (this.storageSpec)
-			yield *this.storageSpec.semanticTokens()
+			yield* this.storageSpec.semanticTokens()
 		yield this.buildSemanticToken(this.semanticType)
 		for (const child of this.comments)
-			yield *child.semanticTokens()
+			yield* child.semanticTokens()
 	}
 }
 
@@ -192,10 +192,10 @@ export class ASTIdentDef extends ASTIdent
 
 	*semanticTokens(): Generator<SemanticToken, void, undefined>
 	{
-		yield *this.identType.semanticTokens()
+		yield* this.identType.semanticTokens()
 		yield this.buildSemanticToken(this.semanticType)
 		for (const child of this.comments)
-			yield *child.semanticTokens()
+			yield* child.semanticTokens()
 	}
 }
 
@@ -222,10 +222,10 @@ export class ASTIndex extends ASTNodeData implements ASTNode
 
 	*semanticTokens(): Generator<SemanticToken, void, undefined>
 	{
-		yield *this.target.semanticTokens()
-		yield *this.index.semanticTokens()
+		yield* this.target.semanticTokens()
+		yield* this.index.semanticTokens()
 		for (const child of this.comments)
-			yield *child.semanticTokens()
+			yield* child.semanticTokens()
 	}
 }
 
@@ -253,11 +253,11 @@ export class ASTSlice extends ASTNodeData implements ASTNode
 
 	*semanticTokens(): Generator<SemanticToken, void, undefined>
 	{
-		yield *this.target.semanticTokens()
+		yield* this.target.semanticTokens()
 		if (this.begin)
-			yield *this.begin.semanticTokens()
+			yield* this.begin.semanticTokens()
 		for (const child of this.comments)
-			yield *child.semanticTokens()
+			yield* child.semanticTokens()
 	}
 }
 
@@ -277,9 +277,9 @@ export class ASTCallArguments extends ASTNodeData implements ASTNode
 	*semanticTokens(): Generator<SemanticToken, void, undefined>
 	{
 		for (const argument of this.arguments)
-			yield *argument.semanticTokens()
+			yield* argument.semanticTokens()
 		for (const child of this.comments)
-			yield *child.semanticTokens()
+			yield* child.semanticTokens()
 	}
 
 	adjustEnd(token: Token, file: TextDocument)
@@ -304,7 +304,7 @@ export class ASTTemplateArguments extends ASTNodeData implements ASTNode
 
 	*semanticTokens(): Generator<SemanticToken, void, undefined>
 	{
-		yield *generateSemanticTokens(undefined, ...this._arguments, ...this.comments)
+		yield* generateSemanticTokens(undefined, ...this._arguments, ...this.comments)
 	}
 
 	adjustEnd(token: Token, file: TextDocument)

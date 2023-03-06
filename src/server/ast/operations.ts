@@ -22,14 +22,14 @@ export class ASTFunctionCall extends ASTNodeData implements ASTNode
 	get semanticType() { return SemanticTokenTypes.function }
 	get functionName() { return this._functionName.fullName }
 	toString() { return `<FunctionCall: '${this.functionName}'>` }
-	addTemplateArgs(args: ASTTemplateArguments) { this._templateArgs = args}
+	addTemplateArgs(args: ASTTemplateArguments) { this._templateArgs = args }
 
 	*semanticTokens(): Generator<SemanticToken, void, undefined>
 	{
 		yield this.buildSemanticToken(this.semanticType)
 		if (this._templateArgs)
-			yield *this._templateArgs.semanticTokens()
-		yield *this._args.semanticTokens()
+			yield* this._templateArgs.semanticTokens()
+		yield* this._args.semanticTokens()
 	}
 }
 
@@ -54,9 +54,9 @@ class ASTUnaryOp extends ASTNodeData implements ASTNode
 	*semanticTokens(): Generator<SemanticToken, void, undefined>
 	{
 		yield this.buildSemanticToken(this.semanticType)
-		yield *this.value.semanticTokens()
+		yield* this.value.semanticTokens()
 		for (const child of this.comments)
-			yield *child.semanticTokens()
+			yield* child.semanticTokens()
 	}
 }
 
@@ -83,11 +83,11 @@ class ASTBinaryOp extends ASTNodeData implements ASTNode
 
 	*semanticTokens(): Generator<SemanticToken, void, undefined>
 	{
-		yield *this.lhs.semanticTokens()
+		yield* this.lhs.semanticTokens()
 		yield this.buildSemanticToken(this.semanticType)
-		yield *this.rhs.semanticTokens()
+		yield* this.rhs.semanticTokens()
 		for (const child of this.comments)
-			yield *child.semanticTokens()
+			yield* child.semanticTokens()
 	}
 }
 
@@ -163,7 +163,7 @@ export class ASTBetween extends ASTNodeData implements ASTNode
 	private _rop: Token
 	private _rhs: ASTNode
 
-	constructor(relation: ASTRel, rop : Token, rhs: ASTNode)
+	constructor(relation: ASTRel, rop: Token, rhs: ASTNode)
 	{
 		super(relation.rhs.token)
 		this._lhs = relation.lhs
@@ -182,13 +182,13 @@ export class ASTBetween extends ASTNodeData implements ASTNode
 
 	*semanticTokens(): Generator<SemanticToken, void, undefined>
 	{
-		yield *this._lhs.semanticTokens()
+		yield* this._lhs.semanticTokens()
 		yield this.buildSemanticToken(this.semanticType, this._lop)
-		yield *this._value.semanticTokens()
+		yield* this._value.semanticTokens()
 		yield this.buildSemanticToken(this.semanticType, this._rop)
-		yield *this._rhs.semanticTokens()
+		yield* this._rhs.semanticTokens()
 		for (const child of this.comments)
-			yield *child.semanticTokens()
+			yield* child.semanticTokens()
 	}
 }
 
@@ -218,10 +218,10 @@ export class ASTAssign extends ASTNodeData implements ASTNode
 
 	*semanticTokens(): Generator<SemanticToken, void, undefined>
 	{
-		yield *this._ident.semanticTokens()
+		yield* this._ident.semanticTokens()
 		yield this.buildSemanticToken(this.semanticType)
-		yield *this._value.semanticTokens()
+		yield* this._value.semanticTokens()
 		for (const child of this.comments)
-			yield *child.semanticTokens()
+			yield* child.semanticTokens()
 	}
 }

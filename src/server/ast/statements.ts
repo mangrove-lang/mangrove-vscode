@@ -228,10 +228,10 @@ export class ASTIfStmt extends ASTNodeData implements ASTNode
 
 export class ASTForStmt extends ASTNodeData implements ASTNode
 {
-	private _container : ASTNode
+	private _container: ASTNode
 	private _block: ASTNode
 
-	constructor(forToken: Token, container : ASTNode, block: ASTNode)
+	constructor(forToken: Token, container: ASTNode, block: ASTNode)
 	{
 		super(forToken)
 		this._container = container
@@ -251,8 +251,8 @@ export class ASTForStmt extends ASTNodeData implements ASTNode
 
 export class ASTWhileStmt extends ASTNodeData implements ASTNode
 {
-	private _cond : ASTNode
-	private _block : ASTNode
+	private _cond: ASTNode
+	private _block: ASTNode
 
 	constructor(whileToken: Token, cond: ASTNode, block: ASTNode)
 	{
@@ -324,9 +324,9 @@ export class ASTParams extends ASTNodeData implements ASTNode
 	{
 		// XXX: Need to get the semantic type for this node passed through to the name component of ASTTypeDecl.
 		for (const parameter of this.parameters)
-			yield *parameter.semanticTokens()
+			yield* parameter.semanticTokens()
 		for (const child of this.comments)
-			yield *child.semanticTokens()
+			yield* child.semanticTokens()
 	}
 
 	adjustEnd(token: Token, file: TextDocument)
@@ -353,7 +353,11 @@ export class ASTReturnType extends ASTNodeData implements ASTNode
 	get semanticType() { return undefined }
 	get functionTypeSpec() { return this._functionTypeSpec }
 	get returnType() { return this._returnType }
-	toString() { return `<ReturnType: '${this.returnType.fullName}' on ${this.functionTypeSpec?.specification ?? ''} function>` }
+
+	toString()
+	{
+		return `<ReturnType: '${this.returnType.fullName}' on ${this.functionTypeSpec?.specification ?? ''} function>`
+	}
 
 	*semanticTokens(): Generator<SemanticToken, void, undefined>
 	{

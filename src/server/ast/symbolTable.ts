@@ -40,10 +40,10 @@ export class SymbolType
 	assign(type: SymbolTypes) { this.type = type }
 	combine(type: SymbolTypes) { return this.type | type }
 	append(type: SymbolTypes) { this.type |= type }
-	mask(type: SymbolTypes) : SymbolTypes { return this.type & type }
-	without(type: SymbolTypes) : SymbolTypes { return this.mask(~type) }
+	mask(type: SymbolTypes): SymbolTypes { return this.type & type }
+	without(type: SymbolTypes): SymbolTypes { return this.mask(~type) }
 
-	forValue() : SymbolType
+	forValue(): SymbolType
 	{
 		// Strip `pack` temporarily as it doesn't change the below logic.
 		const type = this.without(SymbolTypes.pack)
