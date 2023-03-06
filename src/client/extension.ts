@@ -20,10 +20,10 @@ import {SemanticTokensProvider} from './providers/semanticTokens'
 
 export interface Api
 {
-	activeWorkspace : typeof activeWorkspace
+	activeWorkspace: typeof activeWorkspace
 }
 
-export async function activate(context: ExtensionContext) : Promise<Api>
+export async function activate(context: ExtensionContext): Promise<Api>
 {
 	extensionContext = context
 	context.subscriptions.push(
@@ -31,8 +31,8 @@ export async function activate(context: ExtensionContext) : Promise<Api>
 			configureLanguage(),
 			...registerCommands(),
 			workspace.onDidChangeWorkspaceFolders(workspaceFoldersChanged),
-			window.onDidChangeActiveTextEditor(activeTextEditorChanged),
-		],
+			window.onDidChangeActiveTextEditor(activeTextEditorChanged)
+		]
 	)
 	activeTextEditorChanged(window.activeTextEditor)
 
@@ -121,7 +121,7 @@ export class ClientWorkspace
 	setupClient(): Disposable[]
 	{
 		const semanticTokensProvider = new SemanticTokensProvider(this)
-		
+
 		return [
 			languages.registerDocumentSemanticTokensProvider(
 				documentSelector,
@@ -148,7 +148,7 @@ function activeTextEditorChanged(editor: TextEditor | undefined)
 			startSpinner(`[${workspace.folder.name}] ${progress.message}`)
 		else
 		{
-			const symbol = progress.state === 'standby' ? '$(debug-stop)': '$(debug-start)'
+			const symbol = progress.state === 'standby' ? '$(debug-stop)' : '$(debug-start)'
 			stopSpinner(`[${workspace.folder.name}] ${symbol}`)
 		}
 	}
@@ -179,9 +179,9 @@ function clientWorkspaceForURI(uri: Uri, options?: {initialiseIfMissing: boolean
 		return undefined
 
 	const alreadyExists = workspaces.get(folder.uri.toString())
-	if(alreadyExists || !options || !options.initialiseIfMissing)
+	if (alreadyExists || !options || !options.initialiseIfMissing)
 		return alreadyExists
-	
+
 	const clientWorkspace = new ClientWorkspace(folder)
 	workspaces.set(folder.uri.toString(), clientWorkspace)
 	return clientWorkspace
@@ -192,7 +192,7 @@ function registerCommands(): Disposable[]
 	return [
 		commands.registerCommand('mangrove.restart',
 			async () => activeWorkspace.value?.restart()
-		),
+		)
 	]
 }
 

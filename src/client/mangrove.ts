@@ -12,20 +12,21 @@ import {Observable} from './utils/observable'
 
 export const documentSelector: DocumentSelector = [
 	{language: 'mangrove', scheme: 'file'},
-	{language: 'mangrove', scheme: 'untitled'},
+	{language: 'mangrove', scheme: 'untitled'}
 ]
 
 export async function createLanguageClient(folder: WorkspaceFolder): Promise<LanguageClient>
 {
 	const clientOptions: LanguageClientOptions =
 	{
-		documentSelector: documentSelector,
+		documentSelector,
 		diagnosticCollectionName: 'mangrove',
 		initializationOptions: workspace.getConfiguration('mangrove'),
 		workspaceFolder: folder
 	}
 
 	const languageServer = extensionContext.asAbsolutePath(path.join('build', 'server', 'server.js'))
+
 	const serverOptions: ServerOptions =
 	{
 		run:
