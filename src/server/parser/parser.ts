@@ -241,7 +241,7 @@ export class Parser
 		while (haveDot)
 		{
 			// If we're in the first loop and we have lookaside, handle it, otherwise parse normally
-			if (dottedIdent.length == 0 && this.haveIdent)
+			if (dottedIdent.length === 0 && this.haveIdent)
 			{
 				const ident = this.ident as ASTIdent
 				symbols.push(ident.symbol)
