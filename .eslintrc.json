@@ -78,7 +78,7 @@
 		],
 		"comma-dangle": [
 			"error",
-			"never"
+			"always-multiline"
 		],
 		"comma-spacing": [
 			"error",
