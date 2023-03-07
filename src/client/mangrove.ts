@@ -5,14 +5,14 @@ import {
 	DocumentSelector,
 	LanguageClient,
 	ServerOptions,
-	TransportKind
+	TransportKind,
 } from 'vscode-languageclient/node'
 import {extensionContext, WorkspaceProgress} from './extension'
 import {Observable} from './utils/observable'
 
 export const documentSelector: DocumentSelector = [
 	{language: 'mangrove', scheme: 'file'},
-	{language: 'mangrove', scheme: 'untitled'}
+	{language: 'mangrove', scheme: 'untitled'},
 ]
 
 export async function createLanguageClient(folder: WorkspaceFolder): Promise<LanguageClient>
@@ -22,7 +22,7 @@ export async function createLanguageClient(folder: WorkspaceFolder): Promise<Lan
 		documentSelector,
 		diagnosticCollectionName: 'mangrove',
 		initializationOptions: workspace.getConfiguration('mangrove'),
-		workspaceFolder: folder
+		workspaceFolder: folder,
 	}
 
 	const languageServer = extensionContext.asAbsolutePath(path.join('build', 'server', 'server.js'))
@@ -32,21 +32,21 @@ export async function createLanguageClient(folder: WorkspaceFolder): Promise<Lan
 		run:
 		{
 			module: languageServer,
-			transport: TransportKind.ipc
+			transport: TransportKind.ipc,
 		},
 		debug:
 		{
 			module: languageServer,
 			transport: TransportKind.ipc,
-			options: {execArgv: ['--nolazy', '--inspect=6009']}
-		}
+			options: {execArgv: ['--nolazy', '--inspect=6009']},
+		},
 	}
 
 	return new LanguageClient(
 		'mangrove-client',
 		'Mangrove Language Server',
 		serverOptions,
-		clientOptions
+		clientOptions,
 	)
 }
 
@@ -87,6 +87,6 @@ export async function setupProgress(client: CommonLanguageClient, workspaceProgr
 			workspaceProgress.value = runningProgress.size ?
 				{state: 'progress', message: getProgressMessage(progress)} :
 				{state: 'ready'}
-		}
+		},
 	)
 }

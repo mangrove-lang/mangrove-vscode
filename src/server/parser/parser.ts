@@ -13,7 +13,7 @@ import
 	ASTIndex,
 	ASTSlice,
 	ASTCallArguments,
-	ASTTemplateArguments
+	ASTTemplateArguments,
 } from '../ast/values'
 import
 {
@@ -22,7 +22,7 @@ import
 	ASTFloat,
 	ASTInt,
 	ASTNull,
-	ASTStringLit
+	ASTStringLit,
 } from '../ast/literals'
 import {ASTComment, ASTIntType, ASTNode, ASTType} from '../ast/types'
 import
@@ -39,7 +39,7 @@ import
 	ASTRel,
 	ASTBetween,
 	ASTLogic,
-	ASTAssign
+	ASTAssign,
 } from '../ast/operations'
 import {Tokeniser} from './tokeniser'
 import {Token, TokenType} from './types'
@@ -51,7 +51,7 @@ import
 	isStatic,
 	isVolatile,
 	isBeginTmpl,
-	isEndTmpl
+	isEndTmpl,
 } from './recogniser'
 import
 {
@@ -73,7 +73,7 @@ import
 	ASTFunction,
 	ASTOperator,
 	ASTClass,
-	ASTBlock
+	ASTBlock,
 } from '../ast/statements'
 import {ParsingErrors, ErrorKind, SyntaxError, toErrorKind} from './error'
 
@@ -83,7 +83,7 @@ function isInt(token: Token): boolean
 		TokenType.binLit,
 		TokenType.octLit,
 		TokenType.hexLit,
-		TokenType.intLit
+		TokenType.intLit,
 	)
 }
 
@@ -1782,7 +1782,7 @@ export class Parser
 				this.symbolTable.pop(this)
 
 			const node = new ASTFunction(
-				functionToken, functionName, templateParams.val, params.val, returnType.val, block.val
+				functionToken, functionName, templateParams.val, params.val, returnType.val, block.val,
 			)
 			node.add(match)
 			return Ok(node)
@@ -1815,7 +1815,7 @@ export class Parser
 		const match = this.match(
 			TokenType.invert, TokenType.incOp, TokenType.mulOp, TokenType.addOp,
 			TokenType.shiftOp, TokenType.bitOp, TokenType.relOp, TokenType.equOp,
-			TokenType.logicOp, TokenType.assignOp, TokenType.ident
+			TokenType.logicOp, TokenType.assignOp, TokenType.ident,
 		)
 		if (!match)
 			return Err('InvalidTokenSequence')

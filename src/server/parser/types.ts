@@ -173,13 +173,13 @@ export class Token
 			start:
 			{
 				line: token._location.start.line,
-				character: token._location.start.character
+				character: token._location.start.character,
 			},
 			end:
 			{
 				line: token._location.end.line,
-				character: token._location.end.character
-			}
+				character: token._location.end.character,
+			},
 		}
 		this._length = token._length
 	}

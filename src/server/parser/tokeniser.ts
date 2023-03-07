@@ -40,7 +40,7 @@ import
 	isFunctionDef,
 	isOperatorDef,
 	isVisibility,
-	isUnsafe
+	isUnsafe,
 } from './recogniser'
 
 export class Tokeniser

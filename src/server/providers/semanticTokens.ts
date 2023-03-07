@@ -2,7 +2,7 @@ import {
 	SemanticTokensParams,
 	RequestType,
 	HandlerResult,
-	CancellationToken
+	CancellationToken,
 } from 'vscode-languageserver'
 import {GetSemanticTokensResult} from '../../providers/semanticTokens'
 import {tokenise} from '../parser/mangrove'
@@ -21,7 +21,7 @@ export function handleSemanticTokensRequest(params: SemanticTokensParams, token:
 	const result: GetSemanticTokensResult =
 	{
 		canceled: token.isCancellationRequested,
-		tokens: tokenise(file)
+		tokens: tokenise(file),
 	}
 	return result
 }

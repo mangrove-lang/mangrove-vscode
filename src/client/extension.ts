@@ -9,7 +9,7 @@ import
 	window,
 	workspace,
 	WorkspaceFolder,
-	WorkspaceFoldersChangeEvent
+	WorkspaceFoldersChangeEvent,
 } from 'vscode'
 import * as langClient from 'vscode-languageclient'
 import {LanguageClient} from 'vscode-languageclient/node'
@@ -31,8 +31,8 @@ export async function activate(context: ExtensionContext): Promise<Api>
 			configureLanguage(),
 			...registerCommands(),
 			workspace.onDidChangeWorkspaceFolders(workspaceFoldersChanged),
-			window.onDidChangeActiveTextEditor(activeTextEditorChanged)
-		]
+			window.onDidChangeActiveTextEditor(activeTextEditorChanged),
+		],
 	)
 	activeTextEditorChanged(window.activeTextEditor)
 
@@ -126,8 +126,8 @@ export class ClientWorkspace
 			languages.registerDocumentSemanticTokensProvider(
 				documentSelector,
 				semanticTokensProvider,
-				semanticTokensProvider.legend
-			)
+				semanticTokensProvider.legend,
+			),
 		]
 	}
 }
@@ -191,8 +191,8 @@ function registerCommands(): Disposable[]
 {
 	return [
 		commands.registerCommand('mangrove.restart',
-			async () => activeWorkspace.value?.restart()
-		)
+			async () => activeWorkspace.value?.restart(),
+		),
 	]
 }
 

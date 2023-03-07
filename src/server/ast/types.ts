@@ -102,7 +102,7 @@ export class ASTNodeData
 			line: location.start.line,
 			character: location.start.character,
 			length: token.length,
-			type: semanticType
+			type: semanticType,
 		} as SemanticToken
 	}
 }

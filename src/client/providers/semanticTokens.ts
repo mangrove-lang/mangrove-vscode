@@ -6,13 +6,13 @@ import
 	SemanticTokens,
 	SemanticTokensBuilder,
 	SemanticTokensLegend,
-	TextDocument
+	TextDocument,
 } from 'vscode'
 import
 {
 	SemanticTokenModifiers,
 	SemanticTokensParams,
-	RequestType
+	RequestType,
 } from 'vscode-languageclient'
 import {ClientWorkspace} from '../extension'
 import {GetSemanticTokensResult, SemanticTokenTypes} from '../../providers/semanticTokens'
@@ -67,7 +67,7 @@ export class SemanticTokensProvider implements DocumentSemanticTokensProvider
 				semanticToken.character,
 				semanticToken.length,
 				semanticToken.type,
-				semanticToken.modifiers
+				semanticToken.modifiers,
 			)
 		}
 		return builder.build()

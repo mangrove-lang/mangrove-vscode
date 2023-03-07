@@ -6,7 +6,7 @@ import
 	InitializeParams,
 	InitializeResult,
 	ProposedFeatures,
-	TextDocuments
+	TextDocuments,
 } from 'vscode-languageserver/node'
 import {TextDocument} from 'vscode-languageserver-textdocument'
 import {getSemanticTokensRequest, handleSemanticTokensRequest} from './providers/semanticTokens'
