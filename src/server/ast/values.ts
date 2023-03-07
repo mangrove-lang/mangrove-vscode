@@ -23,6 +23,7 @@ export class ASTInvalid extends ASTNodeData implements ASTValue
 export class ASTIdent extends ASTNodeData implements ASTValue
 {
 	private _symbol?: MangroveSymbol
+	protected _templateArgs?: ASTTemplateArguments
 
 	constructor(token: Token, symbol?: MangroveSymbol)
 	{
@@ -39,10 +40,13 @@ export class ASTIdent extends ASTNodeData implements ASTValue
 	get value() { return this.token.value }
 	get fullName() { return this.token.value }
 	toString() { return `<Ident '${this.fullName}'>` }
+	addTemplateArgs(args: ASTTemplateArguments) { this._templateArgs = args }
 
 	*semanticTokens(): Generator<SemanticToken, void, undefined>
 	{
 		yield this.buildSemanticToken(this.semanticType)
+		if (this._templateArgs)
+			yield* this._templateArgs.semanticTokens()
 		for (const child of this.comments)
 			yield* child.semanticTokens()
 	}
@@ -99,6 +103,8 @@ export class ASTDottedIdent extends ASTIdent
 			const semanticType = this.symbolSemanticType(symbol)
 			yield this.buildSemanticToken(semanticType, ident)
 		}
+		if (this._templateArgs)
+			yield* this._templateArgs.semanticTokens()
 		for (const child of this.comments)
 			yield* child.semanticTokens()
 	}
