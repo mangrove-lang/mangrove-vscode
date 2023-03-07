@@ -1,4 +1,3 @@
-import {Ok, Err, Result} from 'ts-results'
 import {Position, TextDocument} from 'vscode-languageserver-textdocument'
 import {MangroveSymbol, SymbolTable, SymbolType, SymbolTypes} from '../ast/symbolTable'
 import {TypeResolver} from '../ast/typeResolver'
@@ -76,6 +75,7 @@ import
 	ASTBlock,
 } from '../ast/statements'
 import {ParsingErrors, ErrorKind, SyntaxError, toErrorKind} from './error'
+import {Err, Ok, Result} from '../../utils/result'
 
 function isInt(token: Token): boolean
 {
@@ -85,26 +85,6 @@ function isInt(token: Token): boolean
 		TokenType.hexLit,
 		TokenType.intLit,
 	)
-}
-
-function isResultValid<T>(result: Result<T | undefined, ParsingErrors>): result is Ok<T>
-{
-	return result.ok && result.val !== undefined
-}
-
-function isResultInvalid<T>(result: Result<T | undefined, ParsingErrors>): result is Ok<undefined>
-{
-	return result.ok && result.val === undefined
-}
-
-function isResultDefined<T>(result: Result<T | undefined, ParsingErrors>): result is Result<T, ParsingErrors>
-{
-	return isResultValid(result) || result.err
-}
-
-function isResultError<T>(result: Result<T, ParsingErrors>): result is Err<ParsingErrors>
-{
-	return result.err
 }
 
 function isNodeRelation(node: ASTNode | ASTRel): node is ASTRel
@@ -444,7 +424,7 @@ export class Parser
 		else if (token.typeIsOneOf(TokenType.charLit))
 			return this.parseCharLiteral()
 		const bool = this.parseBool()
-		if (isResultDefined(bool))
+		if (bool.isDefined())
 			return bool
 		return this.parseNull()
 	}
@@ -465,7 +445,7 @@ export class Parser
 		if (!token.typeIsOneOf(TokenType.rightSquare))
 		{
 			const expr = this.parseLogicExpr()
-			if (!isResultValid(expr))
+			if (!expr.isValid())
 				return expr
 			node.end = expr.val
 		}
@@ -493,7 +473,7 @@ export class Parser
 		else if (!token.typeIsOneOf(TokenType.colon))
 		{
 			const expr = this.parseLogicExpr()
-			if (!isResultValid(expr))
+			if (!expr.isValid())
 				return expr
 			index = expr.val
 		}
@@ -531,13 +511,13 @@ export class Parser
 		if (!this.haveIdent)
 		{
 			const const_ = this.parseConst()
-			if (isResultDefined(const_))
+			if (const_.isDefined())
 				return const_
 		}
 		const ident = this.parseDottedIdent()
 		const startTmplToken = (token: Token) =>
 			token.typeIsOneOf(TokenType.relOp) && isBeginTmpl(token.value)
-		if (isResultValid(ident))
+		if (ident.isValid())
 		{
 			// Save the current lexer state so we can revert back to it
 			// if there's a problem with template parsing since comparison using '<'
@@ -549,18 +529,18 @@ export class Parser
 				// Check both template args and funciton call.
 				// Even if the template args are invalid, we might still be able to parse the function call.
 				const templateArgs = this.parseTemplateArgs()
-				if (isResultError(templateArgs))
+				if (templateArgs.isErr())
 					this._syntaxErrors.push(new SyntaxError(token, ErrorKind.invalidTokenSequence))
 
 				const func = this.parseFunctionCall(ident.val)
-				if (isResultValid(func))
+				if (func.isValid())
 				{
-					if (isResultValid(templateArgs))
+					if (templateArgs.isValid())
 						func.val.addTemplateArgs(templateArgs.val)
 					return func
 				}
 
-				if (isResultValid(templateArgs))
+				if (templateArgs.isValid())
 					ident.val.addTemplateArgs(templateArgs.val)
 				else
 					// Not a valid template, reset the lexer
@@ -594,9 +574,9 @@ export class Parser
 		while (!endTmplToken(token))
 		{
 			const value = this.parseValue()
-			if (isResultError(value))
+			if (value.isErr())
 				return value
-			if (!isResultValid(value))
+			if (!value.isValid())
 				return Err('InvalidTokenSequence')
 			node.addArgument(value.val)
 			if (!endTmplToken(token))
@@ -637,7 +617,7 @@ export class Parser
 		while (!token.typeIsOneOf(TokenType.rightParen))
 		{
 			const value = this.parseValue()
-			if (!isResultValid(value))
+			if (!value.isValid())
 				return value as Result<undefined, ParsingErrors>
 			node.addArgument(value.val)
 			if (!token.typeIsOneOf(TokenType.rightParen))
@@ -661,7 +641,7 @@ export class Parser
 	parseFunctionCall(func: ASTIdent): Result<ASTFunctionCall | undefined, ParsingErrors>
 	{
 		const args = this.parseCallArgs()
-		if (!isResultValid(args))
+		if (!args.isValid())
 			// Assertion required because tsc can't work out that undefined isn't in the valid set after this.
 			return args as Result<undefined, ParsingErrors>
 		return Ok(new ASTFunctionCall(func, args.val))
@@ -677,16 +657,16 @@ export class Parser
 			if (!match)
 				return Err('UnreachableState')
 			const value = this.parseValue()
-			if (!isResultDefined(value))
+			if (!value.isDefined())
 				return Err('OperatorWithNoRHS')
-			if (isResultError(value))
+			if (value.isErr())
 				return value
 			const node = new ASTPrefixOp(op, value.val)
 			node.add(match)
 			return Ok(node)
 		}
 		const value = this.parseValue()
-		if (!isResultValid(value))
+		if (!value.isValid())
 			return value
 		if (token.typeIsOneOf(TokenType.incOp))
 		{
@@ -713,9 +693,9 @@ export class Parser
 			if (!match)
 				return Err('UnreachableState')
 			const value = this.parseIncExpr()
-			if (!isResultDefined(value))
+			if (!value.isDefined())
 				return Err('OperatorWithNoRHS')
-			if (isResultError(value))
+			if (value.isErr())
 				return value
 			const node = new ASTDeref(op, value.val)
 			node.add(match)
@@ -736,9 +716,9 @@ export class Parser
 			if (!match)
 				return Err('UnreachableState')
 			const value = this.parseDerefExpr()
-			if (!isResultDefined(value))
+			if (!value.isDefined())
 				return Err('OperatorWithNoRHS')
-			if (isResultError(value))
+			if (value.isErr())
 				return value
 			const node = new ASTInvert(op, value.val)
 			node.add(match)
@@ -753,9 +733,9 @@ export class Parser
 			if (!match)
 				return Err('UnreachableState')
 			const value = this.parseDerefExpr()
-			if (!isResultDefined(value))
+			if (!value.isDefined())
 				return Err('OperatorWithNoRHS')
-			if (isResultError(value))
+			if (value.isErr())
 				return value
 			const node = new ASTInvert(op, value.val)
 			node.add(match)
@@ -769,7 +749,7 @@ export class Parser
 		Result<ASTNode | undefined, ParsingErrors>
 	{
 		const value = valueFn.call(this)
-		if (!isResultValid(value))
+		if (!value.isValid())
 			return value
 		const token = this.lexer.token
 		let lhs = value.val
@@ -780,9 +760,9 @@ export class Parser
 			if (!match)
 				return Err('UnreachableState')
 			const rhs = valueFn.call(this)
-			if (!isResultDefined(rhs))
+			if (!rhs.isDefined())
 				return Err('OperatorWithNoRHS')
-			if (isResultError(rhs))
+			if (rhs.isErr())
 				return rhs
 			lhs = new nodeType(lhs, op, rhs.val)
 		}
@@ -795,7 +775,7 @@ export class Parser
 	parseShiftExpr(): Result<ASTNode | ASTRel | undefined, ParsingErrors>
 	{
 		const lhs = this.parseAddExpr()
-		if (!isResultValid(lhs))
+		if (!lhs.isValid())
 			return lhs
 		const token = this.lexer.token
 		if (!token.typeIsOneOf(TokenType.shiftOp))
@@ -805,9 +785,9 @@ export class Parser
 		if (!match)
 			return Err('UnreachableState')
 		const rhs = this.parseAddExpr()
-		if (!isResultDefined(rhs))
+		if (!rhs.isDefined())
 			return Err('OperatorWithNoRHS')
-		if (isResultError(rhs))
+		if (rhs.isErr())
 			return rhs
 		const node = new ASTShift(lhs.val, op, rhs.val)
 		node.add(match)
@@ -820,16 +800,16 @@ export class Parser
 	{
 		const lhs = this.parseBitExpr()
 		const token = this.lexer.token
-		if (!isResultValid(lhs) || !token.typeIsOneOf(TokenType.relOp, TokenType.equOp))
+		if (!lhs.isValid() || !token.typeIsOneOf(TokenType.relOp, TokenType.equOp))
 			return lhs
 		const op = token.clone()
 		const match = this.match(TokenType.relOp, TokenType.equOp)
 		if (!match)
 			return Err('UnreachableState')
 		const rhs = this.parseBitExpr()
-		if (!isResultDefined(rhs))
+		if (!rhs.isDefined())
 			return Err('OperatorWithNoRHS')
-		if (isResultError(rhs))
+		if (rhs.isErr())
 			return rhs
 		const node = new ASTRel(lhs.val, op, rhs.val)
 		node.add(match)
@@ -850,9 +830,9 @@ export class Parser
 		if (!match)
 			return Err('UnreachableState')
 		const rhs = this.parseRelExpr()
-		if (!isResultDefined(rhs))
+		if (!rhs.isDefined())
 			return Err('OperatorWithNoRHS')
-		if (isResultError(rhs))
+		if (rhs.isErr())
 			return rhs
 		const node = new ASTBetween(relation, rhsOp, rhs.val)
 		node.add(match)
@@ -862,7 +842,7 @@ export class Parser
 	parseRelation(): Result<ASTNode | undefined, ParsingErrors>
 	{
 		const lhs = this.parseRelExpr()
-		if (!isResultValid(lhs))
+		if (!lhs.isValid())
 			return lhs
 		if (!isNodeRelation(lhs.val))
 			return lhs
@@ -880,7 +860,7 @@ export class Parser
 	parseLogicExpr(): Result<ASTNode | undefined, ParsingErrors>
 	{
 		const relation = this.parseRelation()
-		if (!isResultValid(relation))
+		if (!relation.isValid())
 			return relation
 		const token = this.lexer.token
 		let lhs = relation.val
@@ -891,9 +871,9 @@ export class Parser
 			if (!match)
 				return Err('UnreachableState')
 			const rhs = this.parseRelation()
-			if (!isResultDefined(rhs))
+			if (!rhs.isDefined())
 				return Err('OperatorWithNoRHS')
-			if (isResultError(rhs))
+			if (rhs.isErr())
 				return rhs
 			lhs = new ASTLogic(lhs, op, rhs.val)
 			lhs.add(match)
@@ -910,14 +890,14 @@ export class Parser
 		if (!match)
 			return Err('UnreachableState')
 		const ident = this.parseDottedIdent()
-		if (!isResultDefined(ident))
+		if (!ident.isDefined())
 			return Err('OperatorWithNoRHS')
-		if (isResultError(ident))
+		if (ident.isErr())
 			return ident
 		const call = this.parseFunctionCall(ident.val)
-		if (!isResultDefined(call))
+		if (!call.isDefined())
 			return Err('InvalidTokenSequence')
-		if (isResultError(call))
+		if (call.isErr())
 			return call
 		const node = new ASTNew(token, call.val)
 		node.add(match)
@@ -931,9 +911,9 @@ export class Parser
 		if (!match)
 			return Err('UnreachableState')
 		const ident = this.parseDottedIdent()
-		if (!isResultDefined(ident))
+		if (!ident.isDefined())
 			return Err('OperatorWithNoRHS')
-		if (isResultError(ident))
+		if (ident.isErr())
 			return ident
 		const node = new ASTDelete(token, ident.val)
 		node.add(match)
@@ -943,7 +923,7 @@ export class Parser
 	parseValueExpr(): Result<ASTNode | undefined, ParsingErrors>
 	{
 		const value = this.parseLogicExpr()
-		if (!isResultDefined(value))
+		if (!value.isDefined())
 			return this.parseNewExpr()
 		return value
 	}
@@ -955,9 +935,9 @@ export class Parser
 		if (!match)
 			return Err('UnreachableState')
 		const value = this.parseValueExpr()
-		if (!isResultDefined(value))
+		if (!value.isDefined())
 			return Err('OperatorWithNoRHS')
-		if (isResultError(value))
+		if (value.isErr())
 			return value
 		const node = new ASTReturn(token, value.val)
 		node.add(match)
@@ -981,7 +961,7 @@ export class Parser
 	parseCVSpec(volatileValid = true): Result<ASTStorage | undefined, ParsingErrors>
 	{
 		const spec = this.parseConstSpec()
-		if (!isResultValid(spec) || !volatileValid)
+		if (!spec.isValid() || !volatileValid)
 			return spec
 		const token = this.lexer.token
 		if (!token.typeIsOneOf(TokenType.storageSpec) || !isVolatile(token.value))
@@ -1010,7 +990,7 @@ export class Parser
 			comments = match
 		}
 		const storageSpec = this.parseCVSpec(volatileValid)
-		if (isResultError(storageSpec))
+		if (storageSpec.isErr())
 			return storageSpec
 		const node = storageSpec.val ?? new ASTStorage()
 		node.staticSpec = staticToken
@@ -1039,7 +1019,7 @@ export class Parser
 	{
 		// First try to get any storage specification modifiers
 		const storageSpec = this.parseStorageSpec()
-		if (isResultError(storageSpec))
+		if (storageSpec.isErr())
 			return storageSpec
 		if (locationValid)
 		{
@@ -1048,17 +1028,17 @@ export class Parser
 		// If we didn't error, now try and get a type
 		const typeIdent = this.parseIdent()
 		// If we have storage specifiers and do not have an identifier, that's a failure
-		if (storageSpec.val && !isResultDefined(typeIdent))
+		if (storageSpec.val && !typeIdent.isDefined())
 			return Err('InvalidTokenSequence')
-		if (isResultInvalid(typeIdent) || isResultError(typeIdent))
+		if (typeIdent.isInvalid() || typeIdent.isErr())
 			return typeIdent
 		// This literally only exists to fix TS's type assertions as it can't figure out
 		// that `Ok<ASTIdent>` is the only possible type for typeIdent after the previous if.
-		if (!isResultDefined(typeIdent))
+		if (!typeIdent.isDefined())
 			return Err('UnreachableState')
 		// So far we've parsed `<storageSpec> [<locationSpec>] <type>`, now see if we have a ref or pointer.
 		const symbol = this.parseRefOrPtr(typeIdent.val)
-		if (isResultError(symbol))
+		if (symbol.isErr())
 			return symbol
 		// Finally, if a location spec is not valid (we're parsing a parameter), try to parse
 		// a `...` expression (pack expression) before concluding the type decl
@@ -1085,17 +1065,17 @@ export class Parser
 	parseIdentDef(locationValid = true): Result<IdentDef | undefined, ParsingErrors>
 	{
 		const type = this.parseTypeDecl(locationValid)
-		if (!isResultDefined(type))
+		if (!type.isDefined())
 			return Ok(undefined)
-		if (isResultError(type))
+		if (type.isErr())
 			return type
 		const typeSymbol = type.val.symbol
 		if (!typeSymbol)
 			return Err('UnreachableState')
 		const ident = this.parseIdent()
-		if (!isResultDefined(ident))
+		if (!ident.isDefined())
 			return Err('InvalidTokenSequence')
-		if (isResultError(ident))
+		if (ident.isErr())
 			return ident
 		const symbol = this.symbolTable.add(ident.val.value)
 		if (!symbol)
@@ -1108,12 +1088,12 @@ export class Parser
 	parseTargetIdent(): Result<IdentDef | undefined, ParsingErrors>
 	{
 		const identDef = this.parseIdentDef()
-		if (isResultDefined(identDef))
+		if (identDef.isDefined())
 			return identDef
 		const dottedIdent = this.parseDottedIdent()
-		if (!isResultDefined(dottedIdent))
+		if (!dottedIdent.isDefined())
 			return Ok(undefined)
-		if (isResultError(dottedIdent))
+		if (dottedIdent.isErr())
 			return dottedIdent
 		return Ok({ident: dottedIdent.val})
 	}
@@ -1121,9 +1101,9 @@ export class Parser
 	parseAssignExpr(): Result<ASTNode | undefined, ParsingErrors>
 	{
 		const targetIdent = this.parseTargetIdent()
-		if (!isResultDefined(targetIdent))
+		if (!targetIdent.isDefined())
 			return Ok(undefined)
-		if (isResultError(targetIdent))
+		if (targetIdent.isErr())
 			return targetIdent
 		const {type, ident} = targetIdent.val
 		const token = this.lexer.token
@@ -1154,11 +1134,11 @@ export class Parser
 			if (target.symbol?.isAuto && target.symbol?.isType)
 			{
 				const typeIdent = this.parseIdent()
-				if (!isResultDefined(typeIdent) || isResultError(typeIdent))
+				if (!typeIdent.isDefined() || typeIdent.isErr())
 					return typeIdent
 				// If we got a valid identifier (we're assuming represents a type, for now), try parsing any extra info
 				const symbol = this.parseRefOrPtr(typeIdent.val)
-				if (isResultError(symbol))
+				if (symbol.isErr())
 					return symbol
 				// Check if the identifier is a type ident
 				if (symbol.val?.isType)
@@ -1169,9 +1149,9 @@ export class Parser
 			// Otherwise parse a value expression
 			return this.parseValueExpr()
 		})()
-		if (!isResultDefined(value))
+		if (!value.isDefined())
 			return Err('OperatorWithNoRHS')
-		if (isResultError(value))
+		if (value.isErr())
 			return value
 		// If we're assigning to something of the form `type T = ` (internally translated to type+auto),
 		// ensure the value to assign is a type and copy its type over
@@ -1204,11 +1184,11 @@ export class Parser
 			if (token.typeIsOneOf(TokenType.returnStmt))
 				return this.parseReturnExpr()
 			const expr = this.parseAssignExpr()
-			if (isResultDefined(expr))
+			if (expr.isDefined())
 				return expr
 			return this.parseLogicExpr()
 		})()
-		if (!isResultValid(expr))
+		if (!expr.isValid())
 			return expr
 		const node = expr.val
 		const match = this.match(TokenType.semi)
@@ -1225,7 +1205,7 @@ export class Parser
 			this.match(TokenType.dot, TokenType.ellipsis)
 
 		const libraryName = this.parseDottedIdent()
-		if (!isResultDefined(libraryName))
+		if (!libraryName.isDefined())
 			return Err('MissingIdent')
 		return libraryName
 	}
@@ -1233,9 +1213,9 @@ export class Parser
 	parseImportIdent(): Result<ASTImportIdent, ParsingErrors>
 	{
 		const name = this.parseIdent()
-		if (!isResultDefined(name))
+		if (!name.isDefined())
 			return Err('MissingIdent')
-		if (isResultError(name))
+		if (name.isErr())
 			return name
 
 		const asToken = this.lexer.token.clone()
@@ -1247,9 +1227,9 @@ export class Parser
 			return Err('UnreachableState')
 
 		const alias = this.parseIdent()
-		if (!isResultDefined(alias))
+		if (!alias.isDefined())
 			return Err('MissingIdent')
-		if (isResultError(alias))
+		if (alias.isErr())
 			return alias
 
 		const node = new ASTImportIdent(name.val, asToken, alias.val)
@@ -1266,7 +1246,7 @@ export class Parser
 			return Err('UnreachableState')
 
 		const libraryName = this.parseImportTarget()
-		if (isResultError(libraryName))
+		if (libraryName.isErr())
 			return libraryName
 
 		const importToken = token.clone()
@@ -1282,7 +1262,7 @@ export class Parser
 		while (haveComma)
 		{
 			const ident = this.parseImportIdent()
-			if (isResultError(ident))
+			if (ident.isErr())
 				return ident
 			node.addIdent(ident.val)
 
@@ -1305,12 +1285,12 @@ export class Parser
 		if (!match)
 			return Err('UnreachableState')
 		const cond = this.parseLogicExpr()
-		if (!isResultValid(cond))
+		if (!cond.isValid())
 			return cond as Result<undefined, ParsingErrors>
 		const block = this.parseBlock({allowExtStmt: false})
-		if (!isResultDefined(block))
+		if (!block.isDefined())
 			return Err('MissingBlock')
-		else if (isResultError(block))
+		else if (block.isErr())
 			return block
 		const node = new ASTIfExpr(token, cond.val, block.val)
 		node.add(match)
@@ -1326,12 +1306,12 @@ export class Parser
 		if (!match)
 			return Err('UnreachableState')
 		const cond = this.parseLogicExpr()
-		if (!isResultValid(cond))
+		if (!cond.isValid())
 			return cond as Result<undefined, ParsingErrors>
 		const block = this.parseBlock({allowExtStmt: false})
-		if (!isResultDefined(block))
+		if (!block.isDefined())
 			return Err('MissingBlock')
-		else if (isResultError(block))
+		else if (block.isErr())
 			return block
 		const node = new ASTElifExpr(token, cond.val, block.val)
 		node.add(match)
@@ -1347,9 +1327,9 @@ export class Parser
 		if (!match)
 			return Err('UnreachableState')
 		const block = this.parseBlock({allowExtStmt: false})
-		if (!isResultDefined(block))
+		if (!block.isDefined())
 			return Err('MissingBlock')
-		else if (isResultError(block))
+		else if (block.isErr())
 			return block
 		const node = new ASTElseExpr(token, block.val)
 		node.add(match)
@@ -1359,19 +1339,19 @@ export class Parser
 	parseIfStmt(): Result<ASTNode, ParsingErrors>
 	{
 		const ifExpr = this.parseIfExpr()
-		if (!isResultDefined(ifExpr))
+		if (!ifExpr.isDefined())
 			return Err('InvalidTokenSequence')
-		if (isResultError(ifExpr))
+		if (ifExpr.isErr())
 			return ifExpr
 		const elifExprs: ASTElifExpr[] = []
-		for (let elifExpr = this.parseElifExpr(); isResultDefined(elifExpr); elifExpr = this.parseElifExpr())
+		for (let elifExpr = this.parseElifExpr(); elifExpr.isDefined(); elifExpr = this.parseElifExpr())
 		{
-			if (isResultError(elifExpr))
+			if (elifExpr.isErr())
 				return elifExpr
 			elifExprs.push(elifExpr.val)
 		}
 		const elseExpr = this.parseElseExpr()
-		if (isResultError(elseExpr))
+		if (elseExpr.isErr())
 			return elseExpr
 		return Ok(new ASTIfStmt(ifExpr.val, elifExprs, elseExpr.val))
 	}
@@ -1388,16 +1368,16 @@ export class Parser
 			return Err('MissingParams')
 
 		const typeIdent = this.parseCVType()
-		if (!isResultDefined(typeIdent))
+		if (!typeIdent.isDefined())
 			return Err('MissingType')
-		if (isResultError(typeIdent))
+		if (typeIdent.isErr())
 			return typeIdent
 
 		// We've now got a type, so parse an identifier for the type.
 		const value = this.parseIdent()
-		if (!isResultDefined(value))
+		if (!value.isDefined())
 			return Err('MissingIdent')
-		if (isResultError(value))
+		if (value.isErr())
 			return value
 
 		const typeSymbol = typeIdent.val.symbol
@@ -1419,9 +1399,9 @@ export class Parser
 			return Err('InvalidTokenSequence')
 
 		const container = this.parseValue()
-		if (!isResultDefined(container))
+		if (!container.isDefined())
 			return Err('MissingValue')
-		if (isResultError(container))
+		if (container.isErr())
 			return container
 
 		// We've now matched the control block, so match the closing `)` that's required.
@@ -1431,9 +1411,9 @@ export class Parser
 
 		// Now match the loop body
 		const block = this.parseBlock({allowExtStmt: false})
-		if (!isResultDefined(block))
+		if (!block.isDefined())
 			return Err('MissingBlock')
-		else if (isResultError(block))
+		else if (block.isErr())
 			return block
 
 		const node = new ASTForStmt(forToken, container.val, block.val)
@@ -1452,15 +1432,15 @@ export class Parser
 			return Err('UnreachableState')
 		// We have now matched a `while` token, look for the condition expression that must follow
 		const cond = this.parseLogicExpr()
-		if (!isResultDefined(cond))
+		if (!cond.isDefined())
 			return Err('MissingCond')
-		if (isResultError(cond))
+		if (cond.isErr())
 			return cond
 		// Now parse the body of the loop
 		const block = this.parseBlock({allowExtStmt: false})
-		if (!isResultDefined(block))
+		if (!block.isDefined())
 			return Err('MissingBlock')
-		else if (isResultError(block))
+		else if (block.isErr())
 			return block
 		// And create a suitable AST node from the results
 		const node = new ASTWhileStmt(whileToken, cond.val, block.val)
@@ -1480,7 +1460,7 @@ export class Parser
 		while (!token.typeIsOneOf(TokenType.rightParen))
 		{
 			const type = this.parseTypeDecl(false)
-			if (!isResultValid(type))
+			if (!type.isValid())
 				// Assertion required because tsc can't work out that undefined isn't in the valid set after this.
 				return type as Result<undefined, ParsingErrors>
 			const typeSymbol = type.val.symbol
@@ -1489,9 +1469,9 @@ export class Parser
 			if (token.typeIsOneOf(TokenType.ident))
 			{
 				const ident = this.parseIdent()
-				if (!isResultDefined(ident))
+				if (!ident.isDefined())
 					return Err('UnreachableState')
-				if (isResultError(ident))
+				if (ident.isErr())
 					return ident
 				// Construct a suitable type for this parameter
 				const symbol = this.symbolTable.add(ident.val.value)
@@ -1542,18 +1522,18 @@ export class Parser
 	{
 		// First try to get any storage specification modifiers
 		const storageSpec = this.parseCVSpec()
-		if (isResultError(storageSpec))
+		if (storageSpec.isErr())
 			return storageSpec
 		// If we didn't error, now try and get a type
 		const typeIdent = this.parseIdent()
 		// If we do not have an identifier, that's a failure
-		if (!isResultDefined(typeIdent))
+		if (!typeIdent.isDefined())
 			return Err('MissingType')
-		if (isResultError(typeIdent))
+		if (typeIdent.isErr())
 			return typeIdent
 		// So far we've parsed `<cvSpec> <type>`, now see if we have a ref or pointer.
 		const symbol = this.parseRefOrPtr(typeIdent.val)
-		if (isResultError(symbol))
+		if (symbol.isErr())
 			return symbol
 		// Check if the identifier is a type ident
 		if (symbol.val?.isType)
@@ -1572,7 +1552,7 @@ export class Parser
 	parseReturnType(): Result<ASTReturnType, ParsingErrors>
 	{
 		const functionTypeSpec = this.parseStorageSpec(false)
-		if (isResultError(functionTypeSpec))
+		if (functionTypeSpec.isErr())
 			return functionTypeSpec
 		const token = this.lexer.token
 		if (!token.typeIsOneOf(TokenType.arrow))
@@ -1582,9 +1562,9 @@ export class Parser
 		if (!match)
 			return Err('UnreachableState')
 		const returnType = this.parseReturnTypeDecl()
-		if (!isResultDefined(returnType))
+		if (!returnType.isDefined())
 			return Err('MissingReturnType')
-		if (isResultError(returnType))
+		if (returnType.isErr())
 			return returnType
 		const node = new ASTReturnType(arrow, functionTypeSpec.val, returnType.val)
 		node.add(match)
@@ -1594,9 +1574,9 @@ export class Parser
 	parseTmplTypeParam(): Result<ASTIdentDef, ParsingErrors>
 	{
 		const identDef = this.parseIdentDef(false)
-		if (!isResultDefined(identDef))
+		if (!identDef.isDefined())
 			return Err('UnreachableState')
-		if (isResultError(identDef))
+		if (identDef.isErr())
 			return identDef
 		// XXX: Need to handle assignment still
 		const {type, ident} = identDef.val
@@ -1608,9 +1588,9 @@ export class Parser
 	parseTmplValueParam(): Result<ASTIdentDef, ParsingErrors>
 	{
 		const identDef = this.parseIdentDef(false)
-		if (isResultError(identDef))
+		if (identDef.isErr())
 			return identDef
-		if (!isResultValid(identDef))
+		if (!identDef.isValid())
 			return Err('InvalidTokenSequence')
 		// XXX: Need to handle assignment still
 		const {type, ident} = identDef.val
@@ -1650,7 +1630,7 @@ export class Parser
 		while (!endTmplToken(token))
 		{
 			const parameter = this.parseTmplParam()
-			if (!isResultValid(parameter))
+			if (!parameter.isValid())
 				return parameter
 			node.addParameter(parameter.val)
 
@@ -1697,9 +1677,9 @@ export class Parser
 		if (!match)
 			return Err('UnreachableState')
 		const ident = this.parseIdent()
-		if (!isResultDefined(ident))
+		if (!ident.isDefined())
 			return Err('InvalidTokenSequence')
-		if (isResultError(ident))
+		if (ident.isErr())
 			return ident
 		const className = ident.val
 		if (className.symbol)
@@ -1711,13 +1691,13 @@ export class Parser
 		const templateParams = this.parseTmplDef()
 		const result = ((): Result<ASTNode, ParsingErrors> =>
 		{
-			if (isResultError(templateParams))
+			if (templateParams.isErr())
 				return templateParams
 
 			const block = this.parseBlock({allowExtStmt: true})
-			if (!isResultDefined(block))
+			if (!block.isDefined())
 				return Err('MissingBlock')
-			if (isResultError(block))
+			if (block.isErr())
 				return block
 
 			// If we are in a template context, pop the template symbol table too.
@@ -1728,7 +1708,7 @@ export class Parser
 			node.add(match)
 			return Ok(node)
 		})()
-		if (templateParams.val && !isResultValid(result))
+		if (templateParams.val && !result.isValid())
 			this.symbolTable.pop(this)
 		return result
 	}
@@ -1741,9 +1721,9 @@ export class Parser
 			return Err('UnreachableState')
 
 		const ident = this.parseIdent()
-		if (!isResultDefined(ident))
+		if (!ident.isDefined())
 			return Err('InvalidTokenSequence')
-		if (isResultError(ident))
+		if (ident.isErr())
 			return ident
 
 		const functionName = ident.val
@@ -1756,25 +1736,25 @@ export class Parser
 		const templateParams = this.parseTmplDef()
 		const result = ((): Result<ASTNode, ParsingErrors> =>
 		{
-			if (isResultError(templateParams))
+			if (templateParams.isErr())
 				return templateParams
 
 			const params = this.parseParams()
-			if (!isResultDefined(params))
+			if (!params.isDefined())
 				return Err('InvalidTokenSequence')
-			if (isResultError(params))
+			if (params.isErr())
 				return params
 
 			const returnType = this.parseReturnType()
-			if (!isResultDefined(returnType))
+			if (!returnType.isDefined())
 				return Err('MissingReturnType')
-			if (isResultError(returnType))
+			if (returnType.isErr())
 				return returnType
 
 			const block = this.parseBlock({allowExtStmt: false})
-			if (!isResultDefined(block))
+			if (!block.isDefined())
 				return Err('MissingBlock')
-			if (isResultError(block))
+			if (block.isErr())
 				return block
 
 			// If we are in a template context, pop the template symbol table too.
@@ -1787,7 +1767,7 @@ export class Parser
 			node.add(match)
 			return Ok(node)
 		})()
-		if (templateParams.val && !isResultValid(result))
+		if (templateParams.val && !result.isValid())
 			this.symbolTable.pop(this)
 		return result
 	}
@@ -1800,9 +1780,9 @@ export class Parser
 			// Try and parse the identifier
 			const typeIdent = this.parseIdent()
 			// Make sure the result is defined and not an error
-			if (!isResultDefined(typeIdent))
+			if (!typeIdent.isDefined())
 				return Err('InvalidTokenSequence')
-			if (isResultError(typeIdent))
+			if (typeIdent.isErr())
 				return typeIdent
 			// Extract the identifier's symbol
 			const symbol = typeIdent.val.symbol
@@ -1830,25 +1810,25 @@ export class Parser
 			return Err('UnreachableState')
 
 		const operator = this.parseOperator()
-		if (isResultError(operator))
+		if (operator.isErr())
 			return operator
 
 		const params = this.parseParams()
-		if (!isResultDefined(params))
+		if (!params.isDefined())
 			return Err('InvalidTokenSequence')
-		if (isResultError(params))
+		if (params.isErr())
 			return params
 
 		const returnType = this.parseReturnType()
-		if (!isResultDefined(returnType))
+		if (!returnType.isDefined())
 			return Err('MissingReturnType')
-		if (isResultError(returnType))
+		if (returnType.isErr())
 			return returnType
 
 		const block = this.parseBlock({allowExtStmt: false})
-		if (!isResultDefined(block))
+		if (!block.isDefined())
 			return Err('MissingBlock')
-		if (isResultError(block))
+		if (block.isErr())
 			return block
 
 		const node = new ASTOperator(operatorToken, operator.val, params.val, returnType.val, block.val)
@@ -1883,7 +1863,7 @@ export class Parser
 			return this.parseWhileStmt()
 
 		const stmt = this.parseDefine()
-		if (isResultInvalid(stmt))
+		if (stmt.isInvalid())
 			return this.parseExpression()
 		return stmt
 	}
@@ -1960,18 +1940,18 @@ export class Parser
 		while (!token.typeIsOneOf(TokenType.eof))
 		{
 			const stmt = this.parseStatement({allowExtStmt: true})
-			if (!isResultValid(stmt) && this.haveIdent)
+			if (!stmt.isValid() && this.haveIdent)
 			{
 				const ident = this.ident as ASTIdent
 				console.error(`Spurious left-over ident: ${ident}`)
 				nodes.push(ident)
 			}
-			if (!isResultDefined(stmt))
+			if (!stmt.isDefined())
 			{
 				this.lexer.next()
 				continue
 			}
-			if (isResultValid(stmt))
+			if (stmt.isValid())
 				nodes.push(stmt.val)
 			else
 			{
