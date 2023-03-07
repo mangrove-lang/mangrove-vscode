@@ -560,7 +560,11 @@ export class Parser
 					return func
 				}
 
-				this.lexer.update(lexer)
+				if (isResultValid(templateArgs))
+					ident.val.addTemplateArgs(templateArgs.val)
+				else
+					// Not a valid template, reset the lexer
+					this.lexer.update(lexer)
 			}
 			else if (token.typeIsOneOf(TokenType.leftSquare))
 				return this.parseIndex(ident.val)
