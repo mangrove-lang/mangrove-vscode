@@ -1,3 +1,5 @@
+import {Diagnostic} from 'vscode-languageserver-types'
+
 export enum SemanticTokenTypes
 {
 	type = 0,
@@ -29,4 +31,5 @@ export interface GetSemanticTokensResult
 {
 	canceled: boolean
 	tokens: SemanticToken[]
+	diagnostics: Diagnostic[]
 }
