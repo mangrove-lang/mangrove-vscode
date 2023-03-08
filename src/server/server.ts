@@ -40,7 +40,15 @@ export function getDocumentFor(uri: DocumentUri)
 	return documents.get(uri)
 }
 
-connection.onRequest(getSemanticTokensRequest, handleSemanticTokensRequest)
+connection.onRequest(getSemanticTokensRequest, (params, token) =>
+{
+	const tokens = handleSemanticTokensRequest(params, token)
+	connection.sendDiagnostics({
+		uri: params.textDocument.uri,
+		diagnostics: tokens.diagnostics,
+	})
+	return tokens
+})
 
 documents.listen(connection)
 connection.listen()
