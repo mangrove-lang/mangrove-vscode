@@ -126,6 +126,7 @@ export class Parser
 	private get haveIdent() { return !!this._ident }
 	get symbolTable() { return this._symbolTable }
 	set symbolTable(table: SymbolTable) { this._symbolTable = table }
+	get syntaxErrors() { return this._syntaxErrors }
 
 	match(...tokenTypes: TokenType[])
 	{

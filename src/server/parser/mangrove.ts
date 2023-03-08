@@ -10,7 +10,7 @@ export function tokenise(document: TextDocument)
 		tokens.push(...node.semanticTokens())
 	console.log(`Semantic token generation for ${document.uri} complete.`)
 	console.log('-----------------------------')
-	return tokens
+	return {tokens, errors: parser.syntaxErrors}
 }
 
 // export function parse(_document: TextDocument)

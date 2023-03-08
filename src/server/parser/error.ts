@@ -1,3 +1,4 @@
+import {Diagnostic, DiagnosticSeverity} from 'vscode-languageserver-types'
 import {Token} from './types'
 
 export type ParsingErrors = 'UnreachableState' | 'IncorrectToken' | 'OperatorWithNoRHS' | 'InvalidTokenSequence' |
@@ -42,6 +43,15 @@ export class SyntaxError
 
 	get token() { return this._errorToken }
 	get reason() { return this._reason ?? '' }
+
+	toDiagnostic(): Diagnostic
+	{
+		return {
+			range: this._errorToken.location,
+			message: this._reason ?? this.kind,
+			severity: DiagnosticSeverity.Error,
+		}
+	}
 
 	toString()
 	{
