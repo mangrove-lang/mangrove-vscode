@@ -203,7 +203,7 @@ export class Tokeniser
 			this.readCharToken()
 			break
 		case '~':
-			this._token.set(TokenType.invert)
+			this._token.set(TokenType.invert, '~')
 			break
 		case '/':
 			this.readDivToken()
@@ -454,12 +454,19 @@ export class Tokeniser
 				break
 			case 'u':
 			case 'U':
+			{
+				// `readHexToken` sets token type to `hexLit` so we need to change it back to original type
+				const type = this._token.type
 				this.readHexToken()
+				this._token.set(type, this._token.value)
 				return String.fromCodePoint(Number.parseInt(this._token.value, 16))
+			}
 			default:
+				// If character is not a special escaped character, it's an invalid type
+				// so we can just set the result to empty end let the caller functions to handle it
+				result = ''
 				// TODO: return Result
 				console.warn(`Unknown unicode character: ${this.currentChar}`)
-				return ''
 			}
 			if (this.currentChar === esc)
 			{
@@ -467,7 +474,8 @@ export class Tokeniser
 				return esc
 			}
 		}
-		if (!this.eof)
+		// in case of empty character, don't skip the closing ' character
+		if (!this.eof && this.currentChar !== esc)
 			this.nextChar()
 		return result
 	}
