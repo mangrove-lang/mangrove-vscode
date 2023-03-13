@@ -61,3 +61,27 @@ jobs:
 
       - name: Compile project
         run: npm run compile
+
+  test:
+    name: 'test ${{ matrix.os.id }} (node: ${{ matrix.node-version }})'
+    runs-on: ${{ matrix.os.id }}
+    strategy:
+      matrix:
+        os:
+          - { id: ubuntu-22.04, name: jammy }
+        # 12 is what debian stable uses, 18 latest lts and 19 is latest release
+        node-version: [12, 18, 19]
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+      - name: Setup node
+        uses: actions/setup-node@v3
+        with:
+          node-version: ${{ matrix.node-version }}
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Test project
+        run: npm test
