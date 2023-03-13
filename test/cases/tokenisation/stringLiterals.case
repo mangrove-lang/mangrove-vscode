@@ -1,0 +1,24 @@
+""
+"The quick brown fox jumped over the lazy dog"
+"\ufffd"
+"\U26CF"
+"\U1f96d\u1f496"
+"🎉 unicode literals 🎊"
+''
+'\u1f351'
+'⛏'
+"'"
+"\""
+'\''
+'"'
+'\\'
+'\r'
+'\n'
+'\b'
+'\v'
+'\t'
+'\a'
+'\f'
+"\'"
+'\"'
+'\/'
