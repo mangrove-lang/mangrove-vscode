@@ -35,6 +35,7 @@
 		"vscode:prepublish": "npm run lint && npm run compile",
 		"compile": "tsc -b",
 		"watch": "tsc -b -w",
+		"test": "jest",
 		"lint": "eslint --ext ts src",
 		"prettier": "prettier \"**/*.ts\"",
 		"installDevExtension": "npm install && ./node_modules/.bin/vsce package -o ./build/mangrove-vscode-dev.vsix && code --install-extension ./build/mangrove-vscode-dev.vsix"
@@ -47,6 +48,7 @@
 		"vscode-languageserver-textdocument": "^1.0.7"
 	},
 	"devDependencies": {
+		"@types/jest": "^28.1.3",
 		"@types/node": "^18.7.16",
 		"@types/vscode": "^1.52.0",
 		"@typescript-eslint/eslint-plugin": "^5.36.2",
@@ -54,6 +56,7 @@
 		"eslint": "^8.23.0",
 		"jest": "^28.1.3",
 		"prettier": "^2.7.1",
+		"ts-jest": "^28.0.8",
 		"typescript": "^4.8.3",
 		"vsce": "^1.103.0"
 	},
