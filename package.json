@@ -67,7 +67,11 @@
 				"extensions": [
 					".grove"
 				],
-				"configuration": "./language-configuration.json"
+				"configuration": "./language-configuration.json",
+				"icon": {
+					"dark": "mangrove_icon.svg",
+					"light": "mangrove_icon.svg"
+				}
 			}
 		],
 		"snippets": [
