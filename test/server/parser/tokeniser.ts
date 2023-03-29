@@ -3,6 +3,7 @@ import {readFileSync} from 'fs'
 import {TextDocument} from 'vscode-languageserver-textdocument'
 import {Tokeniser} from '../../../src/server/parser/tokeniser'
 import {TokenType} from '../../../src/server/parser/types'
+import {expect, test} from '@jest/globals'
 
 function tokeniserFor(file: string): Tokeniser
 {
