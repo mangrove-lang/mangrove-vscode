@@ -1,0 +1,4 @@
+function compare(const Int32 a, const Int32 b) -> Bool
+{
+	return a > b
+}

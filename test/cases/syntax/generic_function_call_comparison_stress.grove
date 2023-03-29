@@ -1,0 +1,11 @@
+class Foo {
+	function stress() -> Bool
+	{
+		if bar.inbar<foo<zar(), duck.pond[1]>()>() < bar<foo<zar(), duck[2]>()>()
+		{
+			return false
+		}
+
+		return true
+	}
+}

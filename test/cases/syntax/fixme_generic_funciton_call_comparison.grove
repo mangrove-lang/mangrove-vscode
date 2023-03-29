@@ -1,0 +1,9 @@
+class Foo
+{
+	function stress() -> Bool
+	{
+		if foo.bar<zar(), bar<zar(), tar[1]>>() < foo.bar<foo>
+		{
+			return false
+		}
+}

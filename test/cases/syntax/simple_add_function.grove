@@ -1,0 +1,4 @@
+function add(const Int32 a, const Int32 b) -> Int32
+{
+	return a + b
+}

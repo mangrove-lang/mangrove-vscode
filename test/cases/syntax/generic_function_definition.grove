@@ -1,0 +1,1 @@
+function trace<type... T>(T... values) const -> none { }

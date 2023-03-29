@@ -1,0 +1,5 @@
+function write<type T, type... U>(ConsoleStream &stream, T value, U... values) const -> none
+{
+    stream.write(value)
+	write(stream, values...)
+}

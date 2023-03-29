@@ -1,0 +1,7 @@
+function simple() -> Bool
+{
+	if foo.bar<zar>() < foo.bar<foo>()
+		return false
+
+	return true
+}

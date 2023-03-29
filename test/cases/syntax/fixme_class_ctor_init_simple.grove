@@ -1,0 +1,8 @@
+class Console
+{
+	ConsoleStream outputStream
+	ConsoleStream errorStream
+
+public
+	function ctor() -> none : outputStream(stdout), errorStream(stderr) { }
+}

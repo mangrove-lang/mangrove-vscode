@@ -1,0 +1,2 @@
+function returnShow(const Bool show) -> Bool { return show }
+function returnShow2(const Bool show) -> Bool { return show }
