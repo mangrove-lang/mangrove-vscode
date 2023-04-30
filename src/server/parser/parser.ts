@@ -94,7 +94,7 @@ function isNodeRelation(node: ASTNode | ASTRel): node is ASTRel
 
 type IdentAndComments = {token: Token, comments: ASTNode[]}
 type IdentDef = {type?: ASTIdent, ident: ASTIdent}
-type BlockConfig = {allowExtStmt: boolean}
+type BlockConfig = {allowExtStmt: boolean, isEnum: boolean}
 
 export class Parser
 {
@@ -1288,7 +1288,7 @@ export class Parser
 		const cond = this.parseLogicExpr()
 		if (!cond.isValid())
 			return cond as Result<undefined, ParsingErrors>
-		const block = this.parseBlock({allowExtStmt: false})
+		const block = this.parseBlock({allowExtStmt: false, isEnum: false})
 		if (!block.isDefined())
 			return Err('MissingBlock')
 		else if (block.isErr())
@@ -1309,7 +1309,7 @@ export class Parser
 		const cond = this.parseLogicExpr()
 		if (!cond.isValid())
 			return cond as Result<undefined, ParsingErrors>
-		const block = this.parseBlock({allowExtStmt: false})
+		const block = this.parseBlock({allowExtStmt: false, isEnum: false})
 		if (!block.isDefined())
 			return Err('MissingBlock')
 		else if (block.isErr())
@@ -1327,7 +1327,7 @@ export class Parser
 		const match = this.match(TokenType.elseStmt)
 		if (!match)
 			return Err('UnreachableState')
-		const block = this.parseBlock({allowExtStmt: false})
+		const block = this.parseBlock({allowExtStmt: false, isEnum: false})
 		if (!block.isDefined())
 			return Err('MissingBlock')
 		else if (block.isErr())
@@ -1411,7 +1411,7 @@ export class Parser
 			return Err('MissingRightBracket')
 
 		// Now match the loop body
-		const block = this.parseBlock({allowExtStmt: false})
+		const block = this.parseBlock({allowExtStmt: false, isEnum: false})
 		if (!block.isDefined())
 			return Err('MissingBlock')
 		else if (block.isErr())
@@ -1438,7 +1438,7 @@ export class Parser
 		if (cond.isErr())
 			return cond
 		// Now parse the body of the loop
-		const block = this.parseBlock({allowExtStmt: false})
+		const block = this.parseBlock({allowExtStmt: false, isEnum: false})
 		if (!block.isDefined())
 			return Err('MissingBlock')
 		else if (block.isErr())
@@ -1695,7 +1695,7 @@ export class Parser
 			if (templateParams.isErr())
 				return templateParams
 
-			const block = this.parseBlock({allowExtStmt: true})
+			const block = this.parseBlock({allowExtStmt: true, isEnum: false})
 			if (!block.isDefined())
 				return Err('MissingBlock')
 			if (block.isErr())
@@ -1752,7 +1752,7 @@ export class Parser
 			if (returnType.isErr())
 				return returnType
 
-			const block = this.parseBlock({allowExtStmt: false})
+			const block = this.parseBlock({allowExtStmt: false, isEnum: false})
 			if (!block.isDefined())
 				return Err('MissingBlock')
 			if (block.isErr())
@@ -1826,7 +1826,7 @@ export class Parser
 		if (returnType.isErr())
 			return returnType
 
-		const block = this.parseBlock({allowExtStmt: false})
+		const block = this.parseBlock({allowExtStmt: false, isEnum: false})
 		if (!block.isDefined())
 			return Err('MissingBlock')
 		if (block.isErr())
@@ -1940,7 +1940,7 @@ export class Parser
 		const nodes = this.skipWhite()
 		while (!token.typeIsOneOf(TokenType.eof))
 		{
-			const stmt = this.parseStatement({allowExtStmt: true})
+			const stmt = this.parseStatement({allowExtStmt: true, isEnum: false})
 			if (!stmt.isValid() && this.haveIdent)
 			{
 				const ident = this.ident as ASTIdent
