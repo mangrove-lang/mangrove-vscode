@@ -451,6 +451,82 @@ export class ASTFunction extends ASTNodeData implements ASTNode
 	}
 }
 
+export class ASTEnumMember extends ASTNodeData implements ASTNode
+{
+	private _name: ASTIdent
+	private _value: ASTNode | undefined
+
+	constructor(enumMemberToken: Token, name: ASTIdent, value?: ASTNode)
+	{
+		super(enumMemberToken)
+		this._name = name
+		this._value = value
+	}
+
+	get semanticType() { return SemanticTokenTypes.type }
+	get name() { return this._name }
+	get value() { return this._value }
+	get type() { return ASTType.enumDef }
+
+	toString()
+	{
+		return `<EnumMember '${this.name.fullName}'>`
+	}
+
+	get valid()
+	{
+		return this.token.valid &&
+			this.name.valid
+	}
+
+	*semanticTokens(): Generator<SemanticToken, void, undefined>
+	{
+		yield* generateSemanticTokens(this)
+		yield this.buildSemanticToken(SemanticTokenTypes.type, this._name.token)
+		if (this._value)
+			yield this.buildSemanticToken(SemanticTokenTypes.type, this._value.token)
+	}
+}
+
+export class ASTEnum extends ASTNodeData implements ASTNode
+{
+	private _name: ASTIdent
+	private _members: ASTEnumMember[]
+
+	constructor(enumToken: Token, name: ASTIdent, values: ASTEnumMember[])
+	{
+		super(enumToken)
+		this._name = name
+		this._members = values
+	}
+
+	get semanticType() { return SemanticTokenTypes.keyword }
+	get name() { return this._name.fullName }
+	get members() { return this._members }
+	get type() { return ASTType.enumDef }
+
+	toString()
+	{
+		return `<Enum: '${this.name}' Members: '${this.members.length}'>`
+	}
+
+	get valid()
+	{
+		const membersValid = this.members.every(member => member.valid)
+		return this.token.valid &&
+			this._name.valid &&
+			membersValid
+	}
+
+	*semanticTokens(): Generator<SemanticToken, void, undefined>
+	{
+		yield* generateSemanticTokens(this)
+		for (const value of this.members)
+			yield* value.semanticTokens()
+		yield this.buildSemanticToken(SemanticTokenTypes.type, this._name.token)
+	}
+}
+
 export class ASTOperator extends ASTNodeData implements ASTNode
 {
 	private _operator: Token | ASTIdent
