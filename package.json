@@ -30,7 +30,7 @@
 	"activationEvents": [
 		"onLanguage:mangrove"
 	],
-	"main": "./build/client/extension.js",
+	"main": "./build/src/client/extension.js",
 	"scripts": {
 		"vscode:prepublish": "npm run lint && npm run compile",
 		"compile": "tsc -b",

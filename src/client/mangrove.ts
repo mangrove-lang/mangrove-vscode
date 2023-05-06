@@ -25,7 +25,7 @@ export async function createLanguageClient(folder: WorkspaceFolder): Promise<Lan
 		workspaceFolder: folder,
 	}
 
-	const languageServer = extensionContext.asAbsolutePath(path.join('build', 'server', 'server.js'))
+	const languageServer = extensionContext.asAbsolutePath(path.join('build', 'src', 'server', 'server.js'))
 
 	const serverOptions: ServerOptions =
 	{
