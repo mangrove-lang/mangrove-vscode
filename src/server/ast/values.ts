@@ -51,6 +51,7 @@ export class ASTIdent extends ASTNodeData implements ASTValue
 			yield* child.semanticTokens()
 	}
 
+	get templateArgs() { return this._templateArgs }
 	get symbol() { return this._symbol }
 	set symbol(symbol: MangroveSymbol | undefined)
 	{
@@ -92,6 +93,8 @@ export class ASTDottedIdent extends ASTIdent
 	}
 
 	get type() { return ASTType.dottedIdent }
+	get idents() { return this._idents }
+	get symbolSeq() { return this._symbolSeq }
 	get fullName() { return this._idents.map(ident => ident.value).join('.') }
 	toString() { return `<DottedIdent '${this.fullName}'>` }
 
@@ -210,12 +213,13 @@ export class ASTIndex extends ASTNodeData implements ASTNode
 	private _target: ASTIdent
 	private _index: ASTNode
 
-	constructor(target: ASTIdent)
+	constructor(target: ASTIdent, index?: ASTNode)
 	{
 		super(target.token)
 		this._target = target
 		// This temporarily creates a fake invalid token which we swiftly override in parseIndex()
-		this._index = new ASTInvalid(new Token())
+		// unless constructed with an existing index value node
+		this._index = index ?? new ASTInvalid(new Token())
 	}
 
 	get type() { return ASTType.index }
@@ -298,6 +302,13 @@ export class ASTCallArguments extends ASTNodeData implements ASTNode
 export class ASTTemplateArguments extends ASTNodeData implements ASTNode
 {
 	private _arguments: ASTNode[] = []
+
+	constructor(token: Token, args?: ASTNode[])
+	{
+		super(token)
+		if (args)
+			this._arguments = args
+	}
 
 	get type() { return ASTType.templateArguments }
 	get valid() { return this.arguments.every(arg => arg.valid) }

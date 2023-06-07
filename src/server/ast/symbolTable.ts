@@ -125,17 +125,19 @@ export class MangroveSymbol
 
 export class SymbolTable
 {
-	private parentTable?: SymbolTable
-	private table: Map<string, MangroveSymbol> = new Map()
+	private _parentTable?: SymbolTable
+	private _table: Map<string, MangroveSymbol> = new Map()
 
 	constructor(parser: Parser)
 	{
-		this.parentTable = parser.symbolTable
+		this._parentTable = parser.symbolTable
 		parser.symbolTable = this
 	}
 
 	get empty() { return this.table.size === 0 }
 	get entryCount() { return this.table.size }
+	get table() { return this._table }
+	get parentTable() { return this._parentTable }
 
 	add(ident: string)
 	{

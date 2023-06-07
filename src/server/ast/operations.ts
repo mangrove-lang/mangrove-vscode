@@ -9,18 +9,22 @@ export class ASTFunctionCall extends ASTNodeData implements ASTNode
 	private _args: ASTCallArguments
 	private _templateArgs?: ASTTemplateArguments
 
-	constructor(func: ASTIdent, args: ASTCallArguments)
+	constructor(func: ASTIdent, args: ASTCallArguments, templateArgs?: ASTTemplateArguments)
 	{
 		super(func.token)
 		this._token = func.token
 		this._functionName = func
 		this._args = args
+		this._templateArgs = templateArgs
 	}
 
 	get type() { return ASTType.functionCall }
 	get valid() { return this._functionName.valid && this._args.valid && (this._templateArgs?.valid ?? true) }
 	get semanticType() { return SemanticTokenTypes.function }
 	get functionName() { return this._functionName.fullName }
+	get functionNameIdent() { return this._functionName }
+	get args() { return this._args }
+	get templateArgs() { return this._templateArgs }
 	toString() { return `<FunctionCall: '${this.functionName}'>` }
 	addTemplateArgs(args: ASTTemplateArguments) { this._templateArgs = args }
 
@@ -33,7 +37,11 @@ export class ASTFunctionCall extends ASTNodeData implements ASTNode
 	}
 }
 
-class ASTUnaryOp extends ASTNodeData implements ASTNode
+/**
+ * ASTUnaryOp is internal implementation detail and be should not used outside of this file.
+ * ASTUnaryOp is only exported since we need to access it in tests.
+ */
+export class ASTUnaryOp extends ASTNodeData implements ASTNode
 {
 	private _value: ASTNode
 
@@ -60,7 +68,11 @@ class ASTUnaryOp extends ASTNodeData implements ASTNode
 	}
 }
 
-class ASTBinaryOp extends ASTNodeData implements ASTNode
+/**
+ * ASTBinaryOp is internal implementation detail and should not be used outside of this file.
+ * ASTBinaryOp is only exported since we need to access it in tests.
+ */
+export class ASTBinaryOp extends ASTNodeData implements ASTNode
 {
 	private _lhs: ASTNode
 	private _rhs: ASTNode
@@ -176,6 +188,11 @@ export class ASTBetween extends ASTNodeData implements ASTNode
 	}
 
 	get type() { return ASTType.between }
+	get lhs() { return this._lhs }
+	get lop() { return this._lop }
+	get value() { return this._value }
+	get rop() { return this._rop }
+	get rhs() { return this._rhs }
 	get valid() { return this._lhs.valid && this._value.valid && this._rhs.valid }
 	get semanticType() { return SemanticTokenTypes.operator }
 	toString() { return `<Between op: '${this._lop.value} ${this.token.value} ${this._rop.value}'>` }
@@ -214,7 +231,8 @@ export class ASTAssign extends ASTNodeData implements ASTNode
 	get valid() { return this._token.valid && this.ident.valid && this._value.valid }
 	get semanticType() { return SemanticTokenTypes.operator }
 	get ident() { return this._ident }
-	toString() { return `<Assignment ${this.token.value} op: '${this.ident.fullName}>` }
+	get value() { return this._value }
+	toString() { return `<Assignment ${this.token.value} op: '${this.ident.fullName}'>` }
 
 	*semanticTokens(): Generator<SemanticToken, void, undefined>
 	{

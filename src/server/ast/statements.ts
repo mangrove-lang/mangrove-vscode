@@ -18,6 +18,7 @@ export class ASTNew extends ASTNodeData implements ASTNode
 	}
 
 	get type() { return ASTType.newExpr }
+	get ctorCall() { return this._ctorCall }
 	get valid() { return this.token.valid && this._ctorCall.valid }
 	get semanticType() { return SemanticTokenTypes.keyword }
 	toString() { return `<New '${this._ctorCall.functionName}'>` }
@@ -39,6 +40,7 @@ export class ASTDelete extends ASTNodeData implements ASTNode
 	}
 
 	get type() { return ASTType.deleteExpr }
+	get ident() { return this._ident }
 	get valid() { return this.token.valid && this._ident.valid }
 	get semanticType() { return SemanticTokenTypes.keyword }
 	toString() { return `<Delete: '${this._ident.fullName}'>` }
@@ -60,6 +62,7 @@ export class ASTReturn extends ASTNodeData implements ASTNode
 	}
 
 	get type() { return ASTType.returnStmt }
+	get expr() { return this._expr }
 	get valid() { return this.token.valid && this._expr.valid }
 	get semanticType() { return SemanticTokenTypes.keyword }
 	toString() { return '<Return statement>' }
@@ -86,6 +89,7 @@ export class ASTImportIdent extends ASTNodeData implements ASTNode
 	get valid() { return this._name.valid && (!this.token.valid || (this.alias?.valid ?? false)) }
 	get semanticType() { return undefined }
 	get alias() { return this._alias }
+	get nameIdent() { return this._name }
 	get underlyingName() { return this._name.fullName }
 	toString() { return `<Import identifier ${this.underlyingName} (${this.name})>` }
 
@@ -122,6 +126,8 @@ export class ASTImport extends ASTNodeData implements ASTNode
 	get valid() { return this.token.valid && this._importToken.valid && this._libraryName.valid }
 	get semanticType() { return SemanticTokenTypes.keyword }
 	get libraryName() { return this._libraryName.fullName }
+	get libraryNameIdent() { return this._libraryName }
+	get importToken() { return this._importToken }
 	get importedIdents() { return this._importedIdents }
 	toString() { return `<Import statement from ${this.libraryName}>` }
 
@@ -147,6 +153,8 @@ export class ASTIfExpr extends ASTNodeData implements ASTNode
 	}
 
 	get type() { return ASTType.ifExpr }
+	get cond() { return this._cond }
+	get trueBlock() { return this._trueBlock }
 	get valid() { return this.token.valid && this._cond.valid && this._trueBlock.valid }
 	get semanticType() { return SemanticTokenTypes.keyword }
 	toString() { return '<If expression>' }
@@ -170,6 +178,8 @@ export class ASTElifExpr extends ASTNodeData implements ASTNode
 	}
 
 	get type() { return ASTType.elifExpr }
+	get cond() { return this._cond }
+	get trueBlock() { return this._trueBlock }
 	get valid() { return this.token.valid && this._cond.valid && this._trueBlock.valid }
 	get semanticType() { return SemanticTokenTypes.keyword }
 	toString() { return '<Elif expression>' }
@@ -191,6 +201,7 @@ export class ASTElseExpr extends ASTNodeData implements ASTNode
 	}
 
 	get type() { return ASTType.elseExpr }
+	get block() { return this._block }
 	get valid() { return this.token.valid && this._block.valid }
 	get semanticType() { return SemanticTokenTypes.keyword }
 	toString() { return '<Else expression>' }
@@ -216,6 +227,9 @@ export class ASTIfStmt extends ASTNodeData implements ASTNode
 	}
 
 	get type() { return ASTType.ifStmt }
+	get ifExpr() { return this._ifExpr }
+	get elifExprs() { return this._elifExprs }
+	get elseExpr() { return this._elseExpr }
 	get valid() { return this._ifExpr.valid && this._elifExprs.every(expr => expr.valid) }
 	get semanticType() { return undefined }
 	toString() { return '<If statement>' }
@@ -239,6 +253,8 @@ export class ASTForStmt extends ASTNodeData implements ASTNode
 	}
 
 	get type() { return ASTType.forStmt }
+	get container() { return this._container }
+	get block() { return this._block }
 	get valid() { return this.token.valid && this._block.valid }
 	get semanticType() { return SemanticTokenTypes.keyword }
 	toString() { return '<For statement>' }
@@ -262,6 +278,8 @@ export class ASTWhileStmt extends ASTNodeData implements ASTNode
 	}
 
 	get type() { return ASTType.whileStmt }
+	get cond() { return this._cond }
+	get block() { return this._block }
 	get valid() { return this.token.valid && this._cond.valid && this._block.valid }
 	get semanticType() { return SemanticTokenTypes.keyword }
 	toString() { return '<While statement>' }
@@ -305,7 +323,7 @@ export class ASTVisibility extends ASTNodeData implements ASTNode
 	}
 }
 
-type ASTParameter = ASTTypeDecl | ASTIdentDef
+export type ASTParameter = ASTTypeDecl | ASTIdentDef
 
 export class ASTParams extends ASTNodeData implements ASTNode
 {
@@ -512,6 +530,7 @@ export class ASTClass extends ASTNodeData implements ASTNode
 	get type() { return ASTType.classDef }
 	get semanticType() { return SemanticTokenTypes.keyword }
 	get name() { return this._name.fullName }
+	get nameIdent() { return this._name }
 	get templateParams() { return this._templateParams }
 	get symbolTable() { return this._name.symbol?.structure?.symbolTable }
 	get body() { return this._body }

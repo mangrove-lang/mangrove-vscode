@@ -28,16 +28,17 @@ export class ASTInt extends ASTNodeData implements ASTValue
 
 export class ASTFloat extends ASTNodeData implements ASTValue
 {
-	private floatBits: number
+	private _floatBits: number
 
 	constructor(floatBits: number, token: Token)
 	{
 		super(token)
-		this.floatBits = floatBits
+		this._floatBits = floatBits
 	}
 
 	get type() { return ASTType.floatValue }
 	get valid() { return this.token.valid }
+	get floatBits() { return this._floatBits }
 	get semanticType() { return SemanticTokenTypes.number }
 	toString() { return `<Float${this.floatBits}: ${this.token.value}>` }
 
