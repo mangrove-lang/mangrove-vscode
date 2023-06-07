@@ -199,4 +199,11 @@ export class Token
 			isRangeEqual(this._location, token._location) &&
 			this._length === token._length
 	}
+
+	public static from(type: TokenType, value?: string): Token
+	{
+		const token = new Token()
+		token.set(type, value)
+		return token
+	}
 }
