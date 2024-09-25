@@ -21,14 +21,14 @@ jobs:
       matrix:
         os:
           - { id: ubuntu-22.04, name: jammy }
-        # 18 is oldest LTS, 20 is the current
-        node-version: [18, 20]
+        # 18 is oldest LTS, 20 is the current, 22 is what will be the next
+        node-version: ['18', '20', '22']
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
       - name: Setup node
-        uses: actions/setup-node@v3
+        uses: actions/setup-node@v4
         with:
           node-version: ${{ matrix.node-version }}
 
@@ -45,14 +45,14 @@ jobs:
       matrix:
         os:
           - { id: ubuntu-22.04, name: jammy }
-        # 18 is oldest LTS, 20 is the current
-        node-version: [18, 20]
+        # 18 is oldest LTS, 20 is the current, 22 is what will be the next
+        node-version: ['18', '20', '22']
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
       - name: Setup node
-        uses: actions/setup-node@v3
+        uses: actions/setup-node@v4
         with:
           node-version: ${{ matrix.node-version }}
 
@@ -69,14 +69,14 @@ jobs:
       matrix:
         os:
           - { id: ubuntu-22.04, name: jammy }
-        # 18 is oldest LTS, 20 is the current
-        node-version: [18, 20]
+        # 18 is oldest LTS, 20 is the current, 22 is what will be the next
+        node-version: ['18', '20', '22']
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
       - name: Setup node
-        uses: actions/setup-node@v3
+        uses: actions/setup-node@v4
         with:
           node-version: ${{ matrix.node-version }}
 
