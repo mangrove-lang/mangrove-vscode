@@ -68,6 +68,8 @@ import
 	ASTVisibility,
 	ASTParams,
 	ASTReturnType,
+	ASTEnum,
+	ASTEnumMember,
 	ASTTemplate,
 	ASTFunction,
 	ASTOperator,
@@ -94,7 +96,7 @@ function isNodeRelation(node: ASTNode | ASTRel): node is ASTRel
 
 type IdentAndComments = {token: Token, comments: ASTNode[]}
 type IdentDef = {type?: ASTIdent, ident: ASTIdent}
-type BlockConfig = {allowExtStmt: boolean}
+type BlockConfig = {allowExtStmt: boolean, isEnum: boolean}
 
 export class Parser
 {
@@ -1288,7 +1290,7 @@ export class Parser
 		const cond = this.parseLogicExpr()
 		if (!cond.isValid())
 			return cond as Result<undefined, ParsingErrors>
-		const block = this.parseBlock({allowExtStmt: false})
+		const block = this.parseBlock({allowExtStmt: false, isEnum: false})
 		if (!block.isDefined())
 			return Err('MissingBlock')
 		else if (block.isErr())
@@ -1309,7 +1311,7 @@ export class Parser
 		const cond = this.parseLogicExpr()
 		if (!cond.isValid())
 			return cond as Result<undefined, ParsingErrors>
-		const block = this.parseBlock({allowExtStmt: false})
+		const block = this.parseBlock({allowExtStmt: false, isEnum: false})
 		if (!block.isDefined())
 			return Err('MissingBlock')
 		else if (block.isErr())
@@ -1327,7 +1329,7 @@ export class Parser
 		const match = this.match(TokenType.elseStmt)
 		if (!match)
 			return Err('UnreachableState')
-		const block = this.parseBlock({allowExtStmt: false})
+		const block = this.parseBlock({allowExtStmt: false, isEnum: false})
 		if (!block.isDefined())
 			return Err('MissingBlock')
 		else if (block.isErr())
@@ -1411,7 +1413,7 @@ export class Parser
 			return Err('MissingRightBracket')
 
 		// Now match the loop body
-		const block = this.parseBlock({allowExtStmt: false})
+		const block = this.parseBlock({allowExtStmt: false, isEnum: false})
 		if (!block.isDefined())
 			return Err('MissingBlock')
 		else if (block.isErr())
@@ -1438,7 +1440,7 @@ export class Parser
 		if (cond.isErr())
 			return cond
 		// Now parse the body of the loop
-		const block = this.parseBlock({allowExtStmt: false})
+		const block = this.parseBlock({allowExtStmt: false, isEnum: false})
 		if (!block.isDefined())
 			return Err('MissingBlock')
 		else if (block.isErr())
@@ -1695,7 +1697,7 @@ export class Parser
 			if (templateParams.isErr())
 				return templateParams
 
-			const block = this.parseBlock({allowExtStmt: true})
+			const block = this.parseBlock({allowExtStmt: true, isEnum: false})
 			if (!block.isDefined())
 				return Err('MissingBlock')
 			if (block.isErr())
@@ -1712,6 +1714,73 @@ export class Parser
 		if (templateParams.val && !result.isValid())
 			this.symbolTable.pop(this)
 		return result
+	}
+
+	parseEnumDef(): Result<ASTNode, ParsingErrors>
+	{
+		const token = this.lexer.token.clone()
+		const match = this.match(TokenType.enumDef)
+		if (!match)
+			return Err('UnreachableState')
+
+		const ident = this.parseIdent()
+		if (!ident.isDefined())
+			return Err('InvalidTokenSequence')
+		if (ident.isErr() || ident.isInvalid())
+			return ident
+
+		const enumName = ident.val
+		// If the symbol's already in the table but is not a function symbol, that's an error
+		if (enumName.symbol && !enumName.symbol.type.mask(SymbolTypes.enum))
+			return Err('SymbolAlreadyDefined')
+		enumName.symbol = new MangroveSymbol(enumName.value, new SymbolType(SymbolTypes.enum | SymbolTypes.type))
+		this.symbolTable.insert(enumName.symbol)
+
+		const block = this.parseBlock({allowExtStmt: false, isEnum: true})
+		if (!block.isDefined())
+			return Err('InvalidTokenSequence')
+		if (block.isErr() || block.isInvalid())
+			return block
+		const astBlock = block.val as ASTBlock
+		const enumMembers = astBlock.statements
+		const valuesValid = enumMembers.every(value => value.valid)
+		if (enumMembers && !valuesValid)
+			this.symbolTable.pop(this)
+		return Ok(new ASTEnum(token, enumName, enumMembers as ASTEnumMember[]))
+	}
+
+	parseEnumMember(): Result<ASTEnumMember, ParsingErrors>
+	{
+		let value
+		const token = this.lexer.token
+		if (token.typeIsOneOf(TokenType.comma))
+			this.lexer.next()
+		this.skipWhite()
+		const ident = this.parseIdent()
+		if (!ident.isDefined())
+			return Err('InvalidTokenSequence')
+		if (ident.isErr() || ident.isInvalid())
+			return ident
+		// Parse the actual enum value
+		this.skipWhite()
+		if (token.typeIsOneOf(TokenType.assignOp))
+		{
+			this.lexer.next()
+			this.skipWhite()
+			value = this.parseInt()
+		}
+
+		if (value)
+		{
+			if (!value.isDefined)
+				return Err('InvalidTokenSequence')
+			if (value.isErr() || value.isInvalid())
+				return Err('InvalidAssignment')
+
+			return Ok(new ASTEnumMember(token, ident.val, value.val))
+		}
+
+		return Ok(new ASTEnumMember(token, ident.val))
 	}
 
 	parseFunctionDef(): Result<ASTNode, ParsingErrors>
@@ -1752,7 +1821,7 @@ export class Parser
 			if (returnType.isErr())
 				return returnType
 
-			const block = this.parseBlock({allowExtStmt: false})
+			const block = this.parseBlock({allowExtStmt: false, isEnum: false})
 			if (!block.isDefined())
 				return Err('MissingBlock')
 			if (block.isErr())
@@ -1826,7 +1895,7 @@ export class Parser
 		if (returnType.isErr())
 			return returnType
 
-		const block = this.parseBlock({allowExtStmt: false})
+		const block = this.parseBlock({allowExtStmt: false, isEnum: false})
 		if (!block.isDefined())
 			return Err('MissingBlock')
 		if (block.isErr())
@@ -1854,6 +1923,8 @@ export class Parser
 		const token = this.lexer.token
 		if (config.allowExtStmt && token.typeIsOneOf(TokenType.visibility))
 			return this.parseVisibility()
+		if (config.isEnum)
+			return this.parseEnumMember()
 		if (token.typeIsOneOf(TokenType.fromStmt))
 			return this.parseImportStmt()
 		if (token.typeIsOneOf(TokenType.ifStmt))
@@ -1862,6 +1933,8 @@ export class Parser
 			return this.parseForStmt()
 		if (token.typeIsOneOf(TokenType.whileStmt))
 			return this.parseWhileStmt()
+		if (token.typeIsOneOf(TokenType.enumDef))
+			return this.parseEnumDef()
 
 		const stmt = this.parseDefine()
 		if (stmt.isInvalid())
@@ -1940,7 +2013,7 @@ export class Parser
 		const nodes = this.skipWhite()
 		while (!token.typeIsOneOf(TokenType.eof))
 		{
-			const stmt = this.parseStatement({allowExtStmt: true})
+			const stmt = this.parseStatement({allowExtStmt: true, isEnum: false})
 			if (!stmt.isValid() && this.haveIdent)
 			{
 				const ident = this.ident as ASTIdent
