@@ -45,7 +45,7 @@
 		"tslib": "^2.5.3",
 		"vscode-languageclient": "^7.0.0",
 		"vscode-languageserver": "^7.0.0",
-		"vscode-languageserver-textdocument": "^1.0.7"
+		"vscode-languageserver-textdocument": "1.0.7"
 	},
 	"devDependencies": {
 		"@types/node": "^18.7.16",
