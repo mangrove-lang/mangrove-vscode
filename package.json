@@ -59,7 +59,8 @@
 		"@vscode/vsce": "^3.9.0"
 	},
 	"overrides": {
-		"semver": "^7.5.3"
+		"semver": "^7.5.3",
+		"js-yaml": ">=4.2.0"
 	},
 	"contributes": {
 		"languages": [
