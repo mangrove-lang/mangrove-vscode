@@ -55,6 +55,7 @@ export enum ASTType
 	templateDef,
 	functionDef,
 	operatorDef,
+	enumDef,
 	visibility,
 	block
 }
